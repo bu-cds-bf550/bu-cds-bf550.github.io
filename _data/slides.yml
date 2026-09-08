@@ -22,3 +22,8 @@
   date: "Fri Sep 11"
   title: "Repeat: null distributions and the thousand-test trap (draft)"
   file: unit-02-1
+- unit: unit-01
+  session: 3
+  date: "Wed Sep 9"
+  title: "How a language model works; LLM primer, continued"
+  file: unit-01-3

@@ -367,8 +367,6 @@ If you already cloned, make sure to pull the most recent changes before starting
 Lab 2 is in `unit-01-2.ipynb`
 
 ::: {.notes}
-The run-sheet's session-2 block currently points at slides that live in `unit-01-1.qmd` — the
-live-world sequence (*A world, in eight lines* → *Predict before you run* → *What the world
-says* → *Turn it around* → *The honest report*), Box, and the design launch. Move what belongs
-here, and update `lectures/unit01-runsheet.md` when you do.
+Lab 2 first, then chapter 1's practice problems. The run-sheet (`lectures/unit01-runsheet.md`) cites this
+deck's headings; renaming one means updating it.
 :::

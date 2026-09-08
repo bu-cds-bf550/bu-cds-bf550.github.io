@@ -125,8 +125,8 @@ throwing away the only unaided measurement you get. Full detail is on the
 ### Attendance and participation
 
 Participation is 5% of the grade and it means engagement in the working sessions, not seat time.
-Come to class; the working sessions are where help is cheapest and where designs get compared across
-the room, which is the part of the course that cannot be made up alone. Tell us in advance when you
+Come to class; the working sessions are where help is cheapest and where the room compares its
+readings of a problem, which is the part of the course that cannot be made up alone. Tell us in advance when you
 cannot make it.
 
 ### Late work, and missing a unit

@@ -151,14 +151,13 @@ The semester is split into three acts, organized by one escalating question —
 
 ## Assignments
 
-- Ten assignments across the term, the first assigned today
+- Ten problem sets across the term, the first assigned today
 - Delivered and submitted through GitHub
-- Materials are Jupyter notebooks you complete
+- Each is a Jupyter notebook you complete
 - Due by commit+push to GitHub at the start of the session that assigns the next one
-- Each assignment has three sections in each:
-  - Warm-up exercises
-  - Design - apply computational thinking to a problem
-  - Build - Implement and test design from the unit before
+- A set is one list of questions on a unit's biological problem: **our design** of the problem
+  opens the notebook, your code and answers follow, and checks you run yourself tell you where
+  you stand
 - Feel free to work together, but the work you submit must be individual
 
 ## AI Assessment Scale (AIAS)
@@ -179,7 +178,7 @@ The Bioinformatics Program has developed its own [AI Usage Policy](https://githu
 
 ## Assignments: Warm-ups
 
-A handful of short exercises on the unit's reading
+Problem Set 1, assigned today, is a handful of short exercises on the unit's reading
 
 . . .
 
@@ -197,35 +196,21 @@ warm-up *is* the information: something from the reading did not land, and the
 fastest way to find out *what* is to talk it through with something that will
 answer you.
 
-## Assignments: Design Phase
+## Assignments: Problem sets
 
-In the Design Phase, you will think through a biological problem
-that has a computable answer.
-
-. . .
-
-You will follow these steps:
+From set 2 on, every set has the same shape:
 
 ::: {.incremental}
-1. **Frame** the biological question as a process that generated data
-2. **Decompose** the problem into computable components
-3. **Select** appropriate methods to estimate the answer
-4. **Anticipate** how the answers you compute might be incorrect
+1. **The problem** — a biological question with a computable answer, and **our design** of it:
+   what process produced the data, what has to be computed, which method, and how we would know
+   if it were wrong
+2. **The questions** — you build the pieces of that design, one function at a time, on data we
+   generated, so the truth is known
+3. **The checks** — under every code question, a cell that tests what you wrote; from set 5 the
+   checks are yours to write
+4. **The reasoning** — a few questions in your own words: read our design, read a piece of code,
+   say what the checks cannot see
 :::
-
-## Assignments: Build Phase
-
-Our design unseals the following week, each design has:
-
-- a specification - documentation describing what the code should do
-- tests - code that tests other code for correctness
-- implementation - the code that implements the design
-
-You will evaluate our design and compare it to yours
-
-Your design may be better than ours in some ways!
-
-Then you will implement the design
 
 ## Labs:
 
@@ -237,7 +222,7 @@ Hands-on exercises and practice reading and modifying code
 
 Completing the assignments+labs will prepare you for the exams
 
-This is also time to discuss the Design / Build sections
+This is also working time on the problem sets, with us in the room
 
 ## The exams
 
@@ -256,12 +241,12 @@ One smaller in-class exam for Act III topics, also **AIAS 1**
 
 You will complete a final *synthesis project*
 
-Follows the pattern of the Design / Build phases from assignments:
+The one place this term where the design is yours:
 
 - Pick a biological problem
 - pose it as a question that can be answered with data
-- make a Design
-- simulate and Build
+- design the process that produced the data
+- simulate it, then build and check the method
 
 More detail and guidance to come...
 
@@ -336,24 +321,17 @@ print(sequence_site(m=0.65, n_reads=80, rng=rng))
 The story, visible in the code: each read is one molecule; each molecule
 carries the mark with probability $m$.
 
-## Your first design opens today
+## This unit's problem
 
 *If 68 of 100 people taste the bitter compound PTC, how common is the
 taste allele — and how sure can you be?*
 
-Problem Set 1, section 2. You write down an **approach**, in four parts:
-
-| | |
-|---|---|
-| **Frame** | What process produced this data? |
-| **Decompose** | What has to be computed or estimated? |
-| **Select** | What would the right method need to do? |
-| **Anticipate** | How could your answer be wrong — and how would you know? |
-
 . . .
 
-**Graded for being on time, not for being right.** A design that turns out
-wrong earns full credit. Committing before you know is the point.
+Problem Set 1, assigned today, is warm-ups on this unit's reading.
+
+**Problem Set 2 opens Fri Sep 11** on this problem, with our design of it in the
+notebook — and the tools to build it are Friday's lecture and chapter 1.
 
 # Today's Lab
 
@@ -364,8 +342,7 @@ Follow [Lab 1 · Your working environment](https://bu-cds-bf550.github.io/labs/u
 1. **Toolchain setup** — VS Code on the SCC, your assignment repo accepted,
    the `bf550` conda environment built, the labs cloned, a seeded simulation
    producing the same numbers twice.
-2. **Warm-ups** — Problem Set 1, section 1. Ask for anything, freely.
-3. **Start your Frame** — one paragraph: the chain from "an allele exists"
-   to "a student writes *bitter*."
+2. **Warm-ups** — Problem Set 1. Ask for anything, freely.
+3. **Read chapter 1** before Friday, if the first two are done.
 
 Before Friday: **read chapter 1**
