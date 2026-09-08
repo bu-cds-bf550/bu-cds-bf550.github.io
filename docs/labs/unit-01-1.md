@@ -151,16 +151,15 @@ question states its level, and the level is part of the question.
 
 You are set up. For the rest of today, in order:
 
-1. **Warm-ups** — Problem Set 1, section 1 (level 3). Ask Claude for anything, freely, in the
-   window you just set up.
-2. **Your Frame** — open `ps01-design.md` and draft one paragraph: the chain from "an allele
-   exists" to "a student writes *bitter*." Level 2 — think it through with Claude if you like,
-   but the paragraph is yours to write.
+1. **Warm-ups** — Problem Set 1 (level 3). Ask Claude for anything, freely, in the window you
+   just set up.
+2. **Friday's reading** — [chapter 1](https://bu-cds-bf550.github.io/bf550-textbook/chapters/ch01-simulating-a-process.html),
+   if the warm-ups are done.
 
 ## If you finish early
 
-Keep going: warm-ups 2–4, then the rest of the design's Frame prompts. If all of that is done,
-start Friday's reading — [chapter 1](https://bu-cds-bf550.github.io/bf550-textbook/chapters/ch01-simulating-a-process.html).
+Keep going: the rest of the warm-ups, then Friday's reading. The chapter's practice problems
+have worked solutions and are the cheapest way to find out whether the reading landed.
 
 ## If you are stuck
 

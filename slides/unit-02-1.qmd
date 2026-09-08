@@ -24,16 +24,6 @@ TODO: the standing frame, verbatim; glance at the split before moving on.
 Opener kind; bank `checkins/unit02.md` session 1.
 :::
 
-## The turn-in
-
-PS1 was due at the door.
-
-::: {.notes}
-TODO: one sentence on what PS1 asked, now that it is in — and how the design you wrote for it
-meets ours in PS2 (its opening prose, and Question 8). What the room hears about the change of
-shape is bf550-instructor#41. Never the planted truth of PS2's data or its key.
-:::
-
 ## TODO-rename: activation beat 1 {.smaller}
 
 Target misconception: *"A small p-value means the effect is real."*
@@ -81,10 +71,16 @@ TODO: the wrong answers to fish for, and the sentence that lands the correction.
 
 ## PS2 opens today
 
-On **unit 1's material** — the PTC problem you designed in PS1, with our design in the notebook.
+On **unit 1's material** — the PTC problem from unit 1, with our design in the notebook.
 Title and one teaser sentence ONLY; the notebook carries the problem and our design of it.
 
 Graded on the checks passing and on your answers.
+
+::: {.notes}
+The first graded set. PS1 is not collected (instructor, decision 17 of the overhaul record);
+that is said in the room if asked and never put on a slide. What the room hears about the change
+of shape is bf550-instructor#41. Never the planted truth of PS2's data or its key.
+:::
 
 ::: {.notes}
 TODO: the teaser sentence. Never the planted truth of the set's data on this slide

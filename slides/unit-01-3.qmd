@@ -1,19 +1,17 @@
 ---
-# Session 3's deck. Register it in _data/slides.yml to publish it:
-#   - unit: unit-01
-#     session: 3
-#     date: "Wed Sep 9"
-#     title: "..."
-#     file: unit-01-3
-# NOTE: this deck now carries the LLM primer's detailed half (session 2 keeps only the
-# AIAS 2/3 minimum). The other parked candidate for session 3's single lecture slot --
-# structural checks, "checking an answer with no answer key", code verified -- is still at
-# lectures/unit01-session3-deck-draft.qmd. Only one of the two fits; see the run-sheet.
+# Session 3's deck: how a language model works (the LLM primer's detailed half — session 2
+# carried only the minimum for the weekend), then how software tests work — assert, our
+# check_that, forced inputs then relationships — taught on chapter 1's methylation simulator
+# and never on the set's problem. The run-sheet (instructor repo, lectures/unit01-runsheet.md)
+# owns the clock and says what to cut first.
+#
+# The numbers on *One family, four sizes* were read from platform.claude.com/docs on 7 Sep
+# 2026 and go stale; re-check them the morning of.
 title: "Unit 1 · Session 3"
 subtitle: "BF550 · Unit 1 · Session 3 — Wed Sep 9"
 ---
 
-# LLM Primer, continued
+# How a Language Model Works
 
 ## Where we left it Friday
 
@@ -28,16 +26,318 @@ Friday, in four lines — still true:
 
 . . .
 
-Today: *why* each of those is true, and the numbers behind them.
+Today: what is actually on the other end of the chat — and then *why* each of those four
+lines is true, with the numbers behind them.
 
 ::: {.notes}
 Ninety seconds. If Friday landed, this is a recall check, not a re-teach — ask the room for
-the four lines rather than reading them. Tokens were named on Friday (*Tokens, once*) and
-deliberately not unpacked; today is where the arithmetic lands.
+the four lines rather than reading them.
 
-Run-sheet: this is the 0:15–0:30 block, and it is the block to cut if the room came in
-stuck on the toolchain. Working time does not move.
+Run-sheet: the lecture runs 0:15–1:05 — this section, then *How Software Tests Work*. The
+lecture is the point of today's session; the demos are what gets cut if the clock slips, and
+working time has a floor.
 :::
+
+## A language model is a generative process
+
+Friday's simulator was a **story about how one read comes to say *methylated***, and
+then a draw:
+
+```python
+if rng.random() < m:
+    methylated += 1
+```
+
+. . .
+
+A language model has the same shape. Given the text so far, it produces **a probability
+for every possible next token** — and then **one draw** picks the next token.
+
+. . .
+
+Append it. Do it again. The reply you read is a **chain of draws**, one token at a time.
+
+::: {.notes}
+This is the whole slide: the thing in the chat window is the same kind of object as
+`sequence_site`, a process that turns a state into a probability and then samples. Everything
+else today is detail on where the probabilities come from and what it costs to compute them.
+:::
+
+## The smallest one that works {.smaller}
+
+Train it on Friday's slides. The "model" is a list of what followed each word.
+
+```{python}
+#| echo: true
+import numpy as np
+
+text = """
+Before you analyze data, write down as runnable code the process you think produced it.
+That code is a world you control. You set the truth, run the experiment for free, as many
+times as you like, and watch how far an answer can wander from a truth you chose.
+Research data has no answer key. A world you built is the only place you can ever check
+your method against a known answer. The story is visible in the code: each read is one
+molecule, and each molecule carries the mark with probability m. Same truth every time.
+The answers wander, and now you know by how much. The estimate is where the hill peaks,
+and the honest report is how wide it is. All models are wrong, but some are useful.
+"""
+words = text.lower().replace(".", " .").replace(",", "").replace(":", "").split()
+
+def next_word_options(words, current):
+    """Every word that ever followed `current` in the text (repeats included)."""
+    options = []
+    for i in range(len(words) - 1):
+        if words[i] == current:
+            options.append(words[i + 1])
+    return options
+
+print("words in the training text:", len(words))
+print('after "the":', next_word_options(words, "the"))
+```
+
+::: {.notes}
+Nothing here is new to them: a list, a loop, an `if`, a function — lab 2's constructs.
+`next_word_options` *is* the model: for a given state (the last word), the options list is the
+probability distribution — each option is equally likely, so a word that followed "the"
+twice is twice as likely to be drawn.
+:::
+
+## And now it writes {.smaller}
+
+Start at *the*, draw the next word, append, repeat.
+
+```{python}
+#| echo: true
+rng = np.random.default_rng(2)
+word = "the"
+sentence = [word]
+for _ in range(14):
+    options = next_word_options(words, word)
+    word = options[rng.integers(len(options))]   # one draw: the next token
+    sentence.append(word)
+print(" ".join(sentence))
+```
+
+. . .
+
+Change the seed and it writes a different sentence. **The output is a sample, not an answer.**
+
+. . .
+
+That is also why Claude gives a different reply when you click *retry* — same window,
+new draws.
+
+::: {.notes}
+Predict-then-run, if the room is with you: before revealing, ask whether the sentence will be
+grammatical and whether it will be true. The usual answer is "sort of" and "no" — which is
+exactly right, and the point of the next slide.
+
+`rng.integers(len(options))` is the only unfamiliar call; say it out loud as "pick an index."
+:::
+
+## What it got right, and what it never had
+
+::: {.incremental}
+- **Vocabulary and local grammar** — every pair of adjacent words came from a real sentence.
+- **Meaning** — none. It has never seen a molecule. It has seen the word *molecule* after the
+  word *each*.
+- **A size.** This model is its list of pairs. Count them:
+:::
+
+. . .
+
+```{python}
+#| echo: true
+pairs = set()
+for i in range(len(words) - 1):
+    pairs.add((words[i], words[i + 1]))
+print("distinct (word, next word) pairs the model knows:", len(pairs))
+```
+
+. . .
+
+Those are its **parameters** — the numbers that make it *this* model rather than another.
+Everything you hear about a model's "size" is a count like this one.
+
+::: {.notes}
+`set` is new; say "a list that keeps one of each" and move on. The point is the last line:
+"parameters" means "how many numbers make up the model," and for this one the answer is small
+enough to print.
+:::
+
+## Where the billions come from
+
+A real model is not a list of word pairs. It is **one enormous function**: the input is the
+whole window, the output is a probability for every token, and in between are **billions of
+adjustable numbers**.
+
+. . .
+
+**Training** sets those numbers. Show it text; check how much probability it gave the token
+that actually came next; nudge every number so that probability goes up a little. Repeat, over
+**trillions of tokens** of text.
+
+. . .
+
+That produces a text predictor. A second stage — people rating answers, the numbers nudged
+toward the answers they preferred — turns the predictor into an **assistant**. The chat you
+use is the second thing, running on the first.
+
+::: {.notes}
+High level by design; no architecture. Two words to land: *parameters* (the adjustable
+numbers) and *training* (setting them from data). If someone asks about "transformers" or
+"attention," say: that is the shape of the function, and it matters enormously to the people
+building it and not at all to how you should use it.
+
+The second stage is why the model says "I" and answers questions instead of continuing your
+sentence; it is also where its manners come from. The system prompt, four slides on, is the
+other half of that.
+:::
+
+## How big is big {.smaller}
+
+```{python}
+#| echo: true
+models = [
+    ("our two-word model, above",        len(pairs)),
+    ("GPT-2 (2019)",                     1_500_000_000),
+    ("GPT-3 (2020)",                   175_000_000_000),
+    ("Llama 3.1, open weights (2024)", 405_000_000_000),
+]
+for label, n in models:
+    print(f"{label:>34}: {n:>18,} parameters")
+print(f"{'the human genome, for scale':>34}: {3_100_000_000:>18,} base pairs")
+```
+
+. . .
+
+Anthropic does **not** publish Claude's parameter count. Assume "hundreds of billions" and
+you will not be far wrong about what it implies:
+
+```{python}
+#| echo: true
+params = 405_000_000_000
+print(f"{params * 2 / 1e9:.0f} GB just to hold the numbers, at 2 bytes each")
+print(f"= {params * 2 / 80e9:.0f} of the 80 GB GPUs a datacenter runs these on")
+```
+
+. . .
+
+A model that size does not run on your laptop. It runs in a building, and you rent a slice of
+it. **That is why there is a subscription, and why there is a limit.**
+
+::: {.notes}
+The parameter counts are public (OpenAI's GPT-2 and GPT-3 papers; Meta's Llama 3.1 release).
+Anthropic's silence on Claude's size is deliberate and worth saying plainly — the students
+will read confident numbers online, and none of them is sourced.
+
+The genome line is for scale only: a parameter is a number, a base pair is a letter, and the
+comparison is "billions is a genome-sized count."
+:::
+
+## One family, four sizes {.smaller}
+
+The current Claude lineup — one way to see what "bigger" buys and costs:
+
+| | Fable 5.1 | Opus 5 | Sonnet 5 | Haiku 4.5 |
+| --- | --- | --- | --- | --- |
+| Relative speed | slower | moderate | fast | fastest |
+| Price per million tokens in / out | $10 / $50 | $5 / $25 | $2 / $10 | $1 / $5 |
+| Context window | 1M | 1M | 1M | 200K |
+| Reliable knowledge through | Jun 2026 | May 2026 | Jan 2026 | Feb 2025 |
+
+: {tbl-colwidths="[36,16,16,16,16]"}
+
+. . .
+
+Same family, same kind of training. The larger one answers harder questions and costs ten
+times as much per token as the smallest. **The model picker in your chat is this table.**
+
+::: {.notes}
+Read from platform.claude.com/docs/en/models/overview on 7 Sep 2026 — **re-check the morning
+of**; prices and the lineup change. The API prices are the honest unit even though students
+pay a subscription: they show that the cost is per token and scales with model size, which is
+the whole mechanics story from Friday in one row.
+
+Ask the room which model their picker shows. Most will not know, and that is the point of
+asking.
+:::
+
+## What the model does not know
+
+::: {.incremental}
+- **Anything after its cutoff.** Training stopped on a date. Events, papers, software releases
+  after it are not in the numbers.
+- **What it does not know.** It produces a probable next token either way. A confident
+  paragraph about a paper that does not exist is the same operation as a correct one.
+- **This course.** BF550 in this form has never been on the internet. Ask it about the
+  syllabus and it will write you a plausible one.
+:::
+
+. . .
+
+And yet it knows today's date, and which model it is. How?
+
+::: {.notes}
+Live demo, two windows: ask "what is today's date?" (it answers) and then "what is on the BF550
+problem set this week?" (it invents one — read a line of it aloud). The contrast is the
+setup for the system prompt.
+
+The middle bullet is the hallucination slide, without the word. Land it on the operation:
+there is no separate "I know this" pathway; it is next-token probability all the way down, and
+the checks you run are the only thing that tells the two cases apart.
+:::
+
+## The message you never see
+
+Every claude.ai conversation starts with a message **you did not write and cannot see**: a
+**system prompt** from Anthropic, sitting in the window before your first turn.
+
+. . .
+
+Anthropic publishes it. Three lines from the current one:
+
+> *This iteration of Claude is Claude Fable 5.1, the newest model in Anthropic's Claude 5
+> family …*
+
+> *Claude's reliable knowledge cutoff, past which it can't answer reliably, is the end of
+> Jun 2026. It answers the way a highly informed individual in Jun 2026 would if talking to
+> someone from `{{currentDateTime}}` …*
+
+> *Claude uses the minimum formatting needed for clarity*
+
+::: {.notes}
+Source: platform.claude.com/docs/en/release-notes/system-prompts — the Claude Fable 5.1 entry
+dated 1 Sep 2026, several thousand words long. Pull it up live if the projector allows;
+scrolling it is more persuasive than quoting it.
+
+`{{currentDateTime}}` is the whole answer to the previous slide's question: the date is
+*inserted into the prompt*, not known. So is the model's own name.
+:::
+
+## What the system prompt tells you
+
+::: {.incremental}
+- **Told, not known.** The date, the model's name, its cutoff — all of it is text in the
+  window. The model reads it the way it reads your message.
+- **Instructions, not knowledge.** It also says: *If the person asks Claude about how many
+  messages they can send … Claude should tell them it doesn't know.* So do not ask Claude about
+  your usage limit — **Settings → Usage** is the only source.
+- **It costs tokens, every turn.** It is part of the window, re-sent with everything else.
+- **You can add a layer of your own.** Project instructions and preferences go into the same
+  place, by the same mechanism.
+:::
+
+::: {.notes}
+The second bullet is the practical one: half the room will, at some point this term, ask the
+chat why it stopped answering, and the chat is *instructed* to say it does not know. Say now
+where the answer lives.
+
+Then the bridge to the next section: "So — how much fits in that window, and what happens when
+it fills?" Friday's four lines, with numbers.
+:::
+
+# LLM Primer, continued
 
 ## How big is a token, really {.smaller}
 
@@ -71,6 +371,7 @@ enormous, and you will still hit trouble, for reasons that are not about size.
 Everything competes for the same space:
 
 ::: {.incremental}
+- the system prompt, before anything of yours
 - every message you have sent
 - every reply it has given
 - every file you attached
@@ -111,8 +412,8 @@ Source: Anthropic's help centre, "How do usage and length limits work" — longe
 conversations that trigger automatic context management consume more of your usage limit,
 and the recommendation there is to start a new conversation.
 
-This is the slide students will remember in week 9 when a build-phase chat goes sideways.
-It is also the mechanism behind Friday's "a long chat drifts".
+This is the slide students will remember in week 9 when a long problem-set chat goes
+sideways. It is also the mechanism behind Friday's "a long chat drifts".
 :::
 
 ## Rate limits: two clocks {.smaller}
@@ -134,7 +435,8 @@ is on.
 
 ::: {.notes}
 Settings → Usage again, live — they saw it Friday, but now they have the vocabulary for why
-the bars move at different rates.
+the bars move at different rates: the model row of *One family, four sizes*, and the
+re-sent window.
 
 Do not quote a message count. Anthropic deliberately does not publish one, and any number
 said out loud here will be wrong by December.
@@ -173,20 +475,226 @@ Say the fifth-edit rule out loud: if you are on your fifth round of edits to the
 function, you are paying for four dead versions on every turn. Start a fresh chat, paste
 what you have now.
 
-The last line is the handoff to the working session — PS1 is due Friday, and the checks in
-it are AIAS 1.
+The last line is the handoff to *How Software Tests Work*: verification is the next section.
+:::
+
+# How Software Tests Work
+
+## A test is a claim you can check
+
+```{python}
+#| echo: true
+def count_below(values, cutoff):
+    count = 0
+    for value in values:
+        if value < cutoff:
+            count += 1
+    return count
+
+assert count_below([0.1, 0.4, 0.6, 0.9], 0.5) == 2
+assert count_below([], 0.5) == 0                 # an empty list: nothing to count
+print("two claims, no complaints")
+```
+
+. . .
+
+`assert` then a claim. True: nothing happens. False: the program **stops**, on that line.
+
+. . .
+
+That is the entire idea of a software test — **a claim about what code returns, written down so
+a machine can check it.** Every language has one. Professional code ships with thousands.
+
+::: {.notes}
+Lab 2's `count_below`, which the room wrote last Friday. Predict the output before running:
+half the room expects the asserts to print something. They print nothing — silence is the
+pass.
+:::
+
+## A test that fails is the point
+
+```{python}
+#| echo: true
+#| error: true
+assert count_below([0.5, 0.5, 0.5], 0.5) == 3
+```
+
+. . .
+
+Read the error as a sentence: *the claim on this line is false.* Is 0.5 below 0.5? No — `<` is
+strict. The test just told you something precise about the code, or about what you believed.
+
+. . .
+
+A failed test does not say *something is wrong*. It says **this input gives this answer, and I
+expected that one.** That is the cheapest bug detector you own — and it works on code you did
+not write.
+
+::: {.notes}
+Ask before revealing: will this pass? Take a vote. The wrong votes are the point — the test
+settled a disagreement in one line, which is what tests are for.
+
+"Code you did not write" is the whole term in four words: the agent's drafts, the chapter's
+functions, a classmate's fix.
+:::
+
+## Tests live together, and run together {.smaller}
+
+In a real project the claims are **functions in their own file** — hundreds of them, run by one
+command (`pytest`), re-run automatically on every change. A change that breaks one does not ship.
+
+. . .
+
+In this course they are the **check cells**. Same claims, three changes: they **report** instead
+of stopping, each carries **a label in words**, and a function that does not exist yet shows ⬜.
+
+```{python}
+#| echo: true
+def check_that(label, condition):
+    print(("✅ " if condition else "❌ ") + label)
+
+check_that("nothing is below a cutoff of 0", count_below([0.1, 0.4], 0.0) == 0)
+check_that("a value equal to the cutoff is not below it", count_below([0.5], 0.5) == 0)
+check_that("both values are below 1  (a deliberately false claim)", count_below([0.1, 0.4], 1.0) == 3)
+```
+
+. . .
+
+That is, minus the bookkeeping, the whole of the `check_that` in your notebooks.
+
+::: {.notes}
+Two lines of code is the demystification: the ✅/❌ they have been reading all week is a
+print statement with a condition in it. Say so. Then say why we report instead of stopping —
+sixty people, and a failing first claim would hide the other nine.
+
+`pytest` gets one sentence and no demo.
+:::
+
+## The first tests to write: forced inputs
+
+```{python}
+#| echo: true
+def sequence_site(m, n_reads, rng):
+    """Number of methylated reads at a site with true methylation m."""
+    methylated = 0
+    for _ in range(n_reads):
+        if rng.random() < m:
+            methylated += 1
+    return methylated
+
+rng = np.random.default_rng(3)
+check_that("m = 0: no read is methylated",     sequence_site(0.0, 80, rng) == 0)
+check_that("m = 1: every read is methylated",  sequence_site(1.0, 80, rng) == 80)
+check_that("no reads, no count",               sequence_site(0.5, 0, rng) == 0)
+```
+
+. . .
+
+Randomness in the code, and yet three claims you can make **without seeing a single draw**.
+Notice what is missing: a seed that matters. Any seed gives the same answer, or the code is wrong.
+
+::: {.notes}
+Today's check-in asked the second of these (`m=1.0, n_reads=80` returns 80): if the split was
+good, this is a callback. The habit to name: for any simulator, find the inputs where the answer
+is forced and write those claims first.
+
+Stays on methylation by design. Friday's set has a planted truth and a key; run a check on
+*its* problem here and you hand the room the reflex and the answer together.
+:::
+
+## The one in the middle is the strong one
+
+The ends catch a lot. What they miss is everything between them.
+
+```{python}
+#| echo: true
+#| output-location: slide
+rng = np.random.default_rng(5)
+previous = -1
+for m in (0.0, 0.25, 0.50, 0.75, 1.0):
+    total = 0
+    for _ in range(200):
+        total += sequence_site(m, 80, rng)
+    mean_count = total / 200
+    check_that(f"m = {m:.2f}: mean count {mean_count:6.2f} is higher than the last", mean_count > previous)
+    previous = mean_count
+```
+
+. . .
+
+A claim about a **relationship that must hold everywhere in between** — more truth, more reads
+saying so — says the code got the *shape* right. Code can pass both ends and still be nonsense in
+the middle. **That is the test to write when you only write one.**
+
+::: {.notes}
+One run cannot show a relationship — 80 reads at 0.50 can beat 80 reads at 0.75 by luck — so
+the claim is about averages over 200 runs. Lab 3's section 6 has them write exactly this for a
+coin.
+:::
+
+## A test can only catch what you thought of
+
+```{python}
+#| echo: true
+def fraction_below(values, cutoff):
+    return count_below(values, cutoff) / 4     # the bug: 4 is only right for four values
+
+check_that("half of four values are below 0.5", fraction_below([0.1, 0.4, 0.6, 0.9], 0.5) == 0.5)
+check_that("one of five values is below 1.5",   fraction_below([1, 2, 3, 4, 5], 1.5) == 0.2)
+```
+
+. . .
+
+The first claim passes, and it is the one everybody writes first. The bug lives exactly where the
+obvious test does not look.
+
+. . .
+
+**A test is worth what its input is worth.** In lab 3 today, this bug is yours to catch.
+
+::: {.notes}
+Lab 3's `fraction_below`, with the `/ 4` the lab tells them to distrust. The lesson is about
+choosing inputs, not about this bug: when you test code you did not write, ask what input the
+author was picturing, and pick a different one.
+:::
+
+## Where you will meet them
+
+::: {.incremental}
+- **Today, lab 3.** Sections 4–7 are yours: claims for code we give you, one of which has a bug,
+  then the forced inputs and the relationship for a simulator.
+- **Friday's problem set.** A check cell under every code question — ours, written this way. Run
+  it as often as you like; it only ever calls your functions.
+- **From set 5.** The question states the cases in prose, and the check cell is yours to write.
+:::
+
+. . .
+
+Code the model drafted is code you did not write. The checks are how you find out whether it is
+right, with no answer key.
+
+::: {.notes}
+Straight to working time. Lab 3 is the hour: sections 1–3 are combinations from lab 2, 4–7 are
+the tests. Nothing else is on the table today.
 :::
 
 # Today's Working Session
 
 ## Working time — the rest of today
 
-**PS1 is due at the start of class on Friday** — the whole set, not just the design.
+1. **`git pull`** in your `bf550-labs` clone.
+2. **Lab 3** — `unit-01-3.ipynb`. Sections 1–3: lab 2's pieces, combined. Sections 4–7: you
+   write the tests.
+3. Instructors and TAs are in the room. A check that stays ❌ after the hint is what we are for.
+
+. . .
+
+**Before Friday: read chapter 2.** Friday's session opens **Problem Set 2**, on this unit's
+problem, with our design in the notebook.
 
 ::: {.notes}
-The run-sheet owns this block: stuck points from Friday first, then work, with the pair
-read-through of Frame drafts at ~0:45 — swap, and ask only "what would your output actually
-look like?"
-
-Read ch. 2 before Friday too. Lab 3 is `unit-01-3.ipynb`.
+The run-sheet owns this block: stuck points from Friday first, then the lab. PS1 is not being
+collected — the instructor has told the class; it stays off every slide, and if asked, the
+plain answer is that PS2 is the first graded set. Lab 3 replaces the set work this session used
+to carry.
 :::
