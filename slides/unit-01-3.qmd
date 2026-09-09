@@ -1,9 +1,12 @@
 ---
 # Session 3's deck: how a language model works (the two-word model, probabilities, parameters,
-# size, the Claude family, the system prompt), then how software tests work — assert, our
-# check_that, forced inputs then relationships — taught on chapter 1's methylation simulator
-# and never on the set's problem. The run-sheet (instructor repo, lectures/unit01-runsheet.md)
-# owns the clock and says what to cut first.
+# size, the Claude family, the system prompt). The run-sheet (instructor repo,
+# lectures/unit01-runsheet.md) owns the clock and says what to cut first.
+#
+# *How Software Tests Work* — assert, our check_that, forced inputs then test cases, taught on
+# chapter 1's methylation simulator and never on a set's problem — was written for this deck and
+# skipped in the room on 9 Sep; the model section filled the hour. It moved whole to unit-02-1.qmd
+# (unit 2, session 1, Fri Sep 11) the same day, and the unit 2 run-sheet owns it now.
 #
 # The numbers on *One family, four sizes* were read from platform.claude.com/docs on 7 Sep
 # 2026 and go stale; re-check them the morning of. The primer's mechanics half (token
@@ -28,16 +31,15 @@ LLMs from Friday:
 
 . . .
 
-Today: what is actually on the other end of the chat — and then how you check what it hands
-you.
+Today: what is actually on the other end of the chat.
 
 ::: {.notes}
 Ninety seconds. If Friday landed, this is a recall check, not a re-teach — ask the room for
 the four lines rather than reading them.
 
-Run-sheet: the lecture runs 0:15–1:00 — this section, then *How Software Tests Work*. The
-lecture is the point of today's session; the demos are what gets cut if the clock slips, and
-working time has a floor.
+Run-sheet: the lecture runs 0:15–0:47 — this section alone, since 9 Sep; *How Software Tests
+Work* is Friday's, in the unit 2 session 1 deck. The lecture is the point of today's session;
+the demos are what gets cut if the clock slips, and working time has a floor.
 :::
 
 ## A language model is a generative process
@@ -502,198 +504,10 @@ The second bullet is the practical one: half the room will, at some point this t
 chat why it stopped answering, and the chat is *instructed* to say it does not know. Say now
 where the answer lives.
 
-Then the bridge to the next section: everything so far is what the model *is*, and none of it
+Then the bridge to working time: everything so far is what the model *is*, and none of it
 makes an answer *true* — a confident paragraph is the same operation as a correct one.
-Verification is how you use the tool, and that is *How Software Tests Work*.
-:::
-
-# How Software Tests Work
-
-## A test is a claim you can check
-
-```{python}
-#| echo: true
-def count_below(values, cutoff):
-    count = 0
-    for value in values:
-        if value < cutoff:
-            count += 1
-    return count
-
-assert count_below([0.1, 0.4, 0.6, 0.9], 0.5) == 2
-assert count_below([], 0.5) == 0   # an empty list: nothing to count
-print("two claims, no complaints")
-```
-
-. . .
-
-`assert` then a claim. True: nothing happens. False: the program **stops**, on that line.
-
-. . .
-
-That is the entire idea of a software test — **a claim about what code returns, written down so
-a machine can check it.**
-
-::: {.notes}
-Lab 2's `count_below`, which the room wrote last Friday. Predict the output before running:
-half the room expects the asserts to print something. They print nothing — silence is the
-pass.
-:::
-
-## Tests should check valid claims
-
-```{python}
-#| echo: true
-#| error: true
-assert count_below([0.5, 0.5, 0.5], 0.5) == 3
-```
-
-. . .
-
-Read the error as a sentence: *the claim on this line is false.* Is 0.5 below 0.5? No — `<` is
-strict. The test just told you something precise about the code, or about what you believed about the code.
-
-. . .
-
-A failed test does not say *something is wrong*. It says **for my input, I expected a different answer than the code produced.**
-
-. . .
-
-In this case, *our claim is wrong* -- but we still don't know if the code works correctly.
-
-::: {.notes}
-Ask before revealing: will this pass? Take a vote. The wrong votes are the point — the test
-settled a disagreement in one line, which is what tests are for.
-
-"Code you did not write" is the whole term in four words: the agent's drafts, the chapter's
-functions, a classmate's fix.
-:::
-
-## Tests in this class
-
-In our notebooks, we use **check cells**. They **report** instead of stopping,
-each carries **a label in words**, and ✅, ❌, or ⬜.
-
-```{python}
-#| echo: true
-def check_that(label, condition):
-    print(("✅ " if condition is True else "❌ ") + label)
-
-check_that("nothing is below a cutoff of 0",
-    count_below([0.1, 0.4], 0.0) == 0)
-check_that("a value equal to the cutoff is not below it",
-    count_below([0.5], 0.5) == 0)
-check_that("both values are below 1  (a deliberately false claim)",
-    count_below([0.1, 0.4], 1.0) == 3)
-```
-
-::: {.notes}
-Two lines of code is the demystification: the ✅/❌ they have been reading all week is a
-print statement with a condition in it. Say so. Then say why we report instead of stopping —
-sixty people, and a failing first claim would hide the other nine.
-
-`pytest` gets one sentence and no demo.
-:::
-
-## The first tests to write: forced inputs
-
-```{python}
-#| echo: true
-def sequence_site(m, n_reads, rng):
-    """Number of methylated reads at a site with true methylation m."""
-    methylated = 0
-    for _ in range(n_reads):
-        if rng.random() < m:
-            methylated += 1
-    return methylated
-
-rng = np.random.default_rng(3)
-check_that("m = 0: no read is methylated",
-    sequence_site(0.0, 80, rng) == 0)
-check_that("m = 1: every read is methylated",
-    sequence_site(1.0, 80, rng) == 80)
-check_that("no reads, no count",
-    sequence_site(0.5, 0, rng) == 0)
-```
-
-::: {.notes}
-Today's check-in asked the second of these (`m=1.0, n_reads=80` returns 80): if the split was
-good, this is a callback. The habit to name: for any simulator, find the inputs where the answer
-is forced and write those claims first.
-
-Stays on methylation by design. Friday's set has a planted truth and a key; run a check on
-*its* problem here and you hand the room the reflex and the answer together.
-:::
-
-## The first tests to write: forced inputs
-
-```{python}
-#| echo: true
-rng = np.random.default_rng(3)
-check_that("m = 0: no read is methylated",
-    sequence_site(0.0, 80, rng) == 0)
-check_that("m = 1: every read is methylated",
-    sequence_site(1.0, 80, rng) == 80)
-check_that("no reads, no count",
-    sequence_site(0.5, 0, rng) == 0)
-```
-
-Randomness in the code, and yet three claims you can make **without seeing a single draw**.
-
-. . .
-
-Notice the checks don't depend on the seed -- any seed gives the same answer, or the code is wrong.
-
-## What do we check?
-
-The claims tests check are called *test cases*. We must decide which test cases are required and construct them.
-
-. . .
-
-```{python}
-#| echo: true
-def fraction_below(values, cutoff):
-    return count_below(values, cutoff) / 4     # the bug: 4 is only right for four values
-
-check_that("half of four values are below 0.5",
-    fraction_below([0.1, 0.4, 0.6, 0.9], 0.5) == 0.5)
-check_that("one of five values is below 1.5",
-    fraction_below([1, 2, 3, 4, 5], 1.5) == 0.2)
-```
-
-. . .
-
-The first claim passes, and it is the one everybody writes first. The bug lives exactly where the
-obvious test does not look.
-
-. . .
-
-**A test is worth what its input is worth.** In lab 3 today, this bug is yours to catch.
-
-::: {.notes}
-Lab 3's `fraction_below`, with the `/ 4` the lab tells them to distrust. The lesson is about
-choosing inputs, not about this bug: when you test code you did not write, ask what input the
-author was picturing, and pick a different one.
-:::
-
-## Where you will meet them
-
-::: {.incremental}
-- **Today, lab 3.** Sections 4–7 are yours: claims for code we give you, one of which has a bug,
-  then the forced inputs and the relationship for a simulator.
-- **Friday's problem set.** A check cell under every code question — ours, written this way. Run
-  it as often as you like; it only ever calls your functions.
-- **From set 5.** The question states the cases in prose, and the check cell is yours to write.
-:::
-
-. . .
-
-Code the model drafted is code you did not write. The checks are how you find out whether it is
-right, with no answer key.
-
-::: {.notes}
-Straight to working time. Lab 3 is the hour: sections 1–3 are combinations from lab 2, 4–7 are
-the tests. Nothing else is on the table today.
+Verification is how you use the tool. Lab 3's sections 4–7 start that today, and Friday's
+deck opens with it (*How Software Tests Work*, unit 2 session 1).
 :::
 
 # Today's Working Session
@@ -715,4 +529,8 @@ The run-sheet owns this block: stuck points from Friday first, then the lab. PS1
 collected — the instructor has told the class; it stays off every slide, and if asked, the
 plain answer is that PS2 is the first graded set. Lab 3 replaces the set work this session used
 to carry.
+
+Sections 4–7 are the tests, and the lecture that was meant to precede them (*How Software
+Tests Work*) moved to Friday's deck on 9 Sep. The lab's own prose carries the idea — a test is
+a claim you can check — so the sections stand on their own; Friday names what they did.
 :::

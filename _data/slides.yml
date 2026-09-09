@@ -20,12 +20,12 @@
 - unit: unit-02
   session: 1
   date: "Fri Sep 11"
-  title: "Repeat: null distributions and the thousand-test trap (draft)"
+  title: "Repeat: null distributions and the thousand-test trap; how software tests work (draft)"
   file: unit-02-1
 - unit: unit-01
   session: 3
   date: "Wed Sep 9"
-  title: "How a language model works; how software tests work"
+  title: "How a language model works"
   file: unit-01-3
 - unit: unit-03
   session: 1
