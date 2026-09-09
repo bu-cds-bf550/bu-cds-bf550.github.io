@@ -27,3 +27,18 @@
   date: "Wed Sep 9"
   title: "How a language model works; how software tests work"
   file: unit-01-3
+- unit: unit-03
+  session: 1
+  date: "Fri Sep 18"
+  title: "Nest: why real data is messier than your model (draft)"
+  file: unit-03-1
+- unit: unit-03
+  session: 2
+  date: "Mon Sep 21"
+  title: "Nest: why real data is messier than your model (draft)"
+  file: unit-03-2
+- unit: unit-03
+  session: 3
+  date: "Wed Sep 23"
+  title: "Nest: why real data is messier than your model (draft)"
+  file: unit-03-3
