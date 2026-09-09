@@ -42,3 +42,18 @@
   date: "Wed Sep 23"
   title: "Nest: why real data is messier than your model (draft)"
   file: unit-03-3
+- unit: unit-04
+  session: 1
+  date: "Fri Sep 25"
+  title: "Mix: which process produced this observation? (draft)"
+  file: unit-04-1
+- unit: unit-04
+  session: 2
+  date: "Mon Sep 28"
+  title: "Mix: which process produced this observation? (draft)"
+  file: unit-04-2
+- unit: unit-04
+  session: 3
+  date: "Wed Sep 30"
+  title: "Mix: which process produced this observation? (draft)"
+  file: unit-04-3
