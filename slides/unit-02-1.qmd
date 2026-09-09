@@ -31,6 +31,28 @@ TODO: the standing frame, verbatim; glance at the split before moving on.
 Opener kind; bank `checkins/unit02.md` session 1.
 :::
 
+## From worlds to models
+
+Chapter 1 called the thing you built a **world**: a story of how the data came to be, written as
+code you can run, with the truth as an input.
+
+. . .
+
+The word for that is a **model** — a deliberately simplified version of a process, built so you
+can run it and ask what it produces.
+
+. . .
+
+Every world you built last unit was one. **Model** is the word from here on — and the model in
+which nothing is going on is the **null model**.
+
+::: {.notes}
+Forty seconds; it is the opening paragraph of chapter 2's *The story*, said aloud. Same object,
+the field's word. Chapter 1 is frozen this offering and keeps *world*; its repair is logged in
+bf550-instructor#39. Do not turn this into a lecture on what a model is — the definition is
+the one sentence, and the beats that follow are what it means in practice.
+:::
+
 ## TODO-rename: activation beat 1 {.smaller}
 
 Target misconception: *"A small p-value means the effect is real."*
@@ -44,11 +66,6 @@ Target misconception: *"A small p-value means the effect is real."*
 
 ::: {.notes}
 TODO: the wrong answers to fish for, and the sentence that lands the correction.
-
-Say once, when the null model first comes up: chapter 1 called the thing you build and run a
-*world*; chapter 2 calls it a *model*, and the one with nothing going on is the **null model**.
-Same object — the field's word from here on. Chapter 1 is frozen this offering; the repair is
-logged in bf550-instructor#39.
 :::
 
 ## TODO-rename: activation beat 2 {.smaller}
