@@ -44,6 +44,11 @@ Target misconception: *"A small p-value means the effect is real."*
 
 ::: {.notes}
 TODO: the wrong answers to fish for, and the sentence that lands the correction.
+
+Say once, when the null model first comes up: chapter 1 called the thing you build and run a
+*world*; chapter 2 calls it a *model*, and the one with nothing going on is the **null model**.
+Same object — the field's word from here on. Chapter 1 is frozen this offering; the repair is
+logged in bf550-instructor#39.
 :::
 
 ## TODO-rename: activation beat 2 {.smaller}
