@@ -54,12 +54,17 @@ for _ in range(1000):
 
 . . .
 
-A language model has the same shape. Given the text so far, it produces **a probability
+A language model follows the same pattern.
+
+. . .
+
+Given the text so far, it produces **a probability
 for every possible next token** — and then **one draw** picks the next token.
 
 . . .
 
-Append it. Do it again. The reply you read is a **chain of draws**, one token at a time.
+Append the drawn word to the text, and repeat the process. The reply you read is a
+**chain of draws**, one token at a time.
 
 ::: {.notes}
 This is the whole slide: the thing in the chat window is the same kind of object as
@@ -67,10 +72,9 @@ This is the whole slide: the thing in the chat window is the same kind of object
 else today is detail on where the probabilities come from and what it costs to compute them.
 :::
 
-## The smallest one that works
+## A simple language model
 
-Train it on Friday's slides. This is the **entire** training text — every word the model will
-ever have seen:
+We begin with text from Friday's slides:
 
 ```python
 # text is preprocessed to lower case and "tokenize"
@@ -186,9 +190,9 @@ Say the lookup once — `next_words["the"]` returns the row for *the* — becaus
 uses it.
 :::
 
-## And now it writes
+## Generating new text using the model
 
-Start at *the*, draw the next word, append, repeat.
+Starting with "*the*", draw the next word, append, repeat.
 
 ```{python}
 #| echo: true
@@ -220,7 +224,7 @@ exactly right, and the point of the next slide.
 `rng.integers(len(options))` is the only unfamiliar call; say it out loud as "pick an index."
 :::
 
-## What it got right, and what it never had
+## Properties of the model
 
 ::: {.incremental}
 - **Vocabulary and local grammar** — every pair of adjacent words came from a real sentence.
@@ -274,7 +278,8 @@ for w in sorted(set(row)):
 
 ## Our first language model
 
-This model of word pairs is called a **bigram**: one probability for every (word, next word) pair it saw, and zero for every pair it never saw.
+This model of word pairs is called a **bigram model**: one probability for
+every (word, next word) pair it saw, and zero for every pair it never saw.
 
 . . .
 
@@ -282,11 +287,11 @@ The text the model saw is called the **training data**.
 
 . . .
 
-That zero is why the model will draw "*molecule*" after "*the*" -- it wasn't in the training data.
+This model will *never* draw a next word it hasn't seen before in the text.
 
 . . .
 
-In a bigram, the model is composed of one probability per pair of words in the vocabulary.
+In a bigram model, there is one probability per pair of words in the vocabulary.
 
 . . .
 
@@ -399,7 +404,7 @@ The old *runs in a building* point lives on in the next slide's price column: co
 scales with size, and that is why there is a subscription and a limit.
 :::
 
-## One family, four sizes
+## The Four Claude model types
 
 The current Claude lineup — one way to see what "bigger" buys and costs:
 
@@ -452,7 +457,7 @@ there is no separate "I know this" pathway; it is next-token probability all the
 the checks you run are the only thing that tells the two cases apart.
 :::
 
-## The message you never see
+## The System Prompt
 
 Every claude.ai conversation starts with a message **you did not write and cannot see**: a
 **system prompt** from Anthropic, sitting in the window before your first turn.
@@ -527,7 +532,7 @@ print("two claims, no complaints")
 . . .
 
 That is the entire idea of a software test — **a claim about what code returns, written down so
-a machine can check it.** Every language has one. Professional code ships with thousands.
+a machine can check it.**
 
 ::: {.notes}
 Lab 2's `count_below`, which the room wrote last Friday. Predict the output before running:
