@@ -4,3 +4,5 @@ numpy==2.1.*
 matplotlib==3.9.*
 jupyter==1.*
 pyyaml==6.*
+# Assembles the .pptx beside each PDF from decktape's screenshots (tools/pptx_from_screenshots.py).
+python-pptx==1.*

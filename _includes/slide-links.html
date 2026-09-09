@@ -11,7 +11,7 @@ wrap every bullet in its own paragraph.
 {%- for deck in decks -%}
 {%- unless forloop.first %}
 {% endunless -%}
-- **Slides{% if deck.date %} · {{ deck.date }}{% endif %}:** *{{ deck.title }}* — [view]({{ site.baseurl }}/slides/{{ deck.file }}.html) · [PDF]({{ site.baseurl }}/slides/{{ deck.file }}.pdf)
+- **Slides{% if deck.date %} · {{ deck.date }}{% endif %}:** *{{ deck.title }}* — [view]({{ site.baseurl }}/slides/{{ deck.file }}.html) · [PDF]({{ site.baseurl }}/slides/{{ deck.file }}.pdf) · [PowerPoint]({{ site.baseurl }}/slides/{{ deck.file }}.pptx)
 {%- endfor -%}
 {%- else -%}
 - **Slides:** posted here before the first meeting.

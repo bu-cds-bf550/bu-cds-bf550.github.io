@@ -5,7 +5,8 @@ with code that executes at render time. **One deck per meeting that has a lectur
 `unit-NN-M.qmd` for unit `NN`, session `M` — the shape the labs use. There is a lecture in every
 session, so a three-session unit has three decks and three entries in `_data/slides.yml`, each
 carrying its `session` and its `date`. Rendered decks are
-published at `https://bu-cds-bf550.github.io/slides/<name>.html` with a PDF beside each one;
+published at `https://bu-cds-bf550.github.io/slides/<name>.html` with a PDF and a PowerPoint
+file beside each one;
 the unit pages and [`/slides/`](https://bu-cds-bf550.github.io/slides/) link to them from
 [`_data/slides.yml`](../_data/slides.yml).
 
@@ -18,9 +19,9 @@ the unit pages and [`/slides/`](https://bu-cds-bf550.github.io/slides/) link to 
    with hidden or shown code, figures, output-on-the-next-slide, Graphviz/Mermaid diagrams,
    static images (`img/`), and speaker notes.
 2. Add an entry to `_data/slides.yml` — `unit`, `session`, `date` (spelled as the schedule
-   spells it), `title`, `file`. That entry makes the unit page show *view · PDF* links against
-   the right meeting and adds the row on `/slides/`.
-3. Push. CI renders the deck, exports the PDF, gates the site, and deploys.
+   spells it), `title`, `file`. That entry makes the unit page show *view · PDF · PowerPoint*
+   links against the right meeting and adds the row on `/slides/`.
+3. Push. CI renders the deck, exports the PDF and the PowerPoint, gates the site, and deploys.
 
 Conventions the decks inherit from the textbook (see its `CONVENTIONS.md`):
 
@@ -66,7 +67,7 @@ Without Docker you need [Quarto](https://quarto.org/docs/get-started/) 1.10+, Py
 export QUARTO_PYTHON=/path/to/python            # the interpreter with requirements.txt installed
 quarto preview slides                          # a deck at :4200/unit-01.html, re-rendered on save
 tools/build_slides.sh                          # all decks -> _site/slides/
-tools/build_slides.sh --pdf                    # ...plus a PDF beside each deck
+tools/build_slides.sh --pdf                    # ...plus a PDF and a .pptx beside each deck
 tools/build_slides.sh --instructor             # with speaker notes -> _instructor-slides/
 ```
 
@@ -76,6 +77,17 @@ so Jekyll never touches the sources. Because that output directory sits outside 
 project, rendering prints `WARN: Refusing to remove directory ... unit-01_files` and a warning
 about the path configuration: harmless, but it does mean stale deck assets accumulate there
 until `make clean`.
+
+### PDF and PowerPoint export
+
+The `.pptx` is **not** Quarto's `pptx` format. Pandoc's PowerPoint writer drops the `. . .`
+pauses (they print as three dots), flattens incremental lists, and ignores the theme and the
+slide attributes, so a deck exported that way is not the deck the room saw. Instead, on the same
+decktape pass that prints the PDF, `--screenshots` saves every slide as a PNG, and
+`tools/pptx_from_screenshots.py` puts them into a 16:9 `.pptx`, one picture per slide with an
+empty notes pane. It is pixel-identical to the PDF and the web deck, and its text is not
+editable or selectable — it exists so a student can take notes against the slides, not as an
+editable copy. `python-pptx` (in `requirements.txt`) does the assembly.
 
 PDF export uses [decktape](https://github.com/astefanutti/decktape) (installed, or via
 `npx`); it finds Chrome via `CHROME_PATH`, then `google-chrome`/`chromium` on `PATH`, then a
