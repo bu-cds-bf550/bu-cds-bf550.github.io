@@ -1,12 +1,14 @@
 ---
-# Session 3's deck: how a language model works (the LLM primer's detailed half — session 2
-# carried only the minimum for the weekend), then how software tests work — assert, our
+# Session 3's deck: how a language model works (the two-word model, probabilities, parameters,
+# size, the Claude family, the system prompt), then how software tests work — assert, our
 # check_that, forced inputs then relationships — taught on chapter 1's methylation simulator
 # and never on the set's problem. The run-sheet (instructor repo, lectures/unit01-runsheet.md)
 # owns the clock and says what to cut first.
 #
 # The numbers on *One family, four sizes* were read from platform.claude.com/docs on 7 Sep
-# 2026 and go stale; re-check them the morning of.
+# 2026 and go stale; re-check them the morning of. The primer's mechanics half (token
+# arithmetic, the window, rate limits, *Spend it well*) was cut on 8 Sep — the model section had
+# grown to fill the time; session 2's *Tokens* → *One chat per task* is all the room gets on it.
 title: "Unit 1 · Session 3"
 subtitle: "BF550 · Unit 1 · Session 3 — Wed Sep 9"
 ---
@@ -15,7 +17,7 @@ subtitle: "BF550 · Unit 1 · Session 3 — Wed Sep 9"
 
 ## Where we left it Friday
 
-Friday, in four lines — still true:
+LLMs from Friday:
 
 ::: {.incremental}
 - **tokens** are the unit: roughly three quarters of a word, and code is denser than prose
@@ -26,14 +28,14 @@ Friday, in four lines — still true:
 
 . . .
 
-Today: what is actually on the other end of the chat — and then *why* each of those four
-lines is true, with the numbers behind them.
+Today: what is actually on the other end of the chat — and then how you check what it hands
+you.
 
 ::: {.notes}
 Ninety seconds. If Friday landed, this is a recall check, not a re-teach — ask the room for
 the four lines rather than reading them.
 
-Run-sheet: the lecture runs 0:15–1:05 — this section, then *How Software Tests Work*. The
+Run-sheet: the lecture runs 0:15–1:00 — this section, then *How Software Tests Work*. The
 lecture is the point of today's session; the demos are what gets cut if the clock slips, and
 working time has a floor.
 :::
@@ -44,8 +46,10 @@ Friday's simulator was a **story about how one read comes to say *methylated***,
 then a draw:
 
 ```python
-if rng.random() < m:
-    methylated += 1
+methylated = 0
+for _ in range(1000):
+    if rng.random() < m:
+        methylated += 1
 ```
 
 . . .
@@ -63,12 +67,29 @@ This is the whole slide: the thing in the chat window is the same kind of object
 else today is detail on where the probabilities come from and what it costs to compute them.
 :::
 
-## The smallest one that works {.smaller}
+## The smallest one that works
 
-Train it on Friday's slides. The "model" is a list of what followed each word.
+Train it on Friday's slides. This is the **entire** training text — every word the model will
+ever have seen:
+
+```python
+# text is preprocessed to lower case and "tokenize"
+text = """
+before you analyze data , write down as runnable code the process you think
+produced it . that code is a world you control . you set the truth, run the
+experiment for free, as many times as you like, and watch how far an answer
+can wander from a truth you chose . research data has no answer key . a
+world you built is the only place you can ever check your method against a
+known answer . the story is visible in the code : each read is one molecule
+, and each molecule carries the mark with probability m . same truth every
+time . the answers wander, and now you know by how much . the estimate is
+where the hill peaks, and the honest report is how wide it is . all models
+are wrong, but some are useful .
+"""
+```
 
 ```{python}
-#| echo: true
+#| output: false
 import numpy as np
 
 text = """
@@ -83,26 +104,89 @@ and the honest report is how wide it is. All models are wrong, but some are usef
 """
 words = text.lower().replace(".", " .").replace(",", "").replace(":", "").split()
 
-def next_word_options(words, current):
-    """Every word that ever followed `current` in the text (repeats included)."""
-    options = []
-    for i in range(len(words) - 1):
-        if words[i] == current:
-            options.append(words[i + 1])
-    return options
-
-print("words in the training text:", len(words))
-print('after "the":', next_word_options(words, "the"))
+# The model: a dictionary from each word to every word that ever followed it (repeats kept).
+next_words = {}
+for i in range(len(words) - 1):
+    first, second = words[i], words[i + 1]
+    if first not in next_words:
+        next_words[first] = []
+    next_words[first].append(second)
 ```
 
 ::: {.notes}
-Nothing here is new to them: a list, a loop, an `if`, a function — lab 2's constructs.
-`next_word_options` *is* the model: for a given state (the last word), the options list is the
-probability distribution — each option is equally likely, so a word that followed "the"
-twice is twice as likely to be drawn.
+Talk through the text, not code. It is Friday's own slide lines, about 130 words, and the
+model gets nothing else — no dictionary, no grammar, no idea what a molecule is. Ask the room
+to notice the repeats: *the*, *you*, *truth*, *world*, *answer*. Repetition is the only thing
+this model can learn from; a word that appears once has exactly one thing it can ever say
+next.
+
+The hidden cell under this slide lowercases the text, splits it into words (periods kept as
+their own "word"), and builds `next_words` — the dictionary the next two slides look up.
 :::
 
-## And now it writes {.smaller}
+## Every word, and what came after it
+
+```python
+text = """
+before you analyze data , write down as runnable code the process you think
+"""
+```
+
+. . .
+
+Read the text one **pair of neighboring words** at a time: *(`before`, `you`)*, *(`you`, `analyze`)*,
+*(`analyze`, `data`)*, …
+
+. . .
+
+Now, for each word, **write down every word that ever followed it**. Keep the repeats.
+
+## Every word, and what came after it
+
+| First word | Second word |
+|---|---|
+| `before` | `you` |
+| `you` | `analyze`, `think` |
+| `analyze` | `data` |
+| `data` | `write` |
+| `write` | `down` |
+| `down` | `as` |
+| `as` | `runnable` |
+| `runnable` | `code` |
+| `the` | `process` |
+| `process` | `you` |
+| `think` | `(null)` |
+
+
+## Every word, and what came after it
+
+The rows for the most frequent words in the text:
+
+```{python}
+from collections import Counter
+
+counts = Counter(words[:-1])          # a word's last appearance has no follower
+for word, n in counts.most_common(5):
+    followers = next_words[word]
+    print(f"{word!r:>5} appears {n:2d} times, followed by: {repr(followers)}\n")
+```
+
+::: {.notes}
+The code that builds the table is hidden on purpose: it is a dictionary — one key per word,
+each value the list of words that followed it — and dictionaries (and `Counter`) are still
+ahead of them. Gloss it in a sentence if asked: a dictionary is a table you look up by name.
+The *idea* is the whole slide — a table with one row per word.
+
+Read two rows aloud. After *the*, eleven options and no repeats: every draw is a coin with
+eleven sides. After the period, *the* appears three times out of nine — so a sentence starts
+with *the* a third of the time. After *a*, *world* twice out of four. Those uneven rows are
+where the "probability for every possible next token" from two slides ago actually lives.
+
+Say the lookup once — `next_words["the"]` returns the row for *the* — because the next slide
+uses it.
+:::
+
+## And now it writes
 
 Start at *the*, draw the next word, append, repeat.
 
@@ -112,7 +196,7 @@ rng = np.random.default_rng(2)
 word = "the"
 sentence = [word]
 for _ in range(14):
-    options = next_word_options(words, word)
+    options = next_words[word]
     word = options[rng.integers(len(options))]   # one draw: the next token
     sentence.append(word)
 print(" ".join(sentence))
@@ -132,6 +216,7 @@ Predict-then-run, if the room is with you: before revealing, ask whether the sen
 grammatical and whether it will be true. The usual answer is "sort of" and "no" — which is
 exactly right, and the point of the next slide.
 
+`next_words[word]` is the row lookup from the previous slide, and
 `rng.integers(len(options))` is the only unfamiliar call; say it out loud as "pick an index."
 :::
 
@@ -156,86 +241,165 @@ print("distinct (word, next word) pairs the model knows:", len(pairs))
 
 . . .
 
-Those are its **parameters** — the numbers that make it *this* model rather than another.
-Everything you hear about a model's "size" is a count like this one.
+Small enough to print. But a list of pairs is what it *saw*. What it *knows* is one step from
+that.
 
 ::: {.notes}
-`set` is new; say "a list that keeps one of each" and move on. The point is the last line:
-"parameters" means "how many numbers make up the model," and for this one the answer is small
-enough to print.
+`set` is new; say "a list that keeps one of each" and move on. Do not say "parameters" yet —
+the next two slides earn the word. The count is here so that "small enough to print" has
+landed before the billions arrive.
 :::
 
-## Where the billions come from
+## Each row is a set of probabilities
 
-A real model is not a list of word pairs. It is **one enormous function**: the input is the
-whole window, the output is a probability for every token, and in between are **billions of
-adjustable numbers**.
+"*world*" appeared twice, and both times "*you*" came next:
 
-. . .
-
-**Training** sets those numbers. Show it text; check how much probability it gave the token
-that actually came next; nudge every number so that probability goes up a little. Repeat, over
-**trillions of tokens** of text.
+```{python}
+#| echo: true
+row = next_words["world"]
+print(row, "probability of seeing 'world' followed by 'you' =", row.count("you") / len(row))
+```
 
 . . .
 
-That produces a text predictor. A second stage — people rating answers, the numbers nudged
-toward the answers they preferred — turns the predictor into an **assistant**. The chat you
-use is the second thing, running on the first.
+"*a*" appeared four times, followed by three different words:
+
+```{python}
+#| echo: true
+row = next_words["a"]
+for w in sorted(set(row)):
+    print(f"probability of seeing 'a' followed by '{w}' = "
+          f"{row.count(w)}/{len(row)} = {row.count(w) / len(row):.2f}")
+```
+
+## Our first language model
+
+This model of word pairs is called a **bigram**: one probability for every (word, next word) pair it saw, and zero for every pair it never saw.
+
+. . .
+
+The text the model saw is called the **training data**.
+
+. . .
+
+That zero is why the model will draw "*molecule*" after "*the*" -- it wasn't in the training data.
+
+. . .
+
+In a bigram, the model is composed of one probability per pair of words in the vocabulary.
+
+. . .
+
+Each of these probabilities is called a **parameter**, that is determined from the training data.
 
 ::: {.notes}
-High level by design; no architecture. Two words to land: *parameters* (the adjustable
-numbers) and *training* (setting them from data). If someone asks about "transformers" or
-"attention," say: that is the shape of the function, and it matters enormously to the people
-building it and not at all to how you should use it.
+Read the notation aloud the first time: "the probability of *you*, given *world*." The bar is
+"given," and the word after it is the whole context this model has — one word.
 
-The second stage is why the model says "I" and answers questions instead of continuing your
-sentence; it is also where its manners come from. The system prompt, four slides on, is the
-other half of that.
+The first example is the degenerate case: a probability of 1, no draw to make. The second is
+the interesting one, and it is where the "probability for every possible next token" from the
+opening slide finally has numbers in it. Point back to the *writes* slide: `rng.integers` over a
+row with repeats *is* a draw from these probabilities; we just never wrote them down.
+
+The last line closes the *meaning* bullet from the previous slide with a number: not "it has
+no idea what a molecule is," but "P(molecule | the) is exactly zero, because that pair never
+occurred."
+:::
+
+## Parameters
+
+Every language model — this one, Claude, all of them — is a fixed collection of **numbers set
+from data**. Those numbers are its **parameters**.
+
+. . .
+
+For the two-word model, the parameters are the frequencies of word pairs: one per pair it saw, each set by counting.
+
+. . .
+
+For an LLM, the parameters are **not probabilities you can look up by word**.
+. . .
+
+What carries over: a model's **size** means *how many numbers*, and **training** means *setting them from text*.
+
+::: {.notes}
+One minute; this is the bridge from a table to a function, and the one misconception to head
+off is "a parameter is a fact the model stored." Our table invites that reading — one number
+per pair seen, and more text means more numbers — and it is exactly wrong for an LLM: the count
+is fixed by the design before any text is shown, and training moves the values, not the count.
+Say that sentence out loud even if nothing else on the slide gets said.
+
+If someone asks what a single parameter "means" in Claude: nobody knows, and that is not
+evasion — the numbers only mean anything together, the way no single base in a genome
+codes for a trait.
 :::
 
 ## How big is big {.smaller}
 
-```{python}
-#| echo: true
-models = [
-    ("our two-word model, above",        len(pairs)),
-    ("GPT-2 (2019)",                     1_500_000_000),
-    ("GPT-3 (2020)",                   175_000_000_000),
-    ("Llama 3.1, open weights (2024)", 405_000_000_000),
-]
-for label, n in models:
-    print(f"{label:>34}: {n:>18,} parameters")
-print(f"{'the human genome, for scale':>34}: {3_100_000_000:>18,} base pairs")
-```
+<!-- The bigram row must match the pair count printed on *What it got right* (138 for the
+     current text); the other counts are the published figures where the maker published one. -->
+
+| Model | Year | Parameters | How we know |
+| --- | --- | --- | --- |
+| our bigram, above | 2026 | 138 | counted on the slide |
+| GPT-2 | 2019 | 1.5 billion | published |
+| GPT-3 | 2020 | 175 billion | published |
+| GPT-4 | 2023 | ~1.8 trillion | reported, never confirmed |
+| Llama 3.1 405B | 2024 | 405 billion | published, weights downloadable |
+| DeepSeek-V3 | 2024 | 671 billion | published, weights downloadable |
+| GPT-5 | 2025 | ~2–5 trillion | estimated, never confirmed |
+| GPT-6 Astra | 2026 | ~10 trillion | reported, never confirmed |
+| Claude (any current model) | 2026 | not published | estimates run from hundreds of billions up |
 
 . . .
 
-Anthropic does **not** publish Claude's parameter count. Assume "hundreds of billions" and
-you will not be far wrong about what it implies:
-
-```{python}
-#| echo: true
-params = 405_000_000_000
-print(f"{params * 2 / 1e9:.0f} GB just to hold the numbers, at 2 bytes each")
-print(f"= {params * 2 / 80e9:.0f} of the 80 GB GPUs a datacenter runs these on")
-```
-
-. . .
-
-A model that size does not run on your laptop. It runs in a building, and you rent a slice of
-it. **That is why there is a subscription, and why there is a limit.**
+**More parameters, generally, means more and longer-range relationships between tokens the model
+can encode.** That is what "bigger" buys, and it is why the numbers on this table keep growing.
 
 ::: {.notes}
-The parameter counts are public (OpenAI's GPT-2 and GPT-3 papers; Meta's Llama 3.1 release).
-Anthropic's silence on Claude's size is deliberate and worth saying plainly — the students
-will read confident numbers online, and none of them is sourced.
+The published counts are from OpenAI's GPT-2 and GPT-3 papers and the Llama 3.1 and
+DeepSeek-V3 releases. Everything from GPT-4 down is unconfirmed, and the *How we know* column
+is the honest part of the table; say so. Anthropic's silence on Claude's size is deliberate
+and worth saying plainly — the students will read confident numbers online, and none of them
+is sourced.
 
-The genome line is for scale only: a parameter is a number, a base pair is a letter, and the
-comparison is "billions is a genome-sized count."
+Where the GPT-5 and GPT-6 numbers come from (checked 8 Sep 2026; OpenAI has disclosed neither):
+
+- GPT-5 (released Aug 2025). Samsung's head of memory, Jung-Bae Lee, put it at 3–5 trillion
+  parameters trained on 7,000 B100 GPUs, at SemiCon Taiwan in Sep 2024 — before release, and
+  from a memory supplier's planning slide, not from OpenAI. A 2026 preprint by Bojie Li (Pine
+  AI, arXiv 2604.24827) estimates size from how many obscure facts a model can recall,
+  calibrated on 89 open-weight models; it gives GPT-5 about 4.1 trillion, with a 90% interval
+  of 1.4 to 12 trillion, and GPT-5.5 about 9.7 trillion. Regressions of benchmark scores on
+  size land in the same 2–5 trillion cluster. "~2–5 trillion" is where three unrelated methods
+  agree; the honest width is a factor of three either way.
+- GPT-6 Astra (released 3–4 Sep 2026, five days before this session). The 10 trillion figure
+  is a mixture-of-experts *total* that circulated in leaks and industry reporting from mid-2026
+  on, with no named source and no model card; the one independent estimate I found puts it
+  nearer 8 trillion. The only thing OpenAI has said about scale is Aidan Clark's line that it
+  was "by far" their largest training run, the first pretrained on more than 100,000 GPUs.
+  Treat the row as "order of ten trillion, reported," and expect it to be revised.
+
+Two caveats if the room pushes: the GPT-4, GPT-5 and GPT-6 figures are mixture-of-experts
+totals, and only a fraction of those numbers is used for any one token, so the counts are not
+directly comparable to the dense Llama and DeepSeek rows; and every estimation method above
+has error bars of a factor of two to three, which is why the table says "~" and not "=".
+
+For scale, if it helps the room: the human genome is 3.1 billion base pairs, so GPT-2 is half a
+genome of numbers and Llama 3.1 is about 130 genomes. A parameter is a number and a base pair
+is a letter; the comparison is only "billions is a genome-sized count."
+
+"Generally" is doing work. Parameter count is capacity, not quality: a smaller model trained on
+more and better text routinely beats a larger one trained badly, and the 2024 open models on
+this table outperform GPT-3 at similar or smaller sizes. What is not negotiable is the direction
+— a bigram cannot encode a relationship between words twelve tokens apart no matter how much
+text you give it, because it has nowhere to put one.
+
+The old *runs in a building* point lives on in the next slide's price column: cost per token
+scales with size, and that is why there is a subscription and a limit.
 :::
 
-## One family, four sizes {.smaller}
+## One family, four sizes
 
 The current Claude lineup — one way to see what "bigger" buys and costs:
 
@@ -333,149 +497,9 @@ The second bullet is the practical one: half the room will, at some point this t
 chat why it stopped answering, and the chat is *instructed* to say it does not know. Say now
 where the answer lives.
 
-Then the bridge to the next section: "So — how much fits in that window, and what happens when
-it fills?" Friday's four lines, with numbers.
-:::
-
-# LLM Primer, continued
-
-## How big is a token, really {.smaller}
-
-**Predict first:** chapter 1 is about 3,500 words. How many tokens? And how many
-chapter 1s fit in one chat?
-
-. . .
-
-```{python}
-#| echo: true
-for label, words in [
-    ("this slide", 60),
-    ("chapter 1", 3_500),
-    ("lab 2, the whole notebook", 2_800),
-    ("a long chat about a problem set", 8_000),
-]:
-    print(f"{label:>32}: ~{round(words * 4 / 3):>7,} tokens")
-
-print(f"\na 1,000,000-token window holds ~{round(1_000_000 * 3 / 4):,} words")
-print(f"...or about {round(1_000_000 * 3 / 4 / 3_500)} copies of chapter 1")
-```
-
-::: {.notes}
-Collect the second number out loud before revealing — most rooms guess single digits, and
-the answer is ~200. That over-correction is the setup for the next two slides: the window is
-enormous, and you will still hit trouble, for reasons that are not about size.
-:::
-
-## What is in the window
-
-Everything competes for the same space:
-
-::: {.incremental}
-- the system prompt, before anything of yours
-- every message you have sent
-- every reply it has given
-- every file you attached
-- your project instructions, if you set any
-- everything its tools read for it — a web page, a file, a command's output
-:::
-
-. . .
-
-Current models on a paid plan go up to **1M tokens**; some are 500K or 200K.
-
-::: {.notes}
-Demo: attach chapter 1, ask one question about it, then point out that the chapter is now
-sitting in the window for the rest of the conversation whether the next question needs it
-or not. That is the concrete version of Friday's "it stays in there".
-:::
-
-## When the window fills
-
-Approach the limit and the conversation is **automatically summarized** — earlier messages
-get compressed to make room.
-
-. . .
-
-Two consequences, both worth feeling once:
-
-::: {.incremental}
-- the summary is **lossy** — the constraint you gave it 40 messages ago may simply be gone
-- summarizing **costs tokens**, so the longest chats burn your limit fastest
-:::
-
-. . .
-
-The fix is not a longer chat. It is **a new chat**.
-
-::: {.notes}
-Source: Anthropic's help centre, "How do usage and length limits work" — longer
-conversations that trigger automatic context management consume more of your usage limit,
-and the recommendation there is to start a new conversation.
-
-This is the slide students will remember in week 9 when a long problem-set chat goes
-sideways. It is also the mechanism behind Friday's "a long chat drifts".
-:::
-
-## Rate limits: two clocks {.smaller}
-
-Your Pro subscription runs on two limits at once:
-
-| Clock | What it is |
-| --- | --- |
-| **Session** | A rolling **five-hour** window. Resets on its own. |
-| **Weekly** | A cap across all models, resetting on a fixed day assigned to your account. |
-
-: {tbl-colwidths="[22,78]"}
-
-. . .
-
-Neither is a **message count**. What you spend per message depends on its length, what you
-attached, **how long the conversation already is**, the model, and whether extended thinking
-is on.
-
-::: {.notes}
-Settings → Usage again, live — they saw it Friday, but now they have the vocabulary for why
-the bars move at different rates: the model row of *One family, four sizes*, and the
-re-sent window.
-
-Do not quote a message count. Anthropic deliberately does not publish one, and any number
-said out loud here will be wrong by December.
-:::
-
-## Spend it well {.smaller}
-
-:::: {.columns}
-::: {.column width="50%"}
-**Burns your limit**
-
-- one endless chat for everything
-- re-pasting the same file each turn
-- attaching a whole notebook to ask about one function
-- extended thinking on a trivial question
-- tools left on that the task never needs
-:::
-::: {.column width="50%"}
-**Costs almost nothing**
-
-- one chat per task, closed when done
-- pasting the twenty lines that matter
-- saying what you want in the first message
-- restarting the chat with the *current* version of the file
-- checking Settings → Usage **before** a problem set
-:::
-::::
-
-. . .
-
-None of this makes the answers **true**. Mechanics are how you afford the tool;
-**verification is how you use it.**
-
-::: {.notes}
-Say the fifth-edit rule out loud: if you are on your fifth round of edits to the same
-function, you are paying for four dead versions on every turn. Start a fresh chat, paste
-what you have now.
-
-The last line is the handoff to *How Software Tests Work*: verification is the next section.
+Then the bridge to the next section: everything so far is what the model *is*, and none of it
+makes an answer *true* — a confident paragraph is the same operation as a correct one.
+Verification is how you use the tool, and that is *How Software Tests Work*.
 :::
 
 # How Software Tests Work
