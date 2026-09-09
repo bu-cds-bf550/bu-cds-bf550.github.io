@@ -25,5 +25,5 @@
 - unit: unit-01
   session: 3
   date: "Wed Sep 9"
-  title: "How a language model works; LLM primer, continued"
+  title: "How a language model works; how software tests work"
   file: unit-01-3
