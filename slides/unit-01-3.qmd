@@ -521,7 +521,7 @@ def count_below(values, cutoff):
     return count
 
 assert count_below([0.1, 0.4, 0.6, 0.9], 0.5) == 2
-assert count_below([], 0.5) == 0                 # an empty list: nothing to count
+assert count_below([], 0.5) == 0   # an empty list: nothing to count
 print("two claims, no complaints")
 ```
 
@@ -540,7 +540,7 @@ half the room expects the asserts to print something. They print nothing — sil
 pass.
 :::
 
-## A test that fails is the point
+## Tests should check valid claims
 
 ```{python}
 #| echo: true
@@ -551,13 +551,15 @@ assert count_below([0.5, 0.5, 0.5], 0.5) == 3
 . . .
 
 Read the error as a sentence: *the claim on this line is false.* Is 0.5 below 0.5? No — `<` is
-strict. The test just told you something precise about the code, or about what you believed.
+strict. The test just told you something precise about the code, or about what you believed about the code.
 
 . . .
 
-A failed test does not say *something is wrong*. It says **this input gives this answer, and I
-expected that one.** That is the cheapest bug detector you own — and it works on code you did
-not write.
+A failed test does not say *something is wrong*. It says **for my input, I expected a different answer than the code produced.**
+
+. . .
+
+In this case, *our claim is wrong* -- but we still don't know if the code works correctly.
 
 ::: {.notes}
 Ask before revealing: will this pass? Take a vote. The wrong votes are the point — the test
@@ -567,29 +569,23 @@ settled a disagreement in one line, which is what tests are for.
 functions, a classmate's fix.
 :::
 
-## Tests live together, and run together {.smaller}
+## Tests in this class
 
-In a real project the claims are **functions in their own file** — hundreds of them, run by one
-command (`pytest`), re-run automatically on every change. A change that breaks one does not ship.
-
-. . .
-
-In this course they are the **check cells**. Same claims, three changes: they **report** instead
-of stopping, each carries **a label in words**, and a function that does not exist yet shows ⬜.
+In our notebooks, we use **check cells**. They **report** instead of stopping,
+each carries **a label in words**, and ✅, ❌, or ⬜.
 
 ```{python}
 #| echo: true
 def check_that(label, condition):
-    print(("✅ " if condition else "❌ ") + label)
+    print(("✅ " if condition is True else "❌ ") + label)
 
-check_that("nothing is below a cutoff of 0", count_below([0.1, 0.4], 0.0) == 0)
-check_that("a value equal to the cutoff is not below it", count_below([0.5], 0.5) == 0)
-check_that("both values are below 1  (a deliberately false claim)", count_below([0.1, 0.4], 1.0) == 3)
+check_that("nothing is below a cutoff of 0",
+    count_below([0.1, 0.4], 0.0) == 0)
+check_that("a value equal to the cutoff is not below it",
+    count_below([0.5], 0.5) == 0)
+check_that("both values are below 1  (a deliberately false claim)",
+    count_below([0.1, 0.4], 1.0) == 3)
 ```
-
-. . .
-
-That is, minus the bookkeeping, the whole of the `check_that` in your notebooks.
 
 ::: {.notes}
 Two lines of code is the demystification: the ✅/❌ they have been reading all week is a
@@ -612,15 +608,13 @@ def sequence_site(m, n_reads, rng):
     return methylated
 
 rng = np.random.default_rng(3)
-check_that("m = 0: no read is methylated",     sequence_site(0.0, 80, rng) == 0)
-check_that("m = 1: every read is methylated",  sequence_site(1.0, 80, rng) == 80)
-check_that("no reads, no count",               sequence_site(0.5, 0, rng) == 0)
+check_that("m = 0: no read is methylated",
+    sequence_site(0.0, 80, rng) == 0)
+check_that("m = 1: every read is methylated",
+    sequence_site(1.0, 80, rng) == 80)
+check_that("no reads, no count",
+    sequence_site(0.5, 0, rng) == 0)
 ```
-
-. . .
-
-Randomness in the code, and yet three claims you can make **without seeing a single draw**.
-Notice what is missing: a seed that matters. Any seed gives the same answer, or the code is wrong.
 
 ::: {.notes}
 Today's check-in asked the second of these (`m=1.0, n_reads=80` returns 80): if the split was
@@ -631,45 +625,40 @@ Stays on methylation by design. Friday's set has a planted truth and a key; run 
 *its* problem here and you hand the room the reflex and the answer together.
 :::
 
-## The one in the middle is the strong one
-
-The ends catch a lot. What they miss is everything between them.
+## The first tests to write: forced inputs
 
 ```{python}
 #| echo: true
-#| output-location: slide
-rng = np.random.default_rng(5)
-previous = -1
-for m in (0.0, 0.25, 0.50, 0.75, 1.0):
-    total = 0
-    for _ in range(200):
-        total += sequence_site(m, 80, rng)
-    mean_count = total / 200
-    check_that(f"m = {m:.2f}: mean count {mean_count:6.2f} is higher than the last", mean_count > previous)
-    previous = mean_count
+rng = np.random.default_rng(3)
+check_that("m = 0: no read is methylated",
+    sequence_site(0.0, 80, rng) == 0)
+check_that("m = 1: every read is methylated",
+    sequence_site(1.0, 80, rng) == 80)
+check_that("no reads, no count",
+    sequence_site(0.5, 0, rng) == 0)
 ```
+
+Randomness in the code, and yet three claims you can make **without seeing a single draw**.
 
 . . .
 
-A claim about a **relationship that must hold everywhere in between** — more truth, more reads
-saying so — says the code got the *shape* right. Code can pass both ends and still be nonsense in
-the middle. **That is the test to write when you only write one.**
+Notice the checks don't depend on the seed -- any seed gives the same answer, or the code is wrong.
 
-::: {.notes}
-One run cannot show a relationship — 80 reads at 0.50 can beat 80 reads at 0.75 by luck — so
-the claim is about averages over 200 runs. Lab 3's section 6 has them write exactly this for a
-coin.
-:::
+## What do we check?
 
-## A test can only catch what you thought of
+The claims tests check are called *test cases*. We must decide which test cases are required and construct them.
+
+. . .
 
 ```{python}
 #| echo: true
 def fraction_below(values, cutoff):
     return count_below(values, cutoff) / 4     # the bug: 4 is only right for four values
 
-check_that("half of four values are below 0.5", fraction_below([0.1, 0.4, 0.6, 0.9], 0.5) == 0.5)
-check_that("one of five values is below 1.5",   fraction_below([1, 2, 3, 4, 5], 1.5) == 0.2)
+check_that("half of four values are below 0.5",
+    fraction_below([0.1, 0.4, 0.6, 0.9], 0.5) == 0.5)
+check_that("one of five values is below 1.5",
+    fraction_below([1, 2, 3, 4, 5], 1.5) == 0.2)
 ```
 
 . . .
