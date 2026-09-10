@@ -40,18 +40,15 @@ you can run it and ask what it produces.
 
 Every world from last unit was a model. *Model* is the word from here on.
 
-. . .
-
-The model in which nothing is going on is the **null model**.
-
 ::: {.notes}
 Forty seconds. This slide is the opening paragraph of chapter 2's *The story*, said aloud: the
-same object, with the field's word for it. Chapter 1 is frozen this offering and keeps *world*;
+same object, with the field's word for it. Only *model* is introduced here; the next slide arrives
+at the null model by way of her problem. Chapter 1 is frozen this offering and keeps *world*;
 the repair is logged in bf550-instructor#39. Do not expand this into a lecture on what a model
 is. The definition is one sentence, and the beats that follow show what it means in practice.
 :::
 
-## Why a null model?
+## Every site differs
 
 Her 1,200 sites: **every one** differs between tumor and normal.
 
@@ -71,8 +68,13 @@ Her data alone cannot answer it. Every observed difference mixes biology with ac
 
 A model in which nothing is going on can: build it, run it, and see what accident alone produces.
 
+. . .
+
+That model is the **null model**.
+
 ::: {.notes}
-The chapter's *The problem*, as the reason a null model exists at all. Chapter 1 measured how much
+The chapter's *The problem*, as the reason a null model exists at all; the term arrives on the
+last reveal, after the need for it. Chapter 1 measured how much
 one site's estimate moves between reruns; with two groups of thirty at 1,200 sites, that movement
 alone makes every site differ. Real data cannot separate the two sources of a difference, because
 it only ever shows their sum. A model you built can be set to have no biology in it, so whatever it
