@@ -26,6 +26,26 @@ session it serves.
 
 # Null distributions
 
+## The problem
+
+Chapter 1's methylation project has grown.
+
+. . .
+
+**1,200 CpG sites**, each measured in **30 tumor** and **30 normal** samples: a read count and a methylated fraction at every site in every sample.
+
+. . .
+
+She wants the sites where tumor and normal **genuinely differ**. The top of that list gets validated by pyrosequencing, at real cost per site.
+
+::: {.notes}
+Sixty seconds, so the room shares the problem before any term is introduced. The measurement at
+each site is the one they built in chapter 1: reads at a site, a fraction methylated. The new thing
+is scale, 1,200 sites and two groups of thirty, and the question is which of those sites to spend
+validation money on. Do not say "differ" means anything yet; the next slides are about what a
+difference means when every site shows one.
+:::
+
 ## From worlds to models
 
 Chapter 1 called the thing you built a **world**: a story of how the data came to be, written as
