@@ -46,8 +46,11 @@ you can run it and ask what it produces.
 
 . . .
 
-Every world you built last unit was a model, and *model* is the word from here on. The model in
-which nothing is going on is the **null model**.
+Every world from last unit was a model. *Model* is the word from here on.
+
+. . .
+
+The model in which nothing is going on is the **null model**.
 
 ::: {.notes}
 Forty seconds. This slide is the opening paragraph of chapter 2's *The story*, said aloud: the
@@ -127,8 +130,7 @@ print("two claims, no complaints")
 
 . . .
 
-`assert` is followed by a claim. If the claim is true, nothing happens. If the claim is false, the
-program **stops** on that line.
+`assert`, then a claim. True: nothing happens. False: the program **stops** on that line.
 
 . . .
 
@@ -150,22 +152,26 @@ assert count_below([0.5, 0.5, 0.5], 0.5) == 3
 
 . . .
 
-Read the error as a sentence: *the claim on this line is false.* Is 0.5 below 0.5? No, because
-`<` is strict. The test has told you something precise, either about the code or about what you
-believed about the code.
+Read the error as a sentence: *the claim on this line is false.*
 
 . . .
 
-A failed test says **for this input, I expected a different answer than the code produced.**
+Is 0.5 below 0.5? No. `<` is strict.
 
 . . .
 
-Here the claim is wrong. Correcting the claim and passing still would not show that the code is
-right for every input.
+A failed test says: **for this input, I expected a different answer.**
+
+. . .
+
+Here the *claim* was wrong. The code may still be wrong for other inputs.
 
 ::: {.notes}
 Ask before revealing whether the assert will pass, and take a vote. The wrong votes are useful:
-the test settled the disagreement in one line, which is what tests are for.
+the test settled the disagreement in one line, which is what tests are for. Say aloud what the
+slide leaves out: the test told you something precise, either about the code or about what you
+believed about the code, and correcting the claim and passing still would not show that the code
+is right for every input.
 
 The phrase *code you did not write* covers the whole term: the agent's drafts, the chapter's
 functions, a classmate's fix.
@@ -173,8 +179,8 @@ functions, a classmate's fix.
 
 ## Tests in this class
 
-Our notebooks use **check cells**. A check cell **reports** instead of stopping, carries **a label
-in words**, and prints ✅, ❌, or ⬜.
+Our notebooks use **check cells**: they **report** instead of stopping, with **a label in words**
+and ✅, ❌, or ⬜.
 
 ```{python}
 #| echo: true
@@ -241,17 +247,15 @@ check_that("no reads, no count",
     sequence_site(0.5, 0, rng) == 0)
 ```
 
-The code draws random numbers, and all three claims hold **without seeing a single draw**.
+Random draws in the code, and three claims that hold **without seeing a single draw**.
 
 . . .
 
-None of the checks depends on the seed. Any seed gives the same three answers, or the code is
-wrong.
+No check depends on the seed. Any seed gives the same three answers, or the code is wrong.
 
 ## What do we check?
 
-The claims a test checks are called *test cases*. Deciding which cases are required, and
-constructing them, is the work of testing.
+The claims a test checks are its *test cases*. Choosing them is the work.
 
 . . .
 
@@ -268,40 +272,42 @@ check_that("one of five values is below 1.5",
 
 . . .
 
-The first claim passes, and it is the one everybody writes first. The bug only shows on a list
-whose length is not four, and the obvious test uses a list of four.
+The first claim passes, and everybody writes it first. The bug shows only on a list that is not
+four long.
 
 . . .
 
-A test finds only what its input can reach. Lab 3's section 5 asked you to catch this bug on
-Wednesday with no lecture behind you, and the input you chose is what found it.
+A test finds only what its input can reach.
 
 ::: {.notes}
-Lab 3's `fraction_below`, with the `/ 4` the lab told them to distrust. Ask who caught it and how.
-The answer you want is "I used a list that was not four long." The lesson is about choosing inputs
-rather than about this bug: when you test code you did not write, ask what input the author was
-picturing, and pick a different one.
+Lab 3's `fraction_below`, with the `/ 4` the lab told them to distrust. Ask who caught it on
+Wednesday and how. The answer you want is "I used a list that was not four long," and the input
+they chose is what found the bug; say so, because the slide does not. The lesson is about choosing
+inputs rather than about this bug: when you test code you did not write, ask what input the author
+was picturing, and pick a different one.
 :::
 
 ## Where you will meet them
 
 ::: {.incremental}
-- **Wednesday, lab 3.** Sections 4 to 7 asked for claims about code we gave you, one piece of
-  which had a bug, then the forced inputs and the relationship for a simulator. Finish them if you
-  did not.
-- **Today's problem set.** A check cell sits under every code question, written by us in this
-  form. Run it as often as you like. It only ever calls your functions.
-- **From set 5.** The question states the cases in prose, and the check cell is yours to write.
+- **Wednesday, lab 3.** Claims for code we gave you, one piece with a bug; then forced inputs
+  for a simulator.
+- **Today's problem set.** A check cell under every code question, written by us, calling only
+  your functions.
+- **From set 5.** The cases in prose; the check cell is yours to write.
 :::
 
 . . .
 
 Code the model drafted is code you did not write. The checks are how you find out whether it is
-right when there is no answer key.
+right.
 
 ::: {.notes}
 Go straight to *PS2 opens today*. The second bullet is that slide made concrete: the check cell
-under every question is `check_that` with a label, and it only ever calls their functions.
+under every question is `check_that` with a label, and it only ever calls their functions. Two
+things the slide leaves for you to say: finish lab 3's sections 4 to 7 if you did not, and run the
+set's check cells as often as you like. There is no answer key for research code, and the checks
+are what replaces one.
 :::
 
 ## PS2 opens today
