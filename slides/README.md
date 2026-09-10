@@ -22,6 +22,9 @@ the unit pages and [`/slides/`](https://bu-cds-bf550.github.io/slides/) link to 
    spells it), `title`, `file`. That entry makes the unit page show *view · PDF · PowerPoint*
    links against the right meeting and adds the row on `/slides/`.
 3. Push. CI renders the deck, exports the PDF and the PowerPoint, gates the site, and deploys.
+   The PDF and PowerPoint of a deck whose source, theme, and tooling have not changed are
+   reused from a cache (`.deck-export-cache/`, persisted between CI runs), so a push that
+   touches one deck re-exports one deck. `make clean` empties the cache locally.
 
 Conventions the decks inherit from the textbook (see its `CONVENTIONS.md`):
 
