@@ -51,6 +51,35 @@ the repair is logged in bf550-instructor#39. Do not expand this into a lecture o
 is. The definition is one sentence, and the beats that follow show what it means in practice.
 :::
 
+## The null model
+
+One site is chapter 1's story told twice: tumor's true fraction $m$, normal's true fraction $m$.
+
+. . .
+
+The **same** $m$ in both groups, because at this site nothing is going on.
+
+. . .
+
+The whole experiment: that story repeated **1,200 times**, one $m$ per site.
+
+. . .
+
+The model in which nothing is going on is the **null model**, and this unit builds it as code you can run.
+
+. . .
+
+It answers a question her real data cannot: *what do purely accidental differences look like?*
+
+::: {.notes}
+The chapter's *The story*, second and third paragraphs, as five reveals. The slide shows the unit's
+operation, *repeat*: nothing new is built, chapter 1's simulator is run twice per site with the
+same truth, and then 1,200 times over. Say what the null model is for before the code appears:
+at this depth, with these group sizes, across this many sites, what do differences produced by
+nothing look like? Her observed differences are then compared against the ones the null model
+produces. Ninety seconds; the next slide runs it.
+:::
+
 ## What the null model produces {.smaller}
 
 30 samples a group, 25 reads a sample, 1,200 sites, and **no site differs**.
