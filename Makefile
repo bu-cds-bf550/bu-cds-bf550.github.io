@@ -38,4 +38,4 @@ image:
 	$(COMPOSE) build
 
 clean:
-	rm -rf _site _instructor-slides .jekyll-cache .jekyll-metadata slides/_freeze slides/.quarto
+	rm -rf _site _instructor-slides .jekyll-cache .jekyll-metadata slides/_freeze slides/.quarto .deck-export-cache

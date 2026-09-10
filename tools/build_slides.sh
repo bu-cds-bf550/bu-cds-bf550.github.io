@@ -44,8 +44,32 @@ case "$mode" in
     if command -v decktape >/dev/null 2>&1; then decktape=(decktape); else decktape=(npx -y decktape@3); fi
     shots="$(mktemp -d "${TMPDIR:-/tmp}/deck-shots.XXXXXX")"
     trap 'rm -rf "$shots"' EXIT
+    # The export cache. decktape spends about three seconds per slide, for every slide of every
+    # deck, so a site of fifteen decks pays twelve minutes per build even when one deck changed.
+    # Each deck's PDF and .pptx are kept under $cache, named by a hash of everything the export
+    # depends on: the deck source, the shared theme and config, the images, the assembler, and
+    # the quarto and decktape versions. A deck whose key is already present is copied out of the
+    # cache instead of re-exported. CI persists the directory between runs (actions/cache in
+    # .github/workflows/jekyll.yml); locally it lives beside _site and `make clean` removes it.
+    cache="${DECK_EXPORT_CACHE:-.deck-export-cache}"
+    mkdir -p "$cache"
+    tool_versions="$(quarto --version 2>/dev/null; "${decktape[@]}" version 2>/dev/null)"
+    shared_inputs=(slides/_quarto.yml slides/strip-notes.lua tools/pptx_from_screenshots.py)
+    while IFS= read -r f; do shared_inputs+=("$f"); done < <(find slides/theme slides/img -type f 2>/dev/null | sort)
+    keep=()
+    exported=0; reused=0
     for html in _site/slides/*.html; do
       [[ "$(basename "$html")" == "index.html" ]] && continue   # the Jekyll index page, not a deck
+      name="$(basename "${html%.html}")"
+      key="$( { printf '%s\n' "$tool_versions"; cat "slides/$name.qmd" "${shared_inputs[@]}"; } | sha256sum | cut -c1-16)"
+      entry="$cache/$name-$key"
+      keep+=("$name-$key")
+      if [[ -f "$entry.pdf" && -f "$entry.pptx" ]]; then
+        cp "$entry.pdf" "${html%.html}.pdf"
+        cp "$entry.pptx" "${html%.html}.pptx"
+        reused=$((reused + 1))
+        continue
+      fi
       # One pass through the deck prints the PDF and screenshots every slide; the screenshots
       # become the .pptx. decktape joins --screenshots-directory with the PDF's full path and
       # does not create that subtree, so make it -- the assembler searches $shots recursively.
@@ -54,7 +78,19 @@ case "$mode" in
           --chrome-arg=--no-sandbox --chrome-arg=--disable-gpu \
           --screenshots --screenshots-directory "$shots" --screenshots-size 1920x1080 \
           "$html" "${html%.html}.pdf"
-      python3 tools/pptx_from_screenshots.py "$shots" "$(basename "${html%.html}")" "${html%.html}.pptx"
-    done ;;
+      python3 tools/pptx_from_screenshots.py "$shots" "$name" "${html%.html}.pptx"
+      cp "${html%.html}.pdf" "$entry.pdf"
+      cp "${html%.html}.pptx" "$entry.pptx"
+      exported=$((exported + 1))
+    done
+    # Keep only the entries this build used, so the cache holds one PDF and one .pptx per deck.
+    for f in "$cache"/*.pdf "$cache"/*.pptx; do
+      [[ -e "$f" ]] || continue
+      stem="$(basename "${f%.*}")"
+      wanted=no
+      for k in "${keep[@]}"; do [[ "$k" == "$stem" ]] && wanted=yes && break; done
+      [[ "$wanted" == no ]] && rm -f "$f"
+    done
+    echo "build_slides: exported $exported deck(s), reused $reused from $cache" ;;
   *) echo "usage: tools/build_slides.sh [--pdf|--instructor]" >&2; exit 2 ;;
 esac

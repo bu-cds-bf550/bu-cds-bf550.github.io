@@ -59,6 +59,17 @@ jobs:
         uses: quarto-dev/quarto-actions/setup@v2
         with:
           version: 1.10.18
+      # The PDF and .pptx of every deck, keyed on the deck's source and the shared theme and
+      # tooling (tools/build_slides.sh --pdf). A unique key each run means the post step always
+      # saves the updated directory; restore-keys picks up the most recent one. Without this,
+      # decktape re-prints every slide of every deck on every push, about three seconds a slide.
+      - name: Restore the deck export cache
+        uses: actions/cache@v4
+        with:
+          path: .deck-export-cache
+          key: deck-exports-${{ github.run_id }}
+          restore-keys: |
+            deck-exports-
       # One script builds the whole site -- Jekyll, then the slide decks and their PDFs, then
       # the gate on the built output -- and `make site` runs the same script in the Dockerfile's
       # replica of this job, so local and deployed builds cannot drift.
