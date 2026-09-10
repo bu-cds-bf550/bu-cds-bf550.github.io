@@ -1,0 +1,229 @@
+---
+# Session 2 of unit 2. Two beats on chapter 2 (the p-value as a count; the graded list) and the
+# notation, then working time on lab 5 and PS2. No check-in slide: the instructor delivers the
+# check-in separately. The run-sheet (bf550-instructor lectures/unit02-runsheet.md) owns the
+# clock and cites these headings. Chapter chunks are reused verbatim with the chapter's seeds
+# (7 and 19); the p-of-zero chunk is the deck's own and reuses the same 2,000 null runs.
+title: "Repeat: a p-value is a count, and the list it builds"
+subtitle: "BF550 · Unit 2 · Session 2 — Mon Sep 14"
+---
+
+## Under construction {.center}
+
+<!-- banner:under-construction -->
+
+⚠️ This deck is a **draft** — not yet instructor-reviewed, subject to change until the
+session it serves.
+
+# A p-value is a count; grade the list
+
+```{python}
+#| echo: false
+#| output: false
+import numpy as np
+import matplotlib.pyplot as plt
+
+def group_fraction(m, n_samples, n_reads, rng):
+    """Average observed methylation across one group's samples."""
+    counts = rng.binomial(n_reads, m, n_samples)   # one methylated-read count per sample
+    fractions = counts / n_reads
+    return fractions.mean()
+
+def null_differences(m, n_sims, rng):
+    """Many runs of one site's null model: same true m for both groups."""
+    diffs = []
+    for _ in range(n_sims):
+        tumor = group_fraction(m, 30, 25, rng)
+        normal = group_fraction(m, 30, 25, rng)
+        diffs.append(tumor - normal)
+    return np.array(diffs)
+```
+
+## Where we left it
+
+- A model in which **no site differs** still produced differences a person would call real.
+- Its 1,200 p-values were **flat**, and dozens fell below 0.05.
+- Under the null model, a p-value below 0.05 occurs one time in twenty.
+
+::: {.notes}
+Three minutes, as a recall check rather than a re-teach: ask the room for the three lines. Then,
+with no slide, Friday's open questions: who has PS2 cloned and its environment built, and whose
+first check cell is ⬜ and why.
+:::
+
+## A p-value is a count, not a verdict {.smaller}
+
+One site, true fraction 0.5 in both groups, observed difference **0.045**, 2,000 null runs.
+
+**Predict first:** what fraction of null runs is at least that far from zero, in either direction?
+
+```{python}
+#| echo: true
+rng = np.random.default_rng(7)
+m, observed = 0.5, 0.045
+null = null_differences(m, 2000, rng)
+at_least_as_extreme = np.abs(null) >= abs(observed)   # True/False per run, either direction
+p = at_least_as_extreme.mean()                        # fraction of True = the p-value
+print(f"nothing produces a difference ≥ {observed} about {p:.1%} of the time")
+```
+
+::: {.notes}
+The chapter's *Playing with the story* chunk, seed 7; `group_fraction` and `null_differences` are
+defined off-slide, as in the chapter. Collect predictions before running. The check-in an hour ago
+read this same computation as a five-run loop; lab 5 opens it back up into a loop this afternoon,
+and say so.
+:::
+
+## A p-value is a count, not a verdict {.smaller}
+
+**Predict first:** the same computation, for an observed difference of exactly **0.0**.
+
+```{python}
+#| echo: true
+observed = 0.0
+print(f"p-value for an observed difference of {observed}: {np.mean(np.abs(null) >= abs(observed)):.1%}")
+```
+
+. . .
+
+Nothing in this code mentions 0.05.
+
+. . .
+
+A p-value is a **share of the null distribution**. The verdict is a separate decision.
+
+::: {.notes}
+Same 2,000 runs. Every run is at least as far from zero as zero, so the p-value is 1.0, and that is
+correct: a difference of zero is the least surprising result there is. Anyone calling it a bug is
+pattern-matching on "p = 1 looks broken," which is the conversation to have if the room splits.
+The last line is the correction for the check-in's miss, "it checks whether the result is
+significant": the code computes a proportion, and reading it as a verdict is the substitution that
+turns a p-value into a stamp of approval in a paper. Seven minutes for both slides.
+:::
+
+## Grade the list {.smaller}
+
+**60 sites** where tumor truly runs 0.07 higher, among **1,140** where nothing happens.
+
+**Predict first:** at p < 0.05, how many of the 60 make the list? How many of the 1,140?
+
+```{python}
+#| echo: true
+#| output-location: slide
+rng = np.random.default_rng(19)
+base = rng.uniform(0.2, 0.8, 1200)
+n_true, delta = 60, 0.07                     # sites 0..59 truly differ
+pvals = np.empty(1200)
+for i, m in enumerate(base):
+    if i < n_true:
+        m_tumor = m + delta        # one of the 60 sites that truly differ
+    else:
+        m_tumor = m                # nothing going on at this site
+    obs = group_fraction(m_tumor, 30, 25, rng) - group_fraction(m, 30, 25, rng)
+    null = null_differences(m, 300, rng)
+    pvals[i] = np.mean(np.abs(null) >= abs(obs))
+
+hits = pvals < 0.05
+real, false = hits[:n_true].sum(), hits[n_true:].sum()
+fig, ax = plt.subplots(figsize=(6, 2.2))
+ax.barh(["false discoveries", "real discoveries"], [false, real],
+        color=["#eb6834", "#2a78d6"])
+for y, v in enumerate([false, real]):
+    ax.text(v + 1.5, y, str(v), va="center")
+ax.set_xlabel("sites reported at p < 0.05")
+ax.spines[["top", "right"]].set_visible(False)
+plt.show()
+print(f"list: {hits.sum()} sites — {real} real, {false} false — {false/hits.sum():.0%} of the list is noise")
+```
+
+::: {.notes}
+The chapter's *Where the numbers come from* chunk, seed 19. Collect both numbers aloud before
+advancing. The wrong answer to listen for is "most of the 60, and a handful"; Friday's arithmetic
+says the handful is about 57. You know which sites are which because you set them, which is the
+only reason a list can be graded at all.
+:::
+
+## Grade the list
+
+Every p-value did what it claims.
+
+. . .
+
+Almost **half the list is noise**.
+
+. . .
+
+Real effects were rare, and questions were plentiful.
+
+::: {.notes}
+The chapter's second misconception: if each test is honest, the list is honest. Sixty truths
+cannot outnumber the accidents that 1,140 null sites generate at one in twenty. The fraction of
+the list that is noise depends on the threshold and on how rare true effects are, and nobody knows
+the second in advance. Eight minutes for the two *Grade the list* slides.
+:::
+
+## The accounting rule
+
+> *the p-value is the probability that the null model produces a result at least as extreme as the
+> one observed.*
+
+. . .
+
+$$\mathbb{E}[\text{false positives}] = m_{\text{null}} \cdot \alpha$$
+
+. . .
+
+- $\alpha$: the **threshold**, the `0.05` in `pvals < 0.05`
+- $m_{\text{null}}$: the number of tests where the null model is the truth
+- $\mathbb{E}[\,\cdot\,]$: the long-run average over many runs of the model
+
+. . .
+
+1,140 × 0.05 = 57 expected; the run gave 50. 1,200 × 0.05 = 60 is the ceiling, known before any data.
+
+::: {.notes}
+One slide, no code; the chapter's *The notation*. Read each phrase of the p-value sentence with
+its meaning: *null model* is the story of nothing happening as code you can run, *at least as
+extreme* covers both directions unless the direction was fixed before looking, *produces* means you
+get the probability by running the model. Then the three symbols, read off the run just shown.
+The $m$ for a count of tests collides with the methylation fraction $m$; the subscript is the
+reminder. Whoever wrote 4,000 × 0.01 = 40 on Friday's check-in is the person to call on.
+:::
+
+## 640 − 600 = 40
+
+> *"Of 12,000 genes tested, 640 reached p < 0.05. Since chance predicts 600, we identified 40 genes
+> whose expression truly changed."*
+
+. . .
+
+The arithmetic is right. What is wrong?
+
+::: {.notes}
+Practice problem 2.4, as the closing question. Take three answers. The subtraction is about counts
+and the claim is about individual genes, and nothing in the analysis connects the two: the 640
+names are about 600 accidents and about 40 truths mixed together, and no gene on the list is more
+than about 6% likely to be one of the 40 without further evidence. This slide is the first cut if
+the clock slips; the worked solution is in the reading. Thirteen minutes for the three slides from
+*The accounting rule* to here, and the lecture ends by 0:30.
+:::
+
+## Working time — the rest of today
+
+1. [Lab 5 · Counting your way to a p-value](https://bu-cds-bf550.github.io/labs/unit-02-2/)
+2. Problem Set 2
+
+::: {.notes}
+Lab 5 is the chapter's p-value opened back up into a loop, which is exactly the first beat's
+fraction; say so. Then PS2. Floor for this block: 35 minutes, and it has seventy.
+:::
+
+## Before next session
+
+- **PS2 due Fri Sep 18**, start of class
+- Wednesday: one direction or two, and when the null model is wrong
+
+::: {.notes}
+Say the due date aloud. Wednesday opens with the same five-run null read the other way, then a
+twenty-minute lecture on the three ways the null model can be wrong.
+:::

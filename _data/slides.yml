@@ -72,3 +72,13 @@
   date: "Wed Oct 7"
   title: "Naive Bayes: classification as a generative story (draft)"
   file: unit-05-3
+- unit: unit-02
+  session: 2
+  date: "Mon Sep 14"
+  title: "Repeat: a p-value is a count, and the list it builds (draft)"
+  file: unit-02-2
+- unit: unit-02
+  session: 3
+  date: "Wed Sep 16"
+  title: "Repeat: one direction or two, and when the null model is wrong (draft)"
+  file: unit-02-3

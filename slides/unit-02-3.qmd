@@ -1,0 +1,210 @@
+---
+# Session 3 of unit 2. Two executed beats on chapter 2 (one direction or two; choosing the
+# direction after looking) and two prose slides (correlated neighbors; the null model's noise),
+# leading into chapter 3. No check-in slide: the instructor delivers the check-in separately.
+# The run-sheet (bf550-instructor lectures/unit02-runsheet.md) owns the clock and cites these
+# headings. Chapter chunks are reused verbatim with the chapter's seeds (7 and 23).
+title: "Repeat: one direction or two, and when the null model is wrong"
+subtitle: "BF550 · Unit 2 · Session 3 — Wed Sep 16"
+---
+
+## Under construction {.center}
+
+<!-- banner:under-construction -->
+
+⚠️ This deck is a **draft** — not yet instructor-reviewed, subject to change until the
+session it serves.
+
+# When the null model is wrong
+
+```{python}
+#| echo: false
+#| output: false
+import numpy as np
+import matplotlib.pyplot as plt
+
+def group_fraction(m, n_samples, n_reads, rng):
+    """Average observed methylation across one group's samples."""
+    counts = rng.binomial(n_reads, m, n_samples)   # one methylated-read count per sample
+    fractions = counts / n_reads
+    return fractions.mean()
+
+def null_differences(m, n_sims, rng):
+    """Many runs of one site's null model: same true m for both groups."""
+    diffs = []
+    for _ in range(n_sims):
+        tumor = group_fraction(m, 30, 25, rng)
+        normal = group_fraction(m, 30, 25, rng)
+        diffs.append(tumor - normal)
+    return np.array(diffs)
+```
+
+## Where we left it
+
+- A p-value is a **share of the null distribution**; the verdict is a separate decision.
+- The graded list was almost half noise, and every p-value did what it claims.
+- Every p-value so far counted both directions.
+
+::: {.notes}
+Three minutes, as a recall check. The check-in's two prints, 0.4 on Monday and 0.2 today from the
+same five runs, are the comparison this lecture runs at scale. Then, with no slide: where PS2 is
+stuck two days out. The read-this-code question is where the confusion concentrates; see the
+run-sheet's *Do not give away*.
+:::
+
+## One direction or two? {.smaller}
+
+The same 2,000 null runs as Monday. Two-sided, the p-value for 0.045 was about 8%.
+
+**Predict first:** the one-sided "tumor higher" p-value, from the same runs?
+
+```{python}
+#| echo: true
+rng = np.random.default_rng(7)
+m, observed = 0.5, 0.045
+null = null_differences(m, 2000, rng)                # the same 2,000 runs as before
+
+both_tails = np.abs(null) >= abs(observed)           # True where either direction is as extreme
+upper_tail = null >= observed                        # True only where "tumor higher" is as extreme
+print(f"two-sided p = {both_tails.mean():.1%}   one-sided p = {upper_tail.mean():.1%}")
+print(f"one-sided p, had the site gone the other way by 0.045: {np.mean(null >= -observed):.1%}")
+```
+
+::: {.notes}
+The chapter's *One direction or two?* chunk, seed 7. Collect before running; "the same" and
+"half" both come up. The one-sided p-value is almost exactly half, because the null model is
+symmetric: it overshoots upward about as often as downward, and the one-sided count ignores the
+downward half. The third print is the cost: a one-sided test reports nothing in the other
+direction.
+:::
+
+## One direction or two?
+
+```{python}
+def tail_plot(ax, mask, title):
+    """Every null run in gray, then the runs this p-value counts in color."""
+    edges = np.linspace(-0.1, 0.1, 41)
+    ax.hist(null, bins=edges, color="#c9c7c3")
+    ax.hist(null[mask], bins=edges, color="#eb6834")
+    ax.axvline(observed, color="#52514e", ls=":", lw=1.5)
+    ax.set_title(title, fontsize=10)
+    ax.set_xlabel("difference (tumor − normal)")
+    ax.spines[["top", "right"]].set_visible(False)
+
+fig, (left, right) = plt.subplots(1, 2, figsize=(8, 2.8), sharey=True)
+tail_plot(left, both_tails, "two-sided: both tails count")
+tail_plot(right, upper_tail, "one-sided: only \"tumor higher\" counts")
+left.set_ylabel("runs")
+plt.show()
+```
+
+. . .
+
+Both are honest, **if the direction was written down before the difference was computed**.
+
+::: {.notes}
+The chapter's figure, same runs. What makes a one-sided p-value legitimate is when the direction
+was chosen: the reason comes from outside the data, as when a CpG sits in a promoter known to gain
+methylation in tumors, and it is written down before the difference is computed. Two-sided is the
+default because it needs no such justification. Six minutes for both slides.
+:::
+
+## Choosing after looking {.smaller}
+
+An analyst tests "up" when the difference came out up, and "down" when it came out down. Threshold 0.05, 2,000 null sites.
+
+**Predict first:** what fraction gets flagged?
+
+```{python}
+#| echo: true
+rng = np.random.default_rng(23)
+flagged = 0
+for _ in range(2000):
+    obs = group_fraction(0.5, 30, 25, rng) - group_fraction(0.5, 30, 25, rng)
+    null = null_differences(0.5, 200, rng)
+    if obs > 0:                          # direction chosen after looking:
+        p = np.mean(null >= obs)         #   the difference went up, so test "up"
+    else:
+        p = np.mean(null <= obs)         #   the difference went down, so test "down"
+    if p < 0.05:
+        flagged += 1
+print(f"accident rate with direction-after-looking: {flagged/2000:.3f}  (honest target: 0.05)")
+```
+
+::: {.notes}
+The chapter's first failure in *When the model is wrong*, seed 23. The room that did the check-in
+says "double." The rate comes out short of the exact double that continuous measurements would
+give, because counts are discrete, and the chapter says so. At 1,200 sites the check-in's
+idealized arithmetic says about 120 instead of 60; the chapter's discrete counts land nearer 100;
+the lesson is the same either way.
+:::
+
+## Choosing after looking
+
+Every line in that loop is correct, and the procedure is wrong.
+
+. . .
+
+The question asked depended on the answer.
+
+. . .
+
+The same failure in other forms: a threshold, a subgroup, or an outcome chosen after looking.
+
+::: {.notes}
+The unit's central lesson, and the slide never to cut. Name the general form once and say it
+returns in unit 6, where the same failure appears in evaluation. Six minutes for both slides.
+:::
+
+## Neighbors move together
+
+- Methylation comes in regions, so neighboring CpG sites tend to move together.
+- The null model drew every site independently.
+- Ten significant neighbors may be **one biological event, reported ten times**.
+
+. . .
+
+When discoveries arrive in clusters, count events rather than tests.
+
+::: {.notes}
+The chapter's third misconception: 1,200 tests are 1,200 independent questions. Correlation leaves
+each individual p-value correct and changes what a list means, and the accident count varies far
+more between scans than the independent-sites arithmetic predicts. Geneticists call the
+chromosome version *linkage*. Two minutes; if the clock has slipped, the last line alone.
+:::
+
+## The null model's noise
+
+- This unit's null model: one true fraction per site, read-sampling variability only.
+- Real samples vary for more reasons: handling, cell composition, day-to-day effects.
+- So every accident count this unit is a **floor**, not an estimate.
+
+. . .
+
+What happens when the truth itself varies under the null: **chapter 3**, read before Friday.
+
+::: {.notes}
+Three minutes, and the last line is the reading assignment. The real null distribution is wider
+than the one simulated here, and chapter 3 measures how much that widening changes a scan like
+this one. This slide is never cut.
+:::
+
+## Working time — the rest of today
+
+1. [Lab 6 · Reading drills: loops that count worlds](https://bu-cds-bf550.github.io/labs/unit-02-3/)
+2. Problem Set 2
+
+::: {.notes}
+Floor for this block: 35 minutes, and it has seventy-three. Ask how far people are on PS2 and
+write the answer down; it is the only time measurement before PS3 opens.
+:::
+
+## Before next session
+
+- **PS2 due Friday Sep 18**, start of class
+- Read **chapter 3** before Friday
+- Friday opens unit 3 and its problem set, on this unit's problem, with our design in the notebook
+
+::: {.notes}
+Say the due date aloud. Friday opens unit 3 and PS3; nothing about PS3's problem today.
+:::
