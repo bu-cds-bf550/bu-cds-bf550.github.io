@@ -51,6 +51,35 @@ the repair is logged in bf550-instructor#39. Do not expand this into a lecture o
 is. The definition is one sentence, and the beats that follow show what it means in practice.
 :::
 
+## Why a null model?
+
+Her 1,200 sites: **every one** differs between tumor and normal.
+
+. . .
+
+Two groups of thirty differ at every site by sampling variability alone, even where the biology is identical.
+
+. . .
+
+So the question is narrower: **which differences are larger than two identical groups would show?**
+
+. . .
+
+Her data alone cannot answer it. Every observed difference mixes biology with accident.
+
+. . .
+
+A model in which nothing is going on can: build it, run it, and see what accident alone produces.
+
+::: {.notes}
+The chapter's *The problem*, as the reason a null model exists at all. Chapter 1 measured how much
+one site's estimate moves between reruns; with two groups of thirty at 1,200 sites, that movement
+alone makes every site differ. Real data cannot separate the two sources of a difference, because
+it only ever shows their sum. A model you built can be set to have no biology in it, so whatever it
+produces is accident alone, and her differences can be read against that. Ninety seconds; the next
+slide says what that model is.
+:::
+
 ## The null model
 
 One site is chapter 1's story told twice: tumor's true fraction $m$, normal's true fraction $m$.
