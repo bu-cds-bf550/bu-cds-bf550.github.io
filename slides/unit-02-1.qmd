@@ -95,7 +95,7 @@ produces is accident alone, and her differences can be read against that. Ninety
 slide says what that model is.
 :::
 
-## The null model
+## The methylation story null model
 
 One site is chapter 1's story told twice: tumor's true fraction $m$, normal's true fraction $m$.
 
@@ -106,10 +106,6 @@ The **same** $m$ in both groups, because at this site nothing is going on.
 . . .
 
 The whole experiment: that story repeated **1,200 times**, one $m$ per site.
-
-. . .
-
-The model in which nothing is going on is the **null model**, and this unit builds it as code you can run.
 
 . . .
 
