@@ -51,7 +51,7 @@ pace afterwards.
 | Unit | Sessions | Topic | Problem set Due/Assigned |
 |---:|---|---|---|
 | [**1**]({{ site.baseurl }}/units/unit-01/) | Wed **Sep 2** · Fri **Sep 4** · Wed **Sep 9** | Course intro and setup; simulating a process; binomial counts | NA / **PS1**  |
-| [**2**]({{ site.baseurl }}/units/unit-02/) | Fri **Sep 11** · Mon **Sep 14** · Wed **Sep 16** | Null distributions; what a p-value is; multiple testing | **PS1** / **PS2** |
+| [**2**]({{ site.baseurl }}/units/unit-02/) | Fri **Sep 11** · Mon **Sep 14** · Wed **Sep 16** | Null distributions; what a p-value is; multiple testing | NA / **PS2** |
 | [**3**]({{ site.baseurl }}/units/unit-03/) | Fri **Sep 18** · Mon **Sep 21** · Wed **Sep 23** | Nesting; overdispersion; why counts vary more than they should | **PS2** / **PS3** |
 | [**4**]({{ site.baseurl }}/units/unit-04/) | Fri **Sep 25** · Mon **Sep 28** · Wed **Sep 30** | Bayes' theorem; estimating probabilities from counts | **PS3** / **PS4** |
 | [**5**]({{ site.baseurl }}/units/unit-05/) | Fri **Oct 2** · Mon **Oct 5** · Wed **Oct 7** | Naive Bayes: classification as a generative story | **PS4** / **PS5** |

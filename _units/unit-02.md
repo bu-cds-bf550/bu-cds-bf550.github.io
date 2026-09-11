@@ -6,7 +6,7 @@ title: "Unit 2 — Null distributions; what a p-value is; multiple testing"
 
 **Sessions:** Fri **Sep 11** · Mon **Sep 14** · Wed **Sep 16**
 
-**PS1** is due at the start of the first session, Fri **Sep 11** · **PS2** (on unit 1's material) is assigned in that same session · due Fri **Sep 18**
+**PS2** (on unit 1's material) is assigned in the first session · due Fri **Sep 18**
 
 > *You scanned 1,000 loci and some came up significant. Should you believe any of them?*
 
