@@ -63,7 +63,7 @@ is. The definition is one sentence, and the beats that follow show what it means
 
 ## Every site differs
 
-Her 1,200 sites: **every one** differs between tumor and normal.
+None of the 1,200 sites has precisely the same methylation level in truth
 
 . . .
 
@@ -79,11 +79,11 @@ Her data alone cannot answer it. Every observed difference mixes biology with ac
 
 . . .
 
-A model in which nothing is going on can: build it, run it, and see what accident alone produces.
+A model that assumes no differences by construction can: build it, run it, and see what accident alone produces.
 
 . . .
 
-That model is the **null model**.
+This kind of model is called a **null model**.
 
 ::: {.notes}
 The chapter's *The problem*, as the reason a null model exists at all; the term arrives on the
