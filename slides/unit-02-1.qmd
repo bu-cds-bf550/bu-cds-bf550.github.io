@@ -157,8 +157,10 @@ the built-in form. Do not walk the code line by line; lab 4 drills the construct
 ```{python}
 #| echo: true
 rng = np.random.default_rng(3)
-truths = rng.uniform(0.2, 0.8, 1200)        # each site its own methylation level...
-diffs = null_scan(truths, 30, 25, rng)      # ...identical in both groups
+# each site its own methylation level...
+truths = rng.uniform(0.2, 0.8, 1200)   
+# ...identical in both groups
+diffs = null_scan(truths, 30, 25, rng)      
 print(f"largest difference the null model produces: {np.abs(diffs).max():.3f}")
 ```
 
