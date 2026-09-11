@@ -270,7 +270,33 @@ So a p-value of 0.30 means the null model produces something that extreme **30% 
 The definition, then the number, then the reading of a p-value that the next slide's prediction
 needs. Do not add the precise sentence from *The notation* here; Monday's *The accounting rule*
 reads it phrase by phrase. If anyone asks about one-sided p-values, hold it for Wednesday. Ninety
-seconds; five minutes for the three p-value slides.
+seconds; six minutes for the four p-value slides.
+:::
+
+## The p-value, drawn
+
+```{python}
+#| fig-align: center
+edges = np.linspace(-0.1, 0.1, 41)
+fig, ax = plt.subplots(figsize=(7, 3))
+ax.hist(null, bins=edges, color="#c9c7c3")
+ax.hist(null[at_least_as_extreme], bins=edges, color="#eb6834")
+ax.axvline(observed, color="#52514e", ls=":", lw=1.5)
+ax.set_xlabel("difference (tumor − normal)")
+ax.set_ylabel("runs")
+ax.spines[["top", "right"]].set_visible(False)
+plt.show()
+```
+
+. . .
+
+Gray: all 2,000 null runs. Color: the runs the p-value counts, at least as far from zero as 0.045 in either direction.
+
+::: {.notes}
+The chapter's figure from *One direction or two?*, left panel only: the same 2,000 runs as the
+chunk two slides back, the observed 0.045 as the dotted line, and the counted runs in color. The
+p-value is the colored share of the whole. Point at both tails and say that both count; Wednesday
+asks what happens when only one does. Sixty seconds.
 :::
 
 ## Flat, by construction {.smaller}
