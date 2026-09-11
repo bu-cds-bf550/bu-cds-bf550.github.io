@@ -8,13 +8,6 @@ title: "Repeat: one direction or two, and when the null model is wrong"
 subtitle: "BF550 · Unit 2 · Session 3 — Wed Sep 16"
 ---
 
-## Under construction {.center}
-
-<!-- banner:under-construction -->
-
-⚠️ This deck is a **draft** — not yet instructor-reviewed, subject to change until the
-session it serves.
-
 # When the null model is wrong
 
 ```{python}

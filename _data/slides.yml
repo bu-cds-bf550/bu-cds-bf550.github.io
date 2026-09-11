@@ -20,7 +20,7 @@
 - unit: unit-02
   session: 1
   date: "Fri Sep 11"
-  title: "Repeat: null distributions and the thousand-test trap; how software tests work (draft)"
+  title: "Repeat: null distributions and the thousand-test trap; how software tests work"
   file: unit-02-1
 - unit: unit-01
   session: 3
@@ -75,10 +75,10 @@
 - unit: unit-02
   session: 2
   date: "Mon Sep 14"
-  title: "Repeat: a p-value is a count, and the list it builds (draft)"
+  title: "Repeat: a p-value is a count, and the list it builds"
   file: unit-02-2
 - unit: unit-02
   session: 3
   date: "Wed Sep 16"
-  title: "Repeat: one direction or two, and when the null model is wrong (draft)"
+  title: "Repeat: one direction or two, and when the null model is wrong"
   file: unit-02-3

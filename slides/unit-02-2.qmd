@@ -8,13 +8,6 @@ title: "Repeat: a p-value is a count, and the list it builds"
 subtitle: "BF550 · Unit 2 · Session 2 — Mon Sep 14"
 ---
 
-## Under construction {.center}
-
-<!-- banner:under-construction -->
-
-⚠️ This deck is a **draft** — not yet instructor-reviewed, subject to change until the
-session it serves.
-
 # A p-value is a count; grade the list
 
 ```{python}

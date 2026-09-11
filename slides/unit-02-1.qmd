@@ -17,13 +17,6 @@ title: "Repeat: null distributions and the thousand-test trap; how software test
 subtitle: "BF550 · Unit 2 · First meeting — 2026-09-11"
 ---
 
-## Under construction {.center}
-
-<!-- banner:under-construction -->
-
-⚠️ This deck is a **draft** — not yet instructor-reviewed, subject to change until the
-session it serves.
-
 # Null distributions
 
 ## The problem
