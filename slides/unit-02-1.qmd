@@ -199,9 +199,9 @@ model, which works for any story you can write down. They have read this; do not
 clock has slipped, this slide is a spoken sentence.
 :::
 
-## One site, one question
+## When is an observation surprising?
 
-Pick one site. Its observed tumor-minus-normal difference is **0.045**.
+Say we pick one of the 1,200 sites, and its observed tumor-minus-normal difference is **0.045**.
 
 . . .
 
