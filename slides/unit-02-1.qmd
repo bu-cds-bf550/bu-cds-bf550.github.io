@@ -152,7 +152,7 @@ chapter's *The story, as code* chunk, seed 3, and the two functions are chapter 
 the built-in form. Do not walk the code line by line; lab 4 drills the constructs this afternoon.
 :::
 
-## What the null model produces
+## What the null model produces {.smaller}
 
 ```{python}
 #| echo: true
