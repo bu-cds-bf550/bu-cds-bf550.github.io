@@ -161,7 +161,8 @@ rng = np.random.default_rng(3)
 truths = rng.uniform(0.2, 0.8, 1200)   
 # ...identical in both groups
 diffs = null_scan(truths, 30, 25, rng)      
-print(f"largest difference the null model produces: {np.abs(diffs).max():.3f}")
+print(f"largest difference the null model produces: "
+      f"{np.abs(diffs).max():.3f}")
 ```
 
 ```{python}
