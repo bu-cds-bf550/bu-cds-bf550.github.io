@@ -1,6 +1,6 @@
 ---
 # Session 1 of unit 2. Two beats on chapter 2 (the null model and its distribution; the flat
-# p-value histogram), then How Software Tests Work, then PS2 opens. The run-sheet
+# p-value histogram) with the p-value introduced between them, then How Software Tests Work, then PS2 opens. The run-sheet
 # (bf550-instructor lectures/unit02-runsheet.md) owns the clock and cites these headings.
 # Chapter chunks are reused verbatim with the chapter's seeds (3 and 11).
 #
@@ -203,14 +203,34 @@ model, which works for any story you can write down. They have read this; do not
 clock has slipped, this slide is a spoken sentence.
 :::
 
-## Flat, by construction {.smaller}
+## One site, one question
 
-A p-value at every one of the 1,200 sites, then a histogram of the 1,200 p-values.
+Pick one site. Its observed tumor-minus-normal difference is **0.045**.
 
-**Predict first:** what shape? How many sites land below 0.05?
+. . .
+
+Is that surprising?
+
+. . .
+
+Run *that site's* null model many times, and count how often it produces a difference at least that big.
+
+. . .
+
+Count both directions: a difference of −0.045 is exactly as extreme as +0.045.
+
+::: {.notes}
+The chapter's *Playing with the story*, opening paragraph. The room has just seen 1,200 differences
+from the null model; now the question is asked about one site, and the answer is a count over
+that site's own null distribution. Ask the room how they would decide whether 0.045 is surprising
+before advancing; someone says "compare it to the histogram," which is the right idea and the next
+slide is the arithmetic. Sixty seconds.
+:::
+
+## The p-value {.smaller}
 
 ```{python}
-#| echo: false
+#| echo: true
 def null_differences(m, n_sims, rng):
     """Many runs of one site's null model: same true m for both groups."""
     diffs = []
@@ -219,7 +239,46 @@ def null_differences(m, n_sims, rng):
         normal = group_fraction(m, 30, 25, rng)
         diffs.append(tumor - normal)
     return np.array(diffs)
+
+rng = np.random.default_rng(7)
+m, observed = 0.5, 0.045
+null = null_differences(m, 2000, rng)
+at_least_as_extreme = np.abs(null) >= abs(observed)   # True/False per run, either direction
+p = at_least_as_extreme.mean()                        # fraction of True = the p-value
+print(f"nothing produces a difference ≥ {observed} about {p:.1%} of the time")
 ```
+
+::: {.notes}
+The chapter's chunk, seed 7, so the number is the one in the reading. Read the last three lines
+aloud: a True or False per run, then the mean of those, which is the fraction of runs that count.
+The `.mean()` of a comparison is the mechanic the rest of the term leans on; lab 4 drills arrays
+this afternoon, and Wednesday's check-in asks about exactly this line. Ninety seconds.
+:::
+
+## The p-value
+
+That fraction is the **p-value**: the share of the null distribution at least as extreme as the observation.
+
+. . .
+
+About 8% here. The null model produces a difference this large a few times in every hundred runs.
+
+. . .
+
+So a p-value of 0.30 means the null model produces something that extreme **30% of the time**.
+
+::: {.notes}
+The definition, then the number, then the reading of a p-value that the next slide's prediction
+needs. Do not add the precise sentence from *The notation* here; Monday's *The accounting rule*
+reads it phrase by phrase. If anyone asks about one-sided p-values, hold it for Wednesday. Ninety
+seconds; five minutes for the three p-value slides.
+:::
+
+## Flat, by construction {.smaller}
+
+A p-value at every one of the 1,200 sites, then a histogram of the 1,200 p-values.
+
+**Predict first:** what shape? How many sites land below 0.05?
 
 ```{python}
 #| echo: true
@@ -244,9 +303,8 @@ print(f"sites with p < 0.05: {(pvals < 0.05).sum()} of 1200")
 ::: {.notes}
 Collect predictions before advancing. The wrong answers to listen for are "a bell around 0.5"
 and "a spike near 1"; the second is a sound instinct pointed at the wrong quantity, so name it
-kindly. The chunk is the chapter's, seed 11; `null_differences` is defined off-slide, as in the
-chapter's *Playing with the story*. The p-value itself is Monday's beat; today one line of code
-and one sentence: the share of null runs at least as extreme as the observation.
+kindly. The chunk is the chapter's, seed 11, and `null_differences` is the function from two slides
+ago. The p-value line in the loop is the previous slide's computation, once per site.
 :::
 
 ## Flat, by construction

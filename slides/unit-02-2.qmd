@@ -35,7 +35,8 @@ def null_differences(m, n_sims, rng):
 ## Where we left it
 
 - A model in which **no site differs** still produced differences a person would call real.
-- Its 1,200 p-values were **flat**, and dozens fell below 0.05.
+- One site's **p-value**: the share of its null distribution at least as extreme as the observation.
+- The 1,200 p-values under the null model were **flat**, and dozens fell below 0.05.
 - Under the null model, a p-value below 0.05 occurs one time in twenty.
 
 ::: {.notes}
@@ -46,9 +47,9 @@ first check cell is ⬜ and why.
 
 ## A p-value is a count, not a verdict {.smaller}
 
-One site, true fraction 0.5 in both groups, observed difference **0.045**, 2,000 null runs.
+Friday's site again: true fraction 0.5 in both groups, observed difference **0.045**, 2,000 null runs.
 
-**Predict first:** what fraction of null runs is at least that far from zero, in either direction?
+**Recall first:** what fraction of null runs was at least that far from zero, in either direction?
 
 ```{python}
 #| echo: true
@@ -62,7 +63,8 @@ print(f"nothing produces a difference ≥ {observed} about {p:.1%} of the time")
 
 ::: {.notes}
 The chapter's *Playing with the story* chunk, seed 7; `group_fraction` and `null_differences` are
-defined off-slide, as in the chapter. Collect predictions before running. The check-in an hour ago
+defined off-slide, as in the chapter. Friday's *The p-value* slide ran this chunk, so ask for the
+number before running rather than a prediction; about 8% is the answer. The check-in an hour ago
 read this same computation as a five-run loop; lab 5 opens it back up into a loop this afternoon,
 and say so.
 :::
