@@ -45,6 +45,24 @@ stuck two days out. The read-this-code question is where the confusion concentra
 run-sheet's *Do not give away*.
 :::
 
+## One direction or two?
+
+Every p-value so far counted the null runs at least as extreme **in either direction**: the **two-sided** p-value.
+
+. . .
+
+A **one-sided** p-value counts only the runs that beat the observation **in one direction**, here "tumor higher."
+
+. . .
+
+The direction is a choice. When it is made is the question.
+
+::: {.notes}
+The two terms, defined before the chunk that computes them; the chapter's *One direction or two?*
+opens the same way. The two-sided p-value answers "does this site differ?"; the one-sided answers
+"is tumor higher at this site?" Thirty seconds, then the code.
+:::
+
 ## One direction or two? {.smaller}
 
 The same 2,000 null runs as Monday. Two-sided, the p-value for 0.045 was about 8%.
