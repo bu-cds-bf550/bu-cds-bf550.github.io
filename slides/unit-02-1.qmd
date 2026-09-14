@@ -1,8 +1,12 @@
 ---
-# Session 1 of unit 2. Two beats on chapter 2 (the null model and its distribution; the flat
-# p-value histogram) with the p-value introduced between them, then How Software Tests Work, then PS2 opens. The run-sheet
+# Session 1 of unit 2. One beat on chapter 2 (the null model and its distribution) with the
+# p-value introduced after it, then How Software Tests Work, then PS2 opens. The run-sheet
 # (bf550-instructor lectures/unit02-runsheet.md) owns the clock and cites these headings.
-# Chapter chunks are reused verbatim with the chapter's seeds (3 and 11).
+# Chapter chunks are reused verbatim with the chapter's seeds (3 and 7).
+#
+# Delivered 11 Sep. The second beat, *Flat, by construction* (two slides, seed 11), was not
+# reached in the room and moved whole to unit-02-2.qmd on 13 Sep, where it follows the p-value
+# recall and precedes *Check the list against the truth*, which is the chapter's own order.
 #
 # *How Software Tests Work* (assert, our check_that, forced inputs then test cases, taught on
 # chapter 1's methylation simulator and never on a set's problem) was written for unit-01-3.qmd
@@ -267,8 +271,8 @@ About 8% here. The null model produces a difference this large a few times in ev
 So a p-value of 0.30 means the null model produces something that extreme **30% of the time**.
 
 ::: {.notes}
-The definition, then the number, then the reading of a p-value that the next slide's prediction
-needs. Do not add the precise sentence from *The notation* here; Monday's *The accounting rule*
+The definition, then the number, then the reading of a p-value that Monday's flat-histogram
+prediction needs. Do not add the precise sentence from *The notation* here; Monday's *The accounting rule*
 reads it phrase by phrase. If anyone asks about one-sided p-values, hold it for Wednesday. Ninety
 seconds; six minutes for the four p-value slides.
 :::
@@ -297,58 +301,6 @@ The chapter's figure from *One direction or two?*, left panel only: the same 2,0
 chunk two slides back, the observed 0.045 as the dotted line, and the counted runs in color. The
 p-value is the colored share of the whole. Point at both tails and say that both count; Wednesday
 asks what happens when only one does. Sixty seconds.
-:::
-
-## Flat, by construction {.smaller}
-
-A p-value at every one of the 1,200 sites, then a histogram of the 1,200 p-values.
-
-**Predict first:** what shape? How many sites land below 0.05?
-
-```{python}
-#| echo: true
-#| output-location: slide
-rng = np.random.default_rng(11)
-pvals = np.empty(1200)
-for i, m in enumerate(truths):
-    obs = group_fraction(m, 30, 25, rng) - group_fraction(m, 30, 25, rng)
-    null = null_differences(m, 300, rng)
-    pvals[i] = np.mean(np.abs(null) >= abs(obs))   # the p-value: share of null runs at least as extreme
-
-fig, ax = plt.subplots(figsize=(7, 2.4))
-ax.hist(pvals, bins=20, color="#2a78d6")
-ax.axhline(60, color="#52514e", ls=":", lw=1.5)
-ax.set_xlabel("p-value")
-ax.set_ylabel("sites")
-ax.spines[["top", "right"]].set_visible(False)
-plt.show()
-print(f"sites with p < 0.05: {(pvals < 0.05).sum()} of 1200")
-```
-
-::: {.notes}
-Collect predictions before advancing. The wrong answers to listen for are "a bell around 0.5"
-and "a spike near 1"; the second is a sound instinct pointed at the wrong quantity, so name it
-kindly. The chunk is the chapter's, seed 11, and `null_differences` is the function from two slides
-ago. The p-value line in the loop is the previous slide's computation, once per site.
-:::
-
-## Flat, by construction
-
-Under the null model, a p-value below 0.05 occurs **one time in twenty**.
-
-. . .
-
-1,200 × 0.05 = 60. The dotted line.
-
-. . .
-
-So a small p-value does not mean the effect is real.
-
-::: {.notes}
-The sentence that lands the correction is the first line; the third is the chapter's first
-misconception, stated as the consequence. Asked 1,200 times, an honest question produces about
-sixty accidents, and the run printed how many it actually produced. Stay on the chapter's CpG
-scan. Eighteen minutes from *From worlds to models* to here.
 :::
 
 # How Software Tests Work

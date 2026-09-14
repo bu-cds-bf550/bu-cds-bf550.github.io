@@ -1,14 +1,21 @@
 ---
-# Session 2 of unit 2. Two beats on chapter 2 (the p-value as a count; the graded list) and the
-# notation, then working time on lab 5 and PS2. No check-in slide: the instructor delivers the
-# check-in separately. The run-sheet (bf550-instructor lectures/unit02-runsheet.md) owns the
-# clock and cites these headings. Chapter chunks are reused verbatim with the chapter's seeds
-# (7 and 19); the p-of-zero chunk is the deck's own and reuses the same 2,000 null runs.
+# Session 2 of unit 2. Three beats on chapter 2 (the p-value as a count; the flat p-value
+# histogram; the discovery list checked against the truth, with two exposition slides before it that set up the 60-among-1,140
+# scan and the expected 57 false discoveries) and the notation, then working time on lab 5 and PS2. No check-in
+# slide: the instructor delivers the check-in separately. The run-sheet (bf550-instructor
+# lectures/unit02-runsheet.md) owns the clock and cites these headings. Chapter chunks are
+# reused verbatim with the chapter's seeds (7, 11 and 19); the p-of-zero chunk is the deck's own
+# and reuses the same 2,000 null runs.
+#
+# *Flat, by construction* (two slides, seed 11) was Friday's second beat in unit-02-1.qmd and was
+# not reached in that room on 11 Sep. It moved here whole on 13 Sep, after the p-value recall and
+# before *Check the list against the truth*, which is the order the chapter's *Playing with the story* uses. Its
+# `truths` array is the chapter's seed-3 draw, defined off-slide below.
 title: "Repeat: a p-value is a count, and the list it builds"
 subtitle: "BF550 · Unit 2 · Session 2 — Mon Sep 14"
 ---
 
-# A p-value is a count; grade the list
+# A p-value is a count; flat, by construction; check the list against the truth
 
 ```{python}
 #| echo: false
@@ -30,19 +37,22 @@ def null_differences(m, n_sims, rng):
         normal = group_fraction(m, 30, 25, rng)
         diffs.append(tumor - normal)
     return np.array(diffs)
+
+# the chapter's 1,200 site truths, seed 3, as Friday's null_scan chunk drew them
+truths = np.random.default_rng(3).uniform(0.2, 0.8, 1200)
 ```
 
 ## Where we left it
 
 - A model in which **no site differs** still produced differences a person would call real.
 - One site's **p-value**: the share of its null distribution at least as extreme as the observation.
-- The 1,200 p-values under the null model were **flat**, and dozens fell below 0.05.
-- Under the null model, a p-value below 0.05 occurs one time in twenty.
+- About 8% for Friday's site, counting both directions.
 
 ::: {.notes}
-Three minutes, as a recall check rather than a re-teach: ask the room for the three lines. Then,
-with no slide, Friday's open questions: who has PS2 cloned and its environment built, and whose
-first check cell is ⬜ and why.
+Three minutes, as a recall check rather than a re-teach: ask the room for the three lines. Friday
+ended at *The p-value, drawn*; the histogram of 1,200 p-values it was heading for is this session's
+second beat, and say so. Then, with no slide, Friday's open questions: who has PS2 cloned and its
+environment built, and whose first check cell is ⬜ and why.
 :::
 
 ## A p-value is a count, not a verdict {.smaller}
@@ -64,8 +74,8 @@ print(f"nothing produces a difference ≥ {observed} about {p:.1%} of the time")
 ::: {.notes}
 The chapter's *Playing with the story* chunk, seed 7; `group_fraction` and `null_differences` are
 defined off-slide, as in the chapter. Friday's *The p-value* slide ran this chunk, so ask for the
-number before running rather than a prediction; about 8% is the answer. The check-in an hour ago
-read this same computation as a five-run loop; lab 5 opens it back up into a loop this afternoon,
+number before running rather than a prediction; about 8% is the answer. The check-in that opened
+the session read this same computation as a five-run loop; lab 5 opens it back up into a loop this afternoon,
 and say so.
 :::
 
@@ -93,18 +103,130 @@ correct: a difference of zero is the least surprising result there is. Anyone ca
 pattern-matching on "p = 1 looks broken," which is the conversation to have if the room splits.
 The last line is the correction for the check-in's miss, "it checks whether the result is
 significant": the code computes a proportion, and reading it as a verdict is the substitution that
-turns a p-value into a stamp of approval in a paper. Seven minutes for both slides.
+turns a p-value into a stamp of approval in a paper. Six minutes for both slides; the first is a
+recall, so its pause is short.
 :::
 
-## Grade the list {.smaller}
+## Flat, by construction {.smaller}
 
-**60 sites** where tumor truly runs 0.07 higher, among **1,140** where nothing happens.
+Friday's null model again: 1,200 sites, and **no site differs**. A p-value at every site, then a histogram of the 1,200 p-values.
 
-**Predict first:** at p < 0.05, how many of the 60 make the list? How many of the 1,140?
+**Predict first:** what shape? How many sites land below 0.05?
 
 ```{python}
 #| echo: true
 #| output-location: slide
+rng = np.random.default_rng(11)
+pvals = np.empty(1200)
+for i, m in enumerate(truths):
+    obs = group_fraction(m, 30, 25, rng) - group_fraction(m, 30, 25, rng)
+    null = null_differences(m, 300, rng)
+    pvals[i] = np.mean(np.abs(null) >= abs(obs))   # the p-value: share of null runs at least as extreme
+
+fig, ax = plt.subplots(figsize=(7, 2.4))
+ax.hist(pvals, bins=20, color="#2a78d6")
+ax.axhline(60, color="#52514e", ls=":", lw=1.5)
+ax.set_xlabel("p-value")
+ax.set_ylabel("sites")
+ax.spines[["top", "right"]].set_visible(False)
+plt.show()
+print(f"sites with p < 0.05: {(pvals < 0.05).sum()} of 1200")
+```
+
+::: {.notes}
+Friday's second beat, moved here on 13 Sep because Friday ran out of time before it. Collect
+predictions before advancing. Friday's check-in asked both questions (Q2, "about 60"; Q3, "flat"),
+so read those tallies before class and answer the wrong ones you saw. The wrong answers to listen
+for are "a bell around 0.5" and "a spike near 1"; the second is a sound instinct pointed at the
+wrong quantity, so name it kindly. The chunk is the chapter's, seed 11; `truths` is the chapter's
+seed-3 draw, defined off-slide, and `null_differences` is the function the previous beat ran. The
+p-value line in the loop is the previous beat's computation, once per site.
+:::
+
+## Flat, by construction
+
+Under the null model, a p-value below 0.05 occurs **one time in twenty**.
+
+. . .
+
+1,200 × 0.05 = 60. The dotted line.
+
+. . .
+
+So a small p-value does not mean the effect is real.
+
+::: {.notes}
+The sentence that lands the correction is the first line; the third is the chapter's first
+misconception, stated as the consequence. Asked 1,200 times, an honest question produces about
+sixty accidents, and the run printed how many it actually produced. Stay on the chapter's CpG
+scan. The next beat spends this arithmetic: 1,140 null sites at one in twenty is about 57. Eight
+minutes for the two slides.
+:::
+
+## Sixty sites that truly differ
+
+The same scan: 1,200 sites, 30 samples a group, 25 reads a sample.
+
+. . .
+
+At **60** of them, tumor truly runs **0.07 higher** than normal.
+
+. . .
+
+At the other **1,140**, nothing is going on: the same $m$ in both groups, as before.
+
+. . .
+
+A p-value at every site, computed exactly as before. Only the simulator knows which 60 are real.
+
+::: {.notes}
+The setup of the chapter's *Where the numbers come from*, said before any code appears. Say the
+numbers slowly; the room needs 60 and 1,140 in hand for the next slide. A shift of 0.07 is a
+modest effect at this depth, which is why not every real site will make the list. Ninety seconds.
+:::
+
+## Real discoveries, false discoveries
+
+Report every site with p < 0.05. Each reported site is one of two things:
+
+. . .
+
+- a **real discovery**: one of the 60 sites that truly differ
+- a **false discovery**: one of the 1,140 where nothing is going on
+
+. . .
+
+We can tell which is which only because we set the truth. Real data never lets you.
+
+. . .
+
+Each p-value was computed for its own site alone. A p-value used that way is conventionally called a **nominal p-value**.
+
+. . .
+
+Under the null model a p-value below 0.05 occurs one time in twenty, so the 1,140 null sites should send about **1,140 × 0.05 = 57** false discoveries.
+
+. . .
+
+**Predict first:** how many of the 60 real sites make the list?
+
+::: {.notes}
+The rationale for grading, before the code runs. The false-discovery count is the flat
+histogram's arithmetic applied to 1,140 sites, and it is known before any data arrives; say that
+sentence, because *The accounting rule* names it three slides on. Collect predictions for the 60
+aloud. The wrong answer to listen for is "most of the 60, and a handful of false ones," and the
+room has just computed that the handful is 57. The *nominal* line is for the students who arrive
+from a statistics course: nominal because 0.05 is the per-test rate, which is what the flat
+histogram guarantees, and every p-value in this course so far is one. Adjusted p-values
+(Bonferroni, Benjamini-Hochberg) are unit 9's material; name nothing beyond the word today.
+Two minutes.
+:::
+
+## Check the list against the truth {.smaller}
+
+```{python}
+#| echo: true
+#| output: false
 rng = np.random.default_rng(19)
 base = rng.uniform(0.2, 0.8, 1200)
 n_true, delta = 60, 0.07                     # sites 0..59 truly differ
@@ -117,9 +239,25 @@ for i, m in enumerate(base):
     obs = group_fraction(m_tumor, 30, 25, rng) - group_fraction(m, 30, 25, rng)
     null = null_differences(m, 300, rng)
     pvals[i] = np.mean(np.abs(null) >= abs(obs))
+```
 
+::: {.notes}
+The chapter's chunk, seed 19, the data and its p-values only; the check against the truth is the next slide. Read
+the `if` aloud: the first 60 sites get the shift, the rest do not, and the null model at every
+site is Friday's. Do not walk the rest of the loop; it is the p-value loop from *Flat, by
+construction* with one line added. One minute.
+:::
+
+## Check the list against the truth {.smaller}
+
+```{python}
+#| echo: true
 hits = pvals < 0.05
-real, false = hits[:n_true].sum(), hits[n_true:].sum()
+real, false = hits[:n_true].sum(), hits[n_true:].sum()   # graded against the truth we set
+```
+
+```{python}
+#| echo: false
 fig, ax = plt.subplots(figsize=(6, 2.2))
 ax.barh(["false discoveries", "real discoveries"], [false, real],
         color=["#eb6834", "#2a78d6"])
@@ -132,13 +270,13 @@ print(f"list: {hits.sum()} sites — {real} real, {false} false — {false/hits.
 ```
 
 ::: {.notes}
-The chapter's *Where the numbers come from* chunk, seed 19. Collect both numbers aloud before
-advancing. The wrong answer to listen for is "most of the 60, and a handful"; Friday's arithmetic
-says the handful is about 57. You know which sites are which because you set them, which is the
-only reason a list can be graded at all.
+The two lines are the whole method: which reported sites are among the first 60, and
+which are not. You know which sites are which because you set them, which is the only reason a
+list can be graded at all. Then the figure: most of the real sites, and about 50 false against
+the 57 the room predicted. Ninety seconds.
 :::
 
-## Grade the list
+## Check the list against the truth
 
 Every p-value did what it claims.
 
@@ -154,7 +292,7 @@ Real effects were rare, and questions were plentiful.
 The chapter's second misconception: if each test is honest, the list is honest. Sixty truths
 cannot outnumber the accidents that 1,140 null sites generate at one in twenty. The fraction of
 the list that is noise depends on the threshold and on how rare true effects are, and nobody knows
-the second in advance. Eight minutes for the two *Grade the list* slides.
+the second in advance. Ten minutes from *Sixty sites that truly differ* to here.
 :::
 
 ## The accounting rule
@@ -180,7 +318,8 @@ $$\mathbb{E}[\text{false positives}] = m_{\text{null}} \cdot \alpha$$
 One slide, no code; the chapter's *The notation*. Read each phrase of the p-value sentence with
 its meaning: *null model* is the story of nothing happening as code you can run, *at least as
 extreme* covers both directions unless the direction was fixed before looking, *produces* means you
-get the probability by running the model. Then the three symbols, read off the run just shown.
+get the probability by running the model. Then the three symbols, read off the run just shown; 1,140 × 0.05 = 57 was on
+*Real discoveries, false discoveries* before the run, and here it gets its name.
 The $m$ for a count of tests collides with the methylation fraction $m$; the subscript is the
 reminder. Whoever wrote 4,000 × 0.01 = 40 on Friday's check-in is the person to call on.
 :::
@@ -200,7 +339,9 @@ and the claim is about individual genes, and nothing in the analysis connects th
 names are about 600 accidents and about 40 truths mixed together, and no gene on the list is more
 than about 6% likely to be one of the 40 without further evidence. This slide is the first cut if
 the clock slips; the worked solution is in the reading. Thirteen minutes for the three slides from
-*The accounting rule* to here, and the lecture ends by 0:30.
+*The accounting rule* to here, and the lecture ends by 0:39; the minutes past the usual 0:30 are
+Friday's flat-histogram beat, carried into this session, and the two exposition slides added
+before *Check the list against the truth* on 13 Sep.
 :::
 
 ## Working time — the rest of today
@@ -210,7 +351,7 @@ the clock slips; the worked solution is in the reading. Thirteen minutes for the
 
 ::: {.notes}
 Lab 5 is the chapter's p-value opened back up into a loop, which is exactly the first beat's
-fraction; say so. Then PS2. Floor for this block: 35 minutes, and it has seventy.
+fraction; say so. Then PS2. Floor for this block: 35 minutes, and it has sixty-one.
 :::
 
 ## Before next session

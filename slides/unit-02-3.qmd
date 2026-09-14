@@ -35,7 +35,7 @@ def null_differences(m, n_sims, rng):
 ## Where we left it
 
 - A p-value is a **share of the null distribution**; the verdict is a separate decision.
-- The graded list was almost half noise, and every p-value did what it claims.
+- The discovery list, checked against the truth, was almost half noise, and every p-value did what it claims.
 - Every p-value so far counted both directions.
 
 ::: {.notes}
