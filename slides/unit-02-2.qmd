@@ -362,7 +362,7 @@ against the truth* on 13 Sep.
 
 ## Working time — the rest of today
 
-1. [Lab 5 · Counting your way to a p-value](https://bu-cds-bf550.github.io/labs/unit-02-2/)
+1. [Lab 5 · Counting your way to a p-value](https://github.com/bu-cds-bf550/bf550-unit02-labs/blob/main/unit-02-2.ipynb)
 2. Problem Set 2
 
 ::: {.notes}

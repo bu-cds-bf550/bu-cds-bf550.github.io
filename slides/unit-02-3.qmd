@@ -169,7 +169,7 @@ One repair: count one extra run, top and bottom, $(k + 1)/(n + 1)$. Never zero; 
 Two groups of thirty at depth 25 can differ by 0.10 by accident; 2,000 runs were not enough to
 see it once. The floor is set by the number of null runs and by nothing about the site. Say the
 repaired form once and do not dwell: it reports what the count reports, rarer than one in two
-thousand by an amount the runs cannot resolve. This is the mirror of Monday's p-of-zero: every
+thousand by an amount the runs cannot resolve. The slide is the mirror of Monday's p-of-zero: every
 run counts at one end, no run counts at the other. Two minutes.
 :::
 
@@ -303,7 +303,7 @@ this one. This slide is never cut.
 
 ## Working time — the rest of today
 
-1. [Lab 6 · Reading drills: loops that count worlds](https://bu-cds-bf550.github.io/labs/unit-02-3/)
+1. [Lab 6 · Reading drills: loops that repeat a model](https://github.com/bu-cds-bf550/bf550-unit02-labs/blob/main/unit-02-3.ipynb)
 2. Problem Set 2
 
 ::: {.notes}

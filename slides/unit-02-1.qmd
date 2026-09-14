@@ -531,7 +531,7 @@ design of it (bf550-instructor authoring/assignments.md, `truth-is-planted`).
 ## Working time — the rest of today
 
 1. `git pull` in your labs clone
-2. [Lab 4 · Pieces of a list, positions and all](https://bu-cds-bf550.github.io/labs/unit-02-1/)
+2. [Lab 4 · Pieces of a list, positions and all](https://github.com/bu-cds-bf550/bf550-unit02-labs/blob/main/unit-02-1.ipynb)
 3. Problem Set 2
 
 ::: {.notes}
