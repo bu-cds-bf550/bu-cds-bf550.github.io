@@ -93,23 +93,18 @@ This adds everything the course uses — numpy, matplotlib, pytest, and the rest
 environment from step 3. Every assignment ships this same file; on the rare occasion it changes,
 this same command brings you up to date.
 
-### 7 · Clone the labs, once for the whole term
+### 7 · Accept this unit's labs
 
 ```bash
 cd ~
-git clone https://github.com/bu-cds-bf550/bf550-labs.git
+gh student accept bu-bioinfo-classrooms bf550-fall-2026 bf550-unit01-labs
+gh repo clone bu-bioinfo-classrooms/bf550-fall-2026-bf550-unit01-labs-YOURUSERNAME
 ```
 
-Every lab after this one is a notebook in there. You clone it once — today — and keep working in
-that same copy all term. When we tell you there is something new:
-
-```bash
-cd ~/bf550-labs && git pull
-```
-
-Your own edits stay where you left them, and a fix we push reaches you on your next pull. Nothing
-in the labs is submitted or graded, so break them freely: `git checkout <notebook>` puts one back
-the way it shipped.
+Every lab after this one is a notebook. Each unit's labs are their own repository, and at every
+unit's first meeting you run the same two commands with that unit's number in place of `01`.
+Nothing in the labs is submitted or graded, so break them freely: `git checkout <notebook>` puts
+one back the way it shipped.
 
 ### 8 · Open the notebook, pick the kernel
 

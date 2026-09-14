@@ -2,10 +2,12 @@
 # /labs/ all read this list, so adding a lab means adding a line here.
 #
 #   id      lab 1 is a course-site page: docs/labs/<id>.md -> /labs/<id>/. Every lab from 2
-#           on is a notebook in the public labs repo, bu-cds-bf550/bf550-labs, which students
-#           clone once in lab 1 and `git pull` to update; those carry `path` too.
-#   path    optional: the notebook's path inside the labs repo (site.labs_repo in _config.yml).
-#           Present => the lab links there; absent => it links to its own page under /labs/.
+#           on is a notebook in its unit's public template repo, bu-cds-bf550/bf550-unitNN-labs,
+#           which students accept through Classroom50 at the unit's first meeting; those carry
+#           `path` too.
+#   path    optional: the notebook's path inside the unit's template repo (built from
+#           site.labs_org in _config.yml and the entry's `unit`). Present => the lab links
+#           there; absent => it links to its own page under /labs/.
 #   unit    the unit page it surfaces on, matching _units/<unit>.md
 #   date    the meeting it belongs to, spelled as the schedule spells it
 #   title   the lab's subject, without the "Lab N ·" prefix the page's own title carries

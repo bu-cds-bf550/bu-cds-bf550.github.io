@@ -4,15 +4,16 @@ Lists every lab in _data/labs.yml for that unit, in file order, as bullets that 
 slide-links list above them; a unit with none gets a placeholder line. Mirrors
 slide-links.html, and like it emits no trailing newline -- a blank line here would make the
 whole list loose and wrap every bullet in its own paragraph.
-A lab with a `path` links into the labs repo (`site.labs_repo`); one without links to its
-course-site page. Only lab 1 is a page -- see authoring/labs.md in the instructor repo.
+A lab with a `path` links into its unit's template repo (`site.labs_org`/bf550-unitNN-labs);
+one without links to its course-site page. Only lab 1 is a page -- see authoring/labs.md in
+the instructor repo.
 {%- endcomment -%}
 {%- assign labs = site.data.labs | where: "unit", include.unit -%}
 {%- if labs.size > 0 -%}
 {%- for lab in labs -%}
 {%- unless forloop.first %}
 {% endunless -%}
-- **Lab · {{ lab.date }}:** [{{ lab.title }}]({% if lab.path %}{{ site.labs_repo }}/blob/main/{{ lab.path }}{% else %}{{ site.baseurl }}/labs/{{ lab.id }}/{% endif %})
+- **Lab · {{ lab.date }}:** [{{ lab.title }}]({% if lab.path %}{{ site.labs_org }}/bf550-{{ lab.unit | remove: "-" }}-labs/blob/main/{{ lab.path }}{% else %}{{ site.baseurl }}/labs/{{ lab.id }}/{% endif %})
 {%- endfor -%}
 {%- else -%}
 - **Labs:** posted here before each meeting.
