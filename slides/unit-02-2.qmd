@@ -331,17 +331,33 @@ reminder. Whoever wrote 4,000 × 0.01 = 40 on Friday's check-in is the person to
 
 . . .
 
-The arithmetic is right. What is wrong?
+You are the collaborator. You can validate **five** genes from this list.
+
+. . .
+
+**Predict first:** of the five, how many do you expect to be real?
+
+. . .
+
+About 40 real among 640 reported. One gene in sixteen. Of five, **less than one**.
+
+. . .
+
+The paper has a count. It does not have a list of 40 genes, and neither do you.
 
 ::: {.notes}
-Practice problem 2.4, as the closing question. Take three answers. The subtraction is about counts
-and the claim is about individual genes, and nothing in the analysis connects the two: the 640
-names are about 600 accidents and about 40 truths mixed together, and no gene on the list is more
-than about 6% likely to be one of the 40 without further evidence. This slide is the first cut if
-the clock slips; the worked solution is in the reading. Thirteen minutes for the three slides from
-*The accounting rule* to here, and the lecture ends by 0:39; the minutes past the usual 0:30 are
-Friday's flat-histogram beat, carried into this session, and the two exposition slides added
-before *Check the list against the truth* on 13 Sep.
+Practice problem 2.4, reframed on 14 Sep as a decision rather than a "spot the mismatch": the
+chapter's hinge is the word *identified*, which is not a fair thing to expect a room to notice.
+The paper's arithmetic is right as a count; the excess over chance says something like 40 of the
+640 are real, and even that is weak, since the false count varies between scans. Collect the
+prediction; "most of them" is the answer to listen for. The derivation is today's tools only:
+the list is a mix, the false share is 600 of 640, so each gene is about one in sixteen to be
+real and five picks yield under one. Do not say which genes are likelier; ranking by p-value is
+unit 9's material. The chapter's worked solution reaches the same place. This slide is the
+first cut if the clock slips. Five minutes for the two slides from *The accounting rule* to
+here, and the lecture ends by 0:39; the minutes past the usual 0:30 are Friday's flat-histogram
+beat, carried into this session, and the two exposition slides added before *Check the list
+against the truth* on 13 Sep.
 :::
 
 ## Working time — the rest of today
