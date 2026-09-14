@@ -1,9 +1,15 @@
 ---
-# Session 3 of unit 2. Two executed beats on chapter 2 (one direction or two; choosing the
-# direction after looking) and two prose slides (correlated neighbors; the null model's noise),
-# leading into chapter 3. No check-in slide: the instructor delivers the check-in separately.
-# The run-sheet (bf550-instructor lectures/unit02-runsheet.md) owns the clock and cites these
-# headings. Chapter chunks are reused verbatim with the chapter's seeds (7 and 23).
+# Session 3 of unit 2. Three executed beats on chapter 2 (one direction or two; the smallest
+# p-value a simulation can report; choosing the direction after looking) and two prose slides
+# (correlated neighbors; the null model's noise), leading into chapter 3. No check-in slide: the
+# instructor delivers the check-in separately. The run-sheet (bf550-instructor
+# lectures/unit02-runsheet.md) owns the clock and cites these headings. Chapter chunks are reused
+# verbatim with the chapter's seeds (7, 11 and 23).
+#
+# The p-value-floor beat (four slides) was added 14 Sep 2026 with the chapter's emergency
+# revision (record: decisions/ch02-emergency-revision-p-value-floor.md). PS3's Q6 presupposes it,
+# and the chapter as assigned did not state it; the new subsection *How small can a simulated
+# p-value get?* is its source, and this deck is the room's first exposure. Say so in the room.
 title: "Repeat: one direction or two, and when the null model is wrong"
 subtitle: "BF550 · Unit 2 · Session 3 — Wed Sep 16"
 ---
@@ -30,6 +36,9 @@ def null_differences(m, n_sims, rng):
         normal = group_fraction(m, 30, 25, rng)
         diffs.append(tumor - normal)
     return np.array(diffs)
+
+# the chapter's 1,200 site truths, seed 3, as Friday's null_scan chunk drew them
+truths = np.random.default_rng(3).uniform(0.2, 0.8, 1200)
 ```
 
 ## Where we left it
@@ -120,6 +129,98 @@ methylation in tumors, and it is written down before the difference is computed.
 default because it needs no such justification. Six minutes for both slides.
 :::
 
+## The smallest p-value this code can return {.smaller}
+
+Monday: an observed difference of **0.0** gave p = 1.0. Every one of the 2,000 null runs counted.
+
+**Predict first:** the smallest p-value the same code can return, and the observation that gets it?
+
+```{python}
+#| echo: true
+print(f"most extreme null run: {np.abs(null).max():.3f}")
+for observed in (0.045, 0.080, 0.100):
+    p = np.mean(np.abs(null) >= observed)
+    print(f"observed {observed:.3f}: p = {p:.4f}")
+```
+
+::: {.notes}
+First exposure: the chapter as assigned did not have this, and the subsection *How small can a
+simulated p-value get?* was added on 14 Sep; tell the room where it is. `null` is the seed-7 array
+from the beat just finished. Collect predictions; "zero" and "one in two thousand" both come up,
+and both are right for different observations. Then run: the most extreme of the 2,000 runs is
+about 0.088, an observed 0.080 is matched by three runs, and an observed 0.100 by none, so the
+code prints 0. Ninety seconds.
+:::
+
+## A p-value of 0 means "not seen"
+
+- 1/2,000 is the floor. The count moves in whole runs, so the p-value moves in steps of 1/2,000.
+- Beyond the most extreme run, the code prints **0**.
+
+. . .
+
+0 means *not produced in 2,000 runs*. It never means impossible.
+
+. . .
+
+One repair: count one extra run, top and bottom, $(k + 1)/(n + 1)$. Never zero; here 1/2,001.
+
+::: {.notes}
+Two groups of thirty at depth 25 can differ by 0.10 by accident; 2,000 runs were not enough to
+see it once. The floor is set by the number of null runs and by nothing about the site. Say the
+repaired form once and do not dwell: it reports what the count reports, rarer than one in two
+thousand by an amount the runs cannot resolve. This is the mirror of Monday's p-of-zero: every
+run counts at one end, no run counts at the other. Two minutes.
+:::
+
+## Fewer runs, coarser p-values {.smaller}
+
+Friday's flat-histogram scan again: 1,200 null sites, but **20** null runs per site instead of 300.
+
+**Predict first:** how many sites land below 0.05? Below 0.01?
+
+```{python}
+#| echo: true
+rng = np.random.default_rng(11)
+pvals_20 = np.empty(1200)
+for i, m in enumerate(truths):
+    obs = group_fraction(m, 30, 25, rng) - group_fraction(m, 30, 25, rng)
+    null = null_differences(m, 20, rng)                # 20 runs, not 300
+    pvals_20[i] = np.mean(np.abs(null) >= abs(obs))
+print(f"p < 0.05: {(pvals_20 < 0.05).sum()}   p < 0.01: {(pvals_20 < 0.01).sum()}   "
+      f"p exactly 0: {(pvals_20 == 0).sum()}")
+```
+
+::: {.notes}
+The chapter's new chunk, seed 11, the same seed as Monday's flat histogram. Collect both numbers;
+"about 60 and about 12" is the answer the arithmetic gives and the wrong one here. Run: the three
+counts are the same number. With 20 runs the p-value moves in steps of 0.05, so the only value
+below 0.05 is 0 itself, and every site the 0.05 threshold catches is at exactly 0. Two minutes.
+:::
+
+## Fewer runs, coarser p-values
+
+At 300 runs: **56** below 0.05, **6** below 0.01, **4** at exactly 0.
+
+. . .
+
+At 20 runs: **59**, **59**, **59**. Tightening the threshold changed nothing.
+
+. . .
+
+Choose enough null runs that your threshold sits many steps above the floor. 0.05 is workable at hundreds; 0.01 wants thousands.
+
+. . .
+
+Every null in this course is built by running something many times. The floor comes with it.
+
+::: {.notes}
+The planning rule is the takeaway, and PS3 asks for it on Friday. Name the two returns once:
+unit 6, where the number of label shuffles sets the floor; unit 9, where thousands of genes ranked
+by p-value tie at zero unless the runs are many or the p-values come from a fitted distribution.
+Two minutes; eight for the four slides.
+:::
+
 ## Choosing after looking {.smaller}
 
 An analyst tests "up" when the difference came out up, and "down" when it came out down. Threshold 0.05, 2,000 null sites.
@@ -206,7 +307,7 @@ this one. This slide is never cut.
 2. Problem Set 2
 
 ::: {.notes}
-Floor for this block: 35 minutes, and it has seventy-three. Ask how far people are on PS2 and
+Floor for this block: 35 minutes, and it has sixty-five. Ask how far people are on PS2 and
 write the answer down; it is the only time measurement before PS3 opens.
 :::
 
