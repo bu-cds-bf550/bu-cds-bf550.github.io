@@ -2,7 +2,7 @@
 # Session 2 of unit 2. Three beats on chapter 2 (the p-value as a count; the flat p-value
 # histogram; the discovery list checked against the truth, with two exposition slides before it that set up the 60-among-1,140
 # scan and the expected 57 false discoveries) and the notation, then two closing slides that answer the
-# chapter's opening problem for the collaborator (her 105-site list against the 60 ceiling; the same
+# chapter's opening problem for the collaborator (her 105-site list against the 60 expected if nothing is real; the same
 # rule at p < 0.01 as the hint at which sites go first), then working time on lab 5 and PS2. No check-in
 # slide: the instructor delivers the check-in separately. The run-sheet (bf550-instructor
 # lectures/unit02-runsheet.md) owns the clock and cites these headings. Chapter chunks are
@@ -315,7 +315,11 @@ $$\mathbb{E}[\text{false positives}] = m_{\text{null}} \cdot \alpha$$
 
 . . .
 
-1,140 × 0.05 = 57 expected; the run gave 50. 1,200 × 0.05 = 60 is the ceiling, known before any data.
+1,140 × 0.05 = 57 expected; the run gave 50. If no site were real, 1,200 × 0.05 = 60 expected, known before any data.
+
+. . .
+
+Expected is a long-run average. Any one scan lands above or below it.
 
 ::: {.notes}
 One slide, no code; the chapter's *The notation*. Read each phrase of the p-value sentence with
@@ -324,7 +328,10 @@ extreme* covers both directions unless the direction was fixed before looking, *
 get the probability by running the model. Then the three symbols, read off the run just shown; 1,140 × 0.05 = 57 was on
 *Real discoveries, false discoveries* before the run, and here it gets its name.
 The $m$ for a count of tests collides with the methylation fraction $m$; the subscript is the
-reminder. Whoever wrote 4,000 × 0.01 = 40 on Friday's check-in is the person to call on.
+reminder. The chapter calls the 60 a ceiling on the accidents; do not use that word. It is
+the expected count when every site is null, and a single scan can produce more, as the 17
+against 12 on *Which sites first?* will show. The room reads *expected* as "about, on average";
+say that. The chapter's wording is logged for the next offering. Whoever wrote 4,000 × 0.01 = 40 on Friday's check-in is the person to call on.
 :::
 
 ## What do we tell our collaborator?
@@ -341,7 +348,7 @@ She wants to send the top of that list for pyrosequencing. What do we tell her?
 
 . . .
 
-1,200 × 0.05 = **60** accidents at most, known before her data arrived.
+If nothing at all is real, expect about **60** accidents. Known before her data arrived.
 
 . . .
 
@@ -359,16 +366,17 @@ The reading still has 2.4 with its worked solution, and this slide makes the sam
 her scan. Her situation is the seed-19 chunk with the grade taken away: 105 sites at p < 0.05
 and no `if`. Collect the prediction; "most of them" is the answer to listen for, because the
 room saw 55 real and 50 false two slides back and has to notice that she cannot. The 60 is the
-accounting rule's ceiling from the slide before, 1,200 × 0.05, with m_null at its maximum
-because she does not know how many sites are null. Then the two sentences she gets: the 45 above
-the ceiling are evidence that real differences exist somewhere in the scan, and the 105 is a
+accounting rule from the slide before, 1,200 × 0.05, with m_null at its maximum because she
+does not know how many sites are null; it is what to expect if nothing is real, and a single
+scan can land above it. Then the two sentences she gets: the 45 above the 60 are evidence that
+real differences exist somewhere in the scan, and the 105 is a
 mix, so no site on it is more than about half likely to be real on this evidence. Do not say
 "which half" is the next slide; ask the room what she will ask next. Three minutes.
 :::
 
 ## Which sites first? {.smaller}
 
-Same rule, stricter threshold: 1,200 × 0.01 = **12** accidents at most.
+Same rule, stricter threshold. If nothing is real, expect about **12** at p < 0.01.
 
 . . .
 
@@ -394,10 +402,10 @@ Why not p < 0.001? These p-values come from 300 runs. Wednesday.
 ::: {.notes}
 The hint at an answer, added 14 Sep at the instructor's request: the slide before says the list is
 half noise, and she still needs to know which sites to send. The tool is the accounting rule
-again at a stricter threshold. Say the ceiling first, 1,200 × 0.01 = 12, then run the chunk:
+again at a stricter threshold. Say the expected count first, 1,200 × 0.01 = 12, then run the chunk:
 her list at p < 0.01 is 57 sites, and only we can grade it, 40 real and 17 false. Seventeen
-against an expected 12 is the same kind of miss as 50 against 57 on the graded list; the ceiling
-is a long-run average. The trade is the point: the noise share fell from about half to under a
+against an expected 12 is the same kind of miss as 50 against 57 on the graded list, and it is
+the reason the word is *expected* and never *ceiling*: a single scan can produce more. The trade is the point: the noise share fell from about half to under a
 third, and 15 of the 55 real sites left the list to buy that. Then the sentence for her: start at
 the smallest p-values, because the null model sends the fewest accidents there. Sorting the whole
 list by p-value is this move made continuous, and deciding where to stop is unit 9's rule
