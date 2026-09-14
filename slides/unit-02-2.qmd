@@ -336,7 +336,7 @@ say that. The chapter's wording is logged for the next offering. Whoever wrote 4
 
 ## What do we tell our collaborator?
 
-She has the scan we just ran, without the truth: **105 sites** at p < 0.05, and no `if`.
+She has the scan we just ran, without the truth: **105 sites** at p < 0.05.
 
 . . .
 
