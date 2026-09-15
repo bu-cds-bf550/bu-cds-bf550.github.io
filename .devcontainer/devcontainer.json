@@ -1,0 +1,39 @@
+// Open this repository *inside* the CI image, so VS Code's Quarto extension can render a deck
+// and show it beside the source -- the preview pane follows the cursor, so moving into a
+// slide's source scrolls the preview to that slide. The host has no quarto, ruby or jekyll;
+// this is the only place they exist, and it is the same image `make` and CI build from, so
+// the preview is pinned to the version that ships (Quarto 1.10.18).
+//
+// Reuses the `jekyll` service from ../compose.yaml for its image and bind mount, but replaces
+// its command: dev.sh would start a Jekyll watcher, and this container is for editing.
+{
+  "name": "BF550 course site",
+  "dockerComposeFile": ["../compose.yaml"],
+  "service": "jekyll",
+  "runServices": ["jekyll"],
+  "workspaceFolder": "/site",
+  "overrideCommand": true,
+
+  // compose.yaml runs the service as ${UID}:${GID} so build outputs belong to you. The
+  // Makefile exports both; VS Code does not, and the 1000 fallback is not everyone's uid. Write
+  // them where compose picks them up -- a shell environment still wins over this file, so
+  // `make` is unaffected. Runs on the host, before the container starts.
+  "initializeCommand": "printf 'UID=%s\\nGID=%s\\n' \"$(id -u)\" \"$(id -g)\" > .env",
+
+  "forwardPorts": [4200, 4000],
+  "portsAttributes": {
+    "4200": { "label": "deck preview" },
+    "4000": { "label": "site" }
+  },
+
+  "customizations": {
+    "vscode": {
+      "extensions": ["quarto.quarto", "ms-python.python"],
+      "settings": {
+        // Render into the panel beside the editor rather than an external browser.
+        "quarto.render.previewType": "internal",
+        "python.defaultInterpreterPath": "/opt/venv/bin/python"
+      }
+    }
+  }
+}

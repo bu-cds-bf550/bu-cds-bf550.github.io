@@ -11,4 +11,6 @@ node_modules/
 _freeze/
 .quarto/
 _instructor-slides/
+_authoring-slides/
 .deck-export-cache/
+.env

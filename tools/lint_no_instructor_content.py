@@ -29,6 +29,7 @@ TRIPWIRES = [
     (re.compile(r"planted defect", re.I), "seeded-defect inventory"),
     (re.compile(r"run-sheet", re.I), "instructor run-sheet"),
     (re.compile(r'<aside class="notes"'), "speaker notes in a published slide deck"),
+    (re.compile(r"window\._input_file"), "deck source embedded by the editable extension"),
 ]
 
 SCAN_SUFFIXES = {".html", ".md", ".txt", ".json", ".xml"}

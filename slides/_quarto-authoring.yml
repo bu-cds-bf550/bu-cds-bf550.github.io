@@ -1,0 +1,24 @@
+# Authoring build: `quarto preview slides --profile authoring` (or `make deck DECK=unit-02-2`).
+# The deck with drag-and-resize editing turned on, for laying a slide out by hand instead of by
+# guessing pixel values. Edits made in the browser are saved back into the `.qmd`, which stays
+# the source of truth; this profile changes nothing about what gets published.
+#
+# NEVER add these two keys to `_quarto.yml`. The editable filter base64-encodes the whole `.qmd`
+# into the rendered HTML (`window._input_file`) because its save-back needs the original source
+# to rewrite -- so a deck built with this profile carries every speaker note, every YAML comment
+# and the sealed-material notes into the page, where View Source reveals them. Base64 defeats
+# every pattern in `tools/lint_no_instructor_content.py`, so the content gate cannot catch it;
+# that is why this profile writes outside `_site/` and why the gate grew an `_input_file`
+# tripwire to fail the build if it ever appears there anyway.
+project:
+  output-dir: ../_authoring-slides
+format:
+  revealjs:
+    footer: "BF550 · authoring build — do not publish"
+    filters:
+      - editable
+    revealjs-plugins:
+      - editable
+# Notes are visible while authoring, as in the instructor profile. They are in the embedded
+# source either way; keeping them on screen is the point of authoring in this profile.
+keep-notes: true
