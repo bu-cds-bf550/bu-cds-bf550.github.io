@@ -28,8 +28,14 @@ the unit pages and [`/slides/`](https://bu-cds-bf550.github.io/slides/) link to 
 
 Conventions the decks inherit from the textbook (see its `CONVENTIONS.md`):
 
-- **Activation, not delivery.** The reading carries first exposure; a deck puts the unit's
-  ideas to work. A deck that re-teaches its chapter is too long.
+- **The deck teaches the material a second way.** The deck and the chapter cover the same
+  material by two different routes, and neither is a prerequisite for the other. A student who
+  has not finished the chapter, or who reads English slowly, must still be able to follow the
+  lecture, so a deck introduces every term it uses, in its own words, before the slide that uses
+  it. What a deck does not do is walk the chapter section by section: it works the ideas through
+  predicted-then-run code and questions asked in the room, and leaves the worked designs,
+  derivations and practice problems to the reading. A lecture runs 45 to 60 minutes, which is
+  about 20 to 26 content slides.
 - **Seed every random draw**, reusing the chapter's seeds where a chunk comes from the
   chapter, so what is projected in class is exactly what students find in the reading.
 - **Slide headings are a public interface.** The instructor run-sheets cite slides by

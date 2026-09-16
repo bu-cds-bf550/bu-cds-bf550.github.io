@@ -35,12 +35,12 @@
 - unit: unit-03
   session: 2
   date: "Mon Sep 21"
-  title: "Nest: why real data is messier than your model (draft)"
+  title: "Nest: depth, fitting, and the notation (draft)"
   file: unit-03-2
 - unit: unit-03
   session: 3
   date: "Wed Sep 23"
-  title: "Nest: why real data is messier than your model (draft)"
+  title: "Nest: when the model is wrong (draft)"
   file: unit-03-3
 - unit: unit-04
   session: 1
