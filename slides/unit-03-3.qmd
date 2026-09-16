@@ -74,7 +74,7 @@ It is a sensible thing to build, and someone in every lab has built one.
 
 ::: {.notes}
 Two minutes. Say plainly that nothing about this filter is foolish. It is the honest application of
-last unit's machinery to this unit's data, and that is exactly why the failure is worth an hour.
+last unit's tools to this unit's data, and that is exactly why the failure is worth an hour.
 The room should feel that they would have written it.
 :::
 
@@ -288,7 +288,8 @@ about **individual days** and nothing about **how the days differ**.
 Monday's floor, again: 0.0236.
 
 ::: {.notes}
-Two and a half minutes. The depth dial showed it by simulation on Monday and the bracket proved it
+Two and a half minutes. The depth experiment showed it by simulation on Monday and the bracket
+proved it
 by algebra. A collaborator's grant money is actually at stake here, so say the
 number: a hundredfold increase in depth moved the spread from 0.026 to 0.024.
 :::
@@ -369,7 +370,7 @@ Same problem, one level up. **Chapter 9 closes that gap.**
 
 ::: {.notes}
 Two minutes, the forward pointer, and the first time the room hears that the ceiling mattered. The
-binomial needs an $n$; a count with no ceiling needs a different machine on the second level. Do
+binomial needs an $n$; a count with no ceiling needs a different draw method on the second level. Do
 not name the negative binomial before this slide. Lab 7 and lab 8 have already built both halves of
 it on plain values, which is worth saying here.
 :::

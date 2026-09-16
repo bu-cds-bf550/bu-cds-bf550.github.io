@@ -1,5 +1,5 @@
 ---
-# Session 2 of unit 3. The depth dial, then the inversion that recovers nu, then the
+# Session 2 of unit 3. The depth experiment, then the inversion that recovers nu, then the
 # notation. The run-sheet (bf550-instructor lectures/unit03-runsheet.md) owns the clock
 # and cites these headings.
 #
@@ -152,8 +152,8 @@ The floor is the spread of the daily truth itself, with no sequencing in it at a
 Depth can remove the reading error. It cannot remove the gut.
 
 ::: {.notes}
-Two minutes. The floor is the first level's own spread, computed from the Beta's dials rather than
-simulated. At 500 reads the sampling wobble is still visible above it; by 50,000 it has essentially
+Two minutes. The floor is the first level's own spread, computed from the Beta's parameters rather
+than simulated. At 500 reads the sampling wobble is still visible above it; by 50,000 it has essentially
 vanished and what is left is the day-to-day movement. Sequencing a sample more deeply tells you
 more about *that sample*, not about the next morning.
 :::
@@ -192,8 +192,8 @@ Can we go the other way?
 
 ::: {.notes}
 Ninety seconds, a question slide turning the session around. Everything up to here has been playing
-with a model we set the dials on. The rest of the hour is the real job: the data is what you have,
-and the dials are what you want. Say that this is what fitting a model means, in one sentence,
+with a model whose parameters we set. The rest of the hour is the real job: the data is what you
+have, and the parameters are what you want. Say that this is what fitting a model means, in one sentence,
 without the word *estimation* yet.
 :::
 
@@ -265,7 +265,8 @@ Each one is a whole month generator. Run each, take the standard deviation of it
 ::: {.notes}
 Two and a half minutes, and take the guesses. The useful disagreement is about direction: a smaller
 $\nu$ means a looser gut and a wider spread, so the candidates run from very wide down to nearly
-binomial. If nobody can say which way the list runs, go back to Friday's *What the two dials do*
+binomial. If nobody can say which way the list runs, go back to Friday's *What the two parameters
+do*
 before advancing.
 :::
 
@@ -343,7 +344,7 @@ repeat, and watch the estimates scatter.**
 ::: {.notes}
 Two and a half minutes. The chapter is handing the room a tool rather than a caveat. Knowing when
 an estimate stops being trustworthy is a question they can now answer themselves, with the same
-machinery. Nobody needs a standard error for it. Say that the rest of the course keeps doing this
+tools. Nobody needs a standard error for it. Say that the rest of the course keeps doing this
 with new estimates.
 :::
 
@@ -475,7 +476,8 @@ So depth widens the gap between the binomial model and the data instead of closi
 The depth beat from this morning, in algebra.
 
 ::: {.notes}
-Two minutes, closing the session where it opened. The depth dial showed it by simulation and the
+Two minutes, closing the session where it opened. The depth experiment showed it by simulation and
+the
 bracket proves it. If a student asks why the *fraction*'s spread went down while the bracket goes
 up, the answer is that the count spread grows more slowly than $n$ does; take it offline rather
 than derive it here.
@@ -487,7 +489,7 @@ than derive it here.
 2. PS3
 
 ::: {.notes}
-Lab 8 is *The dial that drifts*: a two-level loop on plain values, then the candidates-score-argmin
+Lab 8 is *When a parameter is itself drawn*: a two-level loop on plain values, then the candidates-score-argmin
 inversion the room just watched. Forty minutes in this block against a floor of thirty-five. Ask
 who is stuck on PS3 and where before people settle in.
 :::

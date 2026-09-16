@@ -1,6 +1,6 @@
 ---
 # Session 1 of unit 3. The two-level story, built from her month, with the beat
-# *Nesting on, nesting off* and the nu dial closing the hour. The run-sheet
+# *Nesting on, nesting off* and the concentration parameter closing the hour. The run-sheet
 # (bf550-instructor lectures/unit03-runsheet.md) owns the clock and cites these headings.
 #
 # Chapter chunks are reused verbatim with the chapter's seeds (17, 7, 11), and every chunk
@@ -243,22 +243,23 @@ It is a **fraction**. Between 0 and 1, never outside.
 
 . . .
 
-We want a machine that makes fractions, centred where we say, as tight or as loose as we say.
+We want a draw method that produces fractions, centred where we say, as tight or as loose as we
+say.
 
 ::: {.notes}
 Ninety seconds, a question slide before the answer. Ask what would go wrong with a normal draw
 around 0.06: it can hand you a negative fraction, and a negative abundance is not a thing. Which
-machine a story needs is decided by what kind of number the story's quantity is, which is lab 7's
-whole subject this afternoon.
+draw method a story needs is decided by what kind of number the story's quantity is, which is lab
+7's whole subject this afternoon.
 :::
 
-## A dial for the day
+## A distribution for the day's truth
 
 The **Beta distribution** samples values between 0 and 1.
 
 . . .
 
-Two dials:
+Two parameters:
 
 - a **mean** $\mu$, where the samples are centred
 - a **concentration** $\nu$, how close they stay to the mean
@@ -270,7 +271,7 @@ density. The chapter introduces the Beta here too, at the top of *The story, as 
 and the reading meet the distribution in the same place.
 :::
 
-## What the two dials do
+## What the two parameters do
 
 $\mu$ moves the centre. Set it to 0.06 and the days sit around 6%.
 
@@ -284,7 +285,7 @@ Small $\nu$ is a gut that swings. Same average, different month.
 
 ::: {.notes}
 Two minutes, and the slide that was missing from the first draft of this deck. The room has to be
-able to say what happens when you turn each dial before the beat turns one of them. Ask for a
+able to say what each parameter does before the beat changes one of them. Ask for a
 prediction: if her gut were perfectly steady, what would $\nu$ be? Very large. The answer sets up
 *Three models, one mean* at the end of the hour.
 :::
@@ -491,7 +492,8 @@ plt.show()
 
 ::: {.notes}
 Three minutes, and the last content slide. One mean with three very different spreads; read the
-three off the output. The dial the room met an hour ago is now doing visible work, and ν = 100 sits
+three off the output. The parameter the room met an hour ago is now doing visible work, and ν = 100
+sits
 between the orange and the green. Monday's session is the reverse question: her month is on the
 table, so which ν made it?
 :::
@@ -520,8 +522,8 @@ away* block has the reserved terms, and this file is public, so they are not rep
 3. PS3
 
 ::: {.notes}
-Lab 7 is *Machines that make numbers*: poisson, gamma and beta as draw methods with dials, then
-argmin and argmax as positions, then ties. Two of the three are new to the room and the lab says
+Lab 7 is *Draw methods and the numbers they produce*: poisson, gamma and beta with their
+parameters, then argmin and argmax as positions, then ties. Two of the three are new to the room and the lab says
 so. Thirty-five minutes is the floor and this block has exactly thirty-five, so the lecture ending
 at 1:00 is a hard mark. Then PS3.
 :::
