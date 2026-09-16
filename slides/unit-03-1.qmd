@@ -13,13 +13,6 @@ title: "Nest: why real data is messier than your model"
 subtitle: "BF550 · Unit 3 · Session 1 — Fri Sep 18"
 ---
 
-## Under construction {.center}
-
-<!-- banner:under-construction -->
-
-⚠️ This deck is a **draft** — not yet instructor-reviewed, subject to change until the
-session it serves.
-
 ## Check-in {.smaller}
 
 **[bf550.link/checkin](https://bu-cds-bf550.github.io/checkin/?session=07)** · `?session=07`

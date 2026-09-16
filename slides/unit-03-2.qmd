@@ -11,13 +11,6 @@ title: "Nest: depth, fitting, and the notation"
 subtitle: "BF550 · Unit 3 · Session 2 — Mon Sep 21"
 ---
 
-## Under construction {.center}
-
-<!-- banner:under-construction -->
-
-⚠️ This deck is a **draft** — not yet instructor-reviewed, subject to change until the
-session it serves.
-
 ## Check-in {.smaller}
 
 **[bf550.link/checkin](https://bu-cds-bf550.github.io/checkin/?session=08)** · `?session=08`

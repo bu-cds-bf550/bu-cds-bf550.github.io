@@ -15,13 +15,6 @@ title: "Nest: when the model is wrong"
 subtitle: "BF550 · Unit 3 · Session 3 — Wed Sep 23"
 ---
 
-## Under construction {.center}
-
-<!-- banner:under-construction -->
-
-⚠️ This deck is a **draft** — not yet instructor-reviewed, subject to change until the
-session it serves.
-
 ## Check-in {.smaller}
 
 **[bf550.link/checkin](https://bu-cds-bf550.github.io/checkin/?session=09)** · `?session=09`
