@@ -7,6 +7,8 @@
 # defined in a hidden chunk on the callback slide; Friday's deck showed it on screen.
 # Authored 16 Sep 2026 to the resized run-sheet: 53 minutes, 23 content slides
 # (decisions/decks-teach-the-material-a-second-way.md; authoring/slides.md, Sizing a deck).
+# Language aligned to the chapter's 15 Sep 2026 revision on 18 Sep 2026 ("first instinct",
+# not "reflex"; "the depth experiment"; the fitting section in the chapter's words).
 title: "Nest: depth, fitting, and the notation"
 subtitle: "BF550 · Unit 3 · Session 2 — Mon Sep 21"
 ---
@@ -60,11 +62,11 @@ Ask before the lecture, because the answer changes what gets cut at the end.
 
 ## Does more data fix it?
 
-The reflex when a measurement is noisy: **measure harder**.
+The first instinct when a measurement is noisy: **measure harder**.
 
 . . .
 
-More reads a day. Deeper sequencing. It is the first thing she will ask for, and it is not cheap.
+More reads a day. Deeper sequencing. It was her instinct too, and it is not cheap.
 
 . . .
 
@@ -130,7 +132,7 @@ opposite conclusion.
 
 . . .
 
-A hundredfold more sequencing. The spread barely moved.
+A hundredfold more reads. The standard deviation of the proportion barely moved.
 
 ::: {.notes}
 Two and a half minutes. Let the room sit with it. Someone usually objects that the numbers *did*
@@ -180,15 +182,15 @@ sentence is the one a collaborator can act on, and it is the one that saves mone
 
 ## So what can we learn from her month?
 
-So far we have chosen $\mu$ and $\nu$ ourselves and run the model forward.
+So far we have guessed $\mu$ and $\nu$ ourselves, and the guesses fit her month quite well.
 
 . . .
 
-She did not hand us $\mu$ and $\nu$. She handed us thirty numbers.
+Suppose she handed us a new month that looked different. Thirty numbers, and no $\mu$ or $\nu$.
 
 . . .
 
-Can we go the other way?
+How would we make good guesses about the $\mu$ and $\nu$ that fit them?
 
 ::: {.notes}
 Ninety seconds, a question slide turning the session around. Everything up to here has been playing
@@ -220,8 +222,8 @@ Her monthly average pins $\mu$ near **0.06**. That one is easy.
 
 . . .
 
-$\nu$ is not visible. It is the day-to-day movement of the truth, and we only ever see it **mixed
-with** the sequencing wobble.
+$\nu$ is less obvious. It is the day-to-day variability of the microbe's proportion, and we only
+see it **combined with** the sampling variance of the sequencing.
 
 ::: {.notes}
 Two minutes, and the asymmetry is why the chapter spends a section here rather than a paragraph.
@@ -256,11 +258,11 @@ $\nu$ = **10, 25, 50, 100, 250, 500**
 
 . . .
 
-Each one is a whole month generator. Run each, take the standard deviation of its counts.
+Test each value: run the model at that $\nu$, take the standard deviation of its counts.
 
 . . .
 
-**Predict first.** Hers was 101.1. Which candidate lands nearest?
+**Predict first.** Hers was 101.1. Which candidate produces a standard deviation similar to it?
 
 ::: {.notes}
 Two and a half minutes, and take the guesses. The useful disagreement is about direction: a smaller
@@ -334,7 +336,7 @@ Thirty days chose $\nu$ = 100 over $\nu$ = 250.
 
 . . .
 
-Thirty days could **not** choose $\nu$ = 100 over $\nu$ = 120.
+Telling $\nu$ = 100 from $\nu$ = 120 on thirty days is very difficult, if not impossible.
 
 . . .
 
@@ -394,12 +396,12 @@ $X_d \mid p_d$ — the bar says **"given"**.
 
 . . .
 
-*The count on day $d$, **given** that day's fraction, is Binomial.*
+The number of *A. muciniphila* reads on day $d$, **given** $p_d$, is Binomial with $n$ reads and
+probability $p_d$.
 
 . . .
 
-In the code, "given" is the plain fact that `p_today` already has a value when the binomial line
-runs.
+In the code, "given" is `p_today` already in hand when the binomial line runs.
 
 ::: {.notes}
 Two minutes, and it is the symbol most worth the time. Students meeting the bar for the first time
@@ -431,7 +433,7 @@ $$
 
 . . .
 
-The first part is the binomial variance you already know.
+The first factor, $n\,\mu(1-\mu)$, is the binomial variance we have seen before.
 
 . . .
 
@@ -473,7 +475,7 @@ So depth widens the gap between the binomial model and the data instead of closi
 
 . . .
 
-The depth beat from this morning, in algebra.
+The depth experiment from this morning, in algebra.
 
 ::: {.notes}
 Two minutes, closing the session where it opened. The depth experiment showed it by simulation and

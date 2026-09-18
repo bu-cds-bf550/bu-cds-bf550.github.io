@@ -6,7 +6,9 @@
 # The chapter's chunk is reused verbatim with its seed (23). sample_reads is defined in a
 # hidden chunk on the callback slide. Authored 16 Sep 2026 to the resized run-sheet:
 # 53 minutes, 21 content slides (decisions/decks-teach-the-material-a-second-way.md;
-# authoring/slides.md, Sizing a deck).
+# authoring/slides.md, Sizing a deck). Language aligned to the chapter's 16 Sep 2026 revision
+# on 18 Sep 2026: the band beat no longer says "wrong world", and its chunk sums the two masks
+# as the chapter's does.
 #
 # Boundary: PS4 opens Friday on this unit's problem. This file is public, so the reserved
 # terms are not named here either; the list lives in lectures/unit03-runsheet.md (Do not give
@@ -110,7 +112,7 @@ carefully, because the beat is about to measure it against reality. Ask what wou
 distrust the filter in practice: flagging almost nothing, or flagging almost everything.
 :::
 
-## A rule built for the wrong world
+## The band, applied to ordinary nested days
 
 Apply the band to **ordinary** nested days. No outbreaks, no contamination, nothing wrong.
 
@@ -124,7 +126,7 @@ beat corrects, and it is the reasonable one. Remind the room that $\nu$ = 500 is
 from Friday, the one whose extra spread was hard to see by eye. Misconception 3 of three.
 :::
 
-## A rule built for the wrong world {.smaller}
+## The band, applied to ordinary nested days {.smaller}
 
 ```{python}
 #| echo: true
@@ -135,8 +137,8 @@ tests = {"fixed truth": rng.binomial(5000, 0.06, 1000),
          "nested, ν=25": sample_reads(0.06, 25, 5000, 1000, rng)}
 print(f"band: [{lo:.0f}, {hi:.0f}] reads, built to flag 5%\n")
 for name, days in tests.items():
-    outside_band = (days < lo) | (days > hi)   # True for each day outside the band
-    frac = outside_band.mean()
+    n_outside = (days < lo).sum() + (days > hi).sum()   # days below the band, plus days above it
+    frac = n_outside / len(days)
     print(f"{name:>14}: flags {frac:.0%} of perfectly ordinary days")
 ```
 
@@ -146,7 +148,7 @@ is ordinary by construction: the same gut, the same protocol, nothing to find. T
 changes between the three rows is how much the daily truth moves.
 :::
 
-## A rule built for the wrong world
+## The band, applied to ordinary nested days
 
 fixed truth: **5%** — exactly as promised.
 
