@@ -1,6 +1,7 @@
 # Python runtime for executing the decks' code chunks (CI installs this before rendering).
 # Mirrors the textbook's pins so a chunk lifted from a chapter runs identically here.
 numpy==2.1.*
+scipy==1.14.*
 matplotlib==3.9.*
 jupyter==1.*
 pyyaml==6.*
