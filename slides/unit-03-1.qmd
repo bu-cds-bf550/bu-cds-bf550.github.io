@@ -8,7 +8,9 @@
 # Authored 16 Sep 2026 to the resized run-sheet: 47 minutes, 22 content slides
 # (decisions/decks-teach-the-material-a-second-way.md; authoring/slides.md, Sizing a deck).
 # The deck introduces every term it uses before the slide that uses it, because the reading
-# is not assumed to have landed.
+# is not assumed to have landed. Language aligned to the chapter's 15 Sep 2026 revision on
+# 18 Sep 2026: the one-level model is "a simple model", not "the reflex"; nesting is defined
+# in the chapter's words; the Beta is introduced by its parameters, in the chapter's words.
 title: "Nest: why real data is messier than your model"
 subtitle: "BF550 · Unit 3 · Session 1 — Fri Sep 18"
 ---
@@ -107,7 +109,7 @@ To call the swing unusual, we would need to know what an ordinary month looks li
 
 . . .
 
-Ordinary meaning: nothing changing in her gut, only the read sampling moving.
+Ordinary meaning: nothing changing in her gut, and the days differing by sampling error alone.
 
 . . .
 
@@ -117,29 +119,31 @@ We cannot get that from her data. We can build it.
 Ninety seconds. Building a comparison is the move the whole course runs on, and the room has done
 it twice. When the data cannot answer the question, write down the process, run it, and read what it produces.
 Chapter 1 did it for one methylated fraction, chapter 2 for 1,200 sites at once. Today we do it
-for her month, and the first attempt will fail in an interesting way.
+for her month, starting from chapter 1's model, and we see how well or how poorly it matches what
+she observed.
 :::
 
-## The reflex: one level
+## A simple model: one level
 
-Fix her gut at 6%. Every morning, draw 5,000 reads.
+Fix her gut at 6%. Every morning, 5,000 reads are drawn from that morning's sample.
 
 . . .
 
-Each read is *A. muciniphila* with probability 0.06, independently.
+Each read is *A. muciniphila* with some fixed probability, say 0.06.
 
 . . .
 
 The days differ only because 5,000 draws differ. **One level of randomness.**
 
 ::: {.notes}
-Ninety seconds, no code yet. The reflex is chapter 1's simulator with new labels, a fixed truth
-and a binomial draw. Say that it is the reflex because it is the first model anyone writes, and it
-is the right place to start. The assumption hiding in it is that her gut is the same on Tuesday and
-on Friday, which the next two slides put to the test.
+Ninety seconds, no code yet. The simple model is chapter 1's simulator with new labels, a fixed
+truth and a binomial draw. Say that it is the first model anyone writes, and it is the right place
+to start; the chapter proposes it and tests it against her month. The assumption hiding in it is
+that the proportion in her gut is the same on Tuesday and on Friday, which the next two slides put
+to the test.
 :::
 
-## The reflex, as code {.smaller}
+## The simple model, as code {.smaller}
 
 ```{python}
 #| echo: true
@@ -193,8 +197,9 @@ somewhere around 6%.
 The second level is the one-level wobble you already know. The first level is new.
 
 ::: {.notes}
-Two and a half minutes. Diet, transit time and which part of the stool was sampled all move the
-composition. That movement is not measurement error: the true fraction itself changes. Say each
+Two and a half minutes. Diet, transit time and which part of the stool was sampled all change the
+composition of the gut from day to day. Those differences are not measurement error. The true
+microbial fraction itself changes from day to day. Say each
 level out loud and hold up a finger for each. The room needs to be able to point at the two levels
 before the code shows them, because the code is two lines and both are easy to miss.
 :::
@@ -220,8 +225,8 @@ exactly this reading, and Monday's check-in turns on it.
 
 ## This operation is called nesting
 
-**Nesting:** the sampling variability of one process is itself shaped by the sampling variability
-of another.
+**Nesting:** the sampling variability of one process is itself influenced by the sampling
+variability of another process.
 
 . . .
 
@@ -255,14 +260,14 @@ draw method a story needs is decided by what kind of number the story's quantity
 
 ## A distribution for the day's truth
 
-The **Beta distribution** samples values between 0 and 1.
+The Binomial samples counts. The **Beta distribution** samples values between 0 and 1.
 
 . . .
 
 Two parameters:
 
 - a **mean** $\mu$, where the samples are centred
-- a **concentration** $\nu$, how close they stay to the mean
+- a **concentration** $\nu$, how close the samples stay to the mean
 
 ::: {.notes}
 Two minutes. $\mu$ is between 0 and 1; $\nu$ is greater than 0. Those two facts are all the room needs
@@ -277,11 +282,11 @@ $\mu$ moves the centre. Set it to 0.06 and the days sit around 6%.
 
 . . .
 
-$\nu$ decides how tightly the days cluster. **Large $\nu$ is a steady gut.**
+$\nu$ sets how close the days stay to the mean. **Large $\nu$ is a steady gut.**
 
 . . .
 
-Small $\nu$ is a gut that swings. Same average, different month.
+Small $\nu$ lets the days vary more. A gut that swings, with the same average.
 
 ::: {.notes}
 Two minutes, and the slide that was missing from the first draft of this deck. The room has to be
@@ -292,7 +297,7 @@ prediction: if her gut were perfectly steady, what would $\nu$ be? Very large. T
 
 ## Writing the Beta in code {.smaller}
 
-`numpy` does not take $\mu$ and $\nu$. It takes two other numbers:
+`rng.beta` does not take $\mu$ and $\nu$ directly. It takes two other numbers:
 
 ```{python}
 #| echo: true
@@ -300,7 +305,7 @@ prediction: if her gut were perfectly steady, what would $\nu$ be? Very large. T
 rng.beta(mean_abund * concentration, (1 - mean_abund) * concentration)
 ```
 
-$\mu\nu$ first, $(1-\mu)\nu$ second. Read it as a translation step and move on.
+$\mu\nu$ as the first parameter, $(1-\mu)\nu$ as the second. Read it as a translation step and move on.
 
 ::: {.notes}
 Two minutes. The chapter states this as an implementation note and so do we. Nobody is being asked
@@ -450,6 +455,10 @@ its mean and was wrong about everything else.
 ## The spread is the instrument
 
 If the mean cannot tell these models apart, the **standard deviation** can.
+
+. . .
+
+Nesting explains the variance that a simple model with fixed parameters cannot.
 
 . . .
 
