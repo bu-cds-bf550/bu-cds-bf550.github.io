@@ -162,7 +162,7 @@ That variation is in the gut, not in the sequencer.
 
 . . .
 
-Misconception 2 of three: deeper sequencing will not average away biological variability.
+**Key idea:**: deeper sequencing will not average away biological variability.
 
 ::: {.notes}
 Two minutes, the correction. The design consequence is Wednesday's, and it is worth previewing in
