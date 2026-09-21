@@ -124,7 +124,7 @@ opposite conclusion.
 
 . . .
 
-A hundredfold more reads. The standard deviation of the proportion barely moved.
+A hundredfold more reads. The standard deviation of the proportion barely changed.
 
 ::: {.notes}
 Two and a half minutes. Let the room sit with it. Someone usually objects that the numbers *did*
@@ -178,7 +178,7 @@ So far we have guessed $\mu$ and $\nu$ ourselves, and the guesses fit her month 
 
 . . .
 
-Suppose she handed us a new month that looked different. Thirty numbers, and no $\mu$ or $\nu$.
+Suppose she handed us a new month that looked different.
 
 . . .
 
@@ -208,7 +208,7 @@ chart. Mean 322.0 and standard deviation 101.1. Say that thirty days is not much
 which is a point the session returns to at *A coarse instrument*.
 :::
 
-## 
+## Initial guesses
 
 Her monthly average pins $\mu$ near **0.06**. We can compute that easily.
 
@@ -225,7 +225,7 @@ levels at once. The room has already seen the two levels add together on Friday,
 the 16.8 against the 121.9.
 :::
 
-## Simulating our way to a  guess
+## Simulating our way to a guess
 
 We can use our model to propose values of $\nu$ and see how well they fit the observations.
 
@@ -300,7 +300,7 @@ between, and let the room notice it is between 100 and 250 rather than exactly o
 is honest, and it sets up *A coarse instrument* two slides later.
 :::
 
-## Her month sits nearest ν = 100
+## Her observations are nearest ν = 100
 
 ```{python}
 #| echo: false
@@ -378,7 +378,7 @@ p_today = rng.beta(mean_abund * concentration,
                    (1 - mean_abund) * concentration)
 
 # Binomial
-counts.append(rng.binomial(n_reads, p_today))
+counts_today = rng.binomial(n_reads, p_today)
 ```
 
 ::: {.notes}
@@ -406,8 +406,9 @@ In the code, "given" is `p_today` already in hand when the binomial line runs.
 p_today = rng.beta(mean_abund * concentration,
                    (1 - mean_abund) * concentration)
 
+
 # Binomial
-counts.append(rng.binomial(n_reads, p_today))
+counts_today = rng.binomial(n_reads, p_today)
 ```
 
 ::: {.notes}
@@ -431,7 +432,7 @@ searches for "beta-binomial" finds the literature on exactly this problem, which
 the name. Chapter 9 meets its counterpart for open-ended counts.
 :::
 
-## Each level has its own spread
+## Each level has its own variability 
 
 The Binomial, the sequencer's level: $n$ reads at a fixed truth $p$.
 
