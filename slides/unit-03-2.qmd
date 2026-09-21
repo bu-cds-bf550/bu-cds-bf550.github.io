@@ -9,25 +9,17 @@
 # (decisions/decks-teach-the-material-a-second-way.md; authoring/slides.md, Sizing a deck).
 # Language aligned to the chapter's 15 Sep 2026 revision on 18 Sep 2026 ("first instinct",
 # not "reflex"; "the depth experiment"; the fitting section in the chapter's words).
-title: "Nest: depth, fitting, and the notation"
+# 21 Sep 2026: the two count-scale slides after the closed form (the 119 check and the growing
+# bracket) replaced by one proportion-space figure that splits the spread into a piece depth
+# moves and a piece it cannot, all code hidden. A slide giving the Binomial's and the Beta's
+# own variances added before the closed form; 24 content slides.
+title: "Nest: sample size, fitting, and the notation"
 subtitle: "BF550 · Unit 3 · Session 2 — Mon Sep 21"
 ---
 
-## Check-in {.smaller}
+# When does increasing sample size help?
 
-**[bf550.link/checkin](https://bu-cds-bf550.github.io/checkin/?session=08)** · `?session=08`
-
-Closed book, no AI, five minutes.
-
-::: {.notes}
-The standing frame, verbatim. Code-reading kind. Bank `checkins/unit03/bank.md` session 2. The
-edge case asks what changes when the setting line moves above the loop; read that tally before
-Wednesday, because Wednesday's check-in is the same code with the line actually moved.
-:::
-
-# Depth, and what it cannot fix
-
-## Where we left it
+## Where we left off
 
 ```{python}
 #| echo: false
@@ -60,17 +52,17 @@ it. Then, no slide: who has PS3 cloned and running, and whose first check cell i
 Ask before the lecture, because the answer changes what gets cut at the end.
 :::
 
-## Does more data fix it?
+## Would more data reduce variability?
 
-The first instinct when a measurement is noisy: **measure harder**.
-
-. . .
-
-More reads a day. Deeper sequencing. It was her instinct too, and it is not cheap.
+The first instinct when a measurement is noisy: **make more measurements**.
 
 . . .
 
-Does it work here?
+Generate more reads each day. The number of reads generated is called the **sequencing depth**
+
+. . .
+
+Increasing sequencing depth was her instinct too, and it is not cheap. Will it help estimate reduce our observed variability?
 
 ::: {.notes}
 Ninety seconds, a question slide. Take a show of hands before the next slide: who thinks deeper
@@ -79,7 +71,7 @@ answer, and the beat that follows is worth running precisely because the answer 
 wrong.
 :::
 
-## Deeper does not help
+## Does deeper sequencing reduce variability?
 
 The same nested model, three sequencing depths: **500**, **5,000** and **50,000** reads a day.
 
@@ -97,7 +89,7 @@ A hundredfold increase in depth is a hundred times the sequencing cost, so the r
 about the answer before it sees it.
 :::
 
-## Deeper does not help {.smaller}
+## Does deeper sequencing reduce variability? {.smaller}
 
 ```{python}
 #| echo: true
@@ -118,7 +110,7 @@ the three depths comparable; a student who compares counts will see the spread g
 opposite conclusion.
 :::
 
-## Deeper does not help
+## Deeper sequencing does not help
 
 500 reads: **0.0261**
 
@@ -141,17 +133,17 @@ board which predictions survived. Nobody who said "toward zero" is wrong about t
 about the destination.
 :::
 
-## The floor it is heading for
+## Why doesn't the variance tend toward zero?
 
 The last line of the output: **0.0236**.
 
 . . .
 
-The floor is the spread of the daily truth itself, with no sequencing in it at all.
+The limit is the spread of the daily truth itself, with no sequencing in it at all.
 
 . . .
 
-Depth can remove the reading error. It cannot remove the gut.
+More depth can remove the sampling error from sequencing. It does not influence the true composition of the gut.
 
 ::: {.notes}
 Two minutes. The floor is the first level's own spread, computed from the Beta's parameters rather
@@ -208,7 +200,7 @@ observed = sample_reads(0.06, 100, 5000, 30, rng)   # her month, the one from th
 print(f"her month: mean {observed.mean():.1f}, standard deviation = {observed.std():.1f}")
 ```
 
-Two numbers. Everything we do next has to work from them.
+We can use the computed mean and standard deviation to make some guesses.
 
 ::: {.notes}
 Two minutes. Seed 17 is Friday's, so this is the same month the room has already seen as a bar
@@ -216,9 +208,9 @@ chart. Mean 322.0 and standard deviation 101.1. Say that thirty days is not much
 which is a point the session returns to at *A coarse instrument*.
 :::
 
-## We know the mean. We do not know the concentration
+## 
 
-Her monthly average pins $\mu$ near **0.06**. That one is easy.
+Her monthly average pins $\mu$ near **0.06**. We can compute that easily.
 
 . . .
 
@@ -233,9 +225,9 @@ levels at once. The room has already seen the two levels add together on Friday,
 the 16.8 against the 121.9.
 :::
 
-## Chapter 1's move, with a new unknown
+## Simulating our way to a  guess
 
-You have done this before.
+We can use our model to propose values of $\nu$ and see how well they fit the observations.
 
 . . .
 
@@ -243,7 +235,7 @@ Pick a candidate value. Run the model forward. Compare what it produces against 
 
 . . .
 
-Keep the candidate whose output matches. **Nothing here needs a formula.**
+Keep the candidate whose output matches.
 
 ::: {.notes}
 Two minutes. Chapter 1 did exactly this for a single methylated fraction, over a grid of candidate
@@ -272,7 +264,7 @@ do*
 before advancing.
 :::
 
-## Which model made her month? {.smaller}
+## Which values simulate a month like hers? {.smaller}
 
 ```{python}
 #| echo: true
@@ -300,7 +292,7 @@ are measured well even though her month is only thirty days. Point at the loop a
 
 . . .
 
-Her month: **101.1**.
+Standard deviation of her month: **101.1**.
 
 ::: {.notes}
 Two and a half minutes. Read down the row and stop at 117.5. Ask which two candidates hers sits
@@ -332,7 +324,7 @@ this loop with `argmin` doing the keeping, this afternoon, so tell them they wil
 
 ## A coarse instrument
 
-Thirty days chose $\nu$ = 100 over $\nu$ = 250.
+Her observations suggest $\nu$ = 100 is more likely than $\nu$ = 250, or any other value we proposed.
 
 . . .
 
@@ -341,7 +333,7 @@ Telling $\nu$ = 100 from $\nu$ = 120 on thirty days is very difficult, if not im
 . . .
 
 How would you know where the line is? **Simulate a model whose $\nu$ you know, estimate it,
-repeat, and watch the estimates scatter.**
+repeat, and watch how the estimates vary.**
 
 ::: {.notes}
 Two and a half minutes. The chapter is handing the room a tool rather than a caveat. Knowing when
@@ -358,11 +350,8 @@ Everything so far has been code.
 
 . . .
 
-Her model has a conventional written form, and you will meet it in every paper that uses one.
+Our two-level model has a conventional mathematical notation.
 
-. . .
-
-Two lines. One per level.
 
 ::: {.notes}
 Ninety seconds, a question slide before the symbols. Say plainly that the notation adds no new
@@ -371,7 +360,7 @@ room that can read the code and not the notation is locked out of the papers, wh
 reason this section exists.
 :::
 
-## Two lines of notation
+## The Beta-Binomial Distribution
 
 $$
 p_d \sim \mathrm{Beta}(\mu\nu,\ (1-\mu)\nu)
@@ -382,6 +371,15 @@ $$
 . . .
 
 Line one is `p_today = rng.beta(...)`. Line two is `rng.binomial(n_reads, p_today)`.
+
+```python
+# Beta
+p_today = rng.beta(mean_abund * concentration,
+                   (1 - mean_abund) * concentration)
+
+# Binomial
+counts.append(rng.binomial(n_reads, p_today))
+```
 
 ::: {.notes}
 Two and a half minutes. Read the first line aloud: day $d$'s truth $p_d$ is distributed as a Beta
@@ -403,6 +401,15 @@ probability $p_d$.
 
 In the code, "given" is `p_today` already in hand when the binomial line runs.
 
+```python
+# Beta
+p_today = rng.beta(mean_abund * concentration,
+                   (1 - mean_abund) * concentration)
+
+# Binomial
+counts.append(rng.binomial(n_reads, p_today))
+```
+
 ::: {.notes}
 Two minutes, and it is the symbol most worth the time. Students meeting the bar for the first time
 read it as division or as a set-builder. The code reading is the one that sticks: the second line
@@ -412,16 +419,47 @@ chapter 12, so this is an investment.
 
 ## The pair has a name
 
-A Beta truth with a Binomial draw on top of it is called the **beta-binomial**.
+A Beta truth with a Binomial draw on top of it is called the **Beta-Binomial**.
 
 . . .
 
-`sample_reads` has been sampling from it since Friday.
+`sample_reads` samples from a Beta-Binomial distribution.
 
 ::: {.notes}
 Ninety seconds, the naming slide, and the only place the word is said. Do not cut it. A student who
 searches for "beta-binomial" finds the literature on exactly this problem, which is why they get
 the name. Chapter 9 meets its counterpart for open-ended counts.
+:::
+
+## Each level has its own spread
+
+The Binomial, the sequencer's level: $n$ reads at a fixed truth $p$.
+
+$$
+\mathrm{Var}(X) \;=\; n\,p\,(1-p)
+$$
+
+. . .
+
+The Beta, the gut's level: a daily truth with mean $\mu$ and concentration $\nu$.
+
+$$
+\mathrm{Var}(p_d) \;=\; \frac{\mu(1-\mu)}{\nu + 1}
+$$
+
+. . .
+
+Notice: the number of reads $n$ only appears in the binomial variance.
+
+::: {.notes}
+Two and a half minutes, and neither line has been written down before today. The first is
+chapter 1's fact that precision improves with the square root of depth, in symbols: it is a count,
+so it grows with $n$, and its spread as a fraction shrinks like $1/\sqrt{n}$. The second is the
+Beta's, and it is where this morning's floor came from: $0.06 \times 0.94 / 101$ is exactly this
+with $\nu = 100$, and the square root of it is the 0.0236 the three depths stopped at. Point at
+which symbol appears in which line before advancing, because the next two slides are about what
+happens when the two levels are stacked and the room needs to know which knob belongs to which
+level. Nobody derives either.
 :::
 
 ## The spread, in closed form
@@ -433,11 +471,11 @@ $$
 
 . . .
 
-The first factor, $n\,\mu(1-\mu)$, is the binomial variance we have seen before.
+The first term, $n\,\mu(1-\mu)$, is the binomial variance.
 
 . . .
 
-The bracket is the **overdispersion factor**. It is everything nesting adds.
+The second term, $\bigl[\,1 + (n-1)\rho\,\bigr]$ is the **overdispersion factor**. It is everything nesting adds.
 
 ::: {.notes}
 Two and a half minutes. $\rho$ is the intraclass correlation: two reads from the same day share
@@ -446,43 +484,65 @@ today and nobody is memorising it. It is here so the next slide can check the si
 it, which is the real lesson.
 :::
 
-## Checking the formula against the run
+## Overdispersion
 
-At $n$ = 5,000 and $\nu$ = 100: the bracket is $1 + 4999/101 \approx 50.5$.
-
-. . .
-
-So the spread should be $\sqrt{50.5} \approx 7.1$ times the binomial 16.8, or about **119**.
+Observed variance that exceeds the expected variance of a single source of randomness is called **overdispersion**.
 
 . . .
 
-The $\nu$ = 100 bar on the previous figure sits at **117.5**.
+Overdispersion is a very common situation when dealing with biological data.
+
+## The sequencer's piece shrinks, the gut's piece stays
+
+```{python}
+#| echo: false
+#| fig-cap: "The spread of the daily fraction, split into its two pieces. Depth removes one and cannot touch the other."
+mean_abund, concentration = 0.06, 100
+rng = np.random.default_rng(13)
+
+# the gut's own movement: the Beta line of sample_reads run alone, no sequencing on top
+p_days = rng.beta(mean_abund * concentration, (1 - mean_abund) * concentration, size=100_000)
+gut_piece = np.var(p_days)
+
+# the sequencer's wobble: chapter 1's binomial spread of a fraction, shrinking with depth
+depth_grid = np.logspace(2, 5, 60)
+gut_curve = np.full_like(depth_grid, gut_piece)
+sequencer_curve = mean_abund * (1 - mean_abund) / depth_grid
+
+# this morning's three depths, simulated in full, to sit on top of the two pieces
+sim_depths = (500, 5000, 50000)
+simulated_spreads = [np.var(sample_reads(mean_abund, concentration, d, 2000, rng) / d)
+                     for d in sim_depths]
+
+fig, ax = plt.subplots(figsize=(8, 3.4))
+ax.stackplot(depth_grid, gut_curve, sequencer_curve, colors=["#1baf7a", "#2a78d6"], alpha=0.85,
+             labels=["the gut's own movement", "the sequencer's wobble"])
+ax.plot(depth_grid, gut_curve + sequencer_curve, color="#1d1d1b", lw=1.5, label="the two added")
+ax.scatter(sim_depths, simulated_spreads, color="#eb6834", zorder=5, s=50, label="simulated")
+ax.set_xscale("log")
+ax.set_xticks([100, 1000, 10000, 100000])
+ax.set_xticklabels(["100", "1,000", "10,000", "100,000"])
+ax.set_xlabel("reads per day")
+ax.set_ylabel("spread of the daily fraction\n(variance)")
+ax.set_ylim(0, None)
+ax.legend(frameon=False, loc="upper right")
+ax.spines[["top", "right"]].set_visible(False)
+plt.show()
+```
+
+**Depth moves the blue. Concentration moves the green.** Each parameter reaches one level of the model.
 
 ::: {.notes}
-Two and a half minutes, and the check is what the formula earned its slide for. Algebra and
-simulation were computed by completely different routes and they agree. Say that when the two
-disagree, one of them has a bug, and that having both is how you find it. Agreement between two
-routes is the habit the course is building, rather than the formula.
-:::
-
-## The bracket grows with n
-
-$1 + (n-1)\rho$ — more reads a day makes the bracket **bigger**.
-
-. . .
-
-So depth widens the gap between the binomial model and the data instead of closing it.
-
-. . .
-
-The depth experiment from this morning, in algebra.
-
-::: {.notes}
-Two minutes, closing the session where it opened. The depth experiment showed it by simulation and
-the
-bracket proves it. If a student asks why the *fraction*'s spread went down while the bracket goes
-up, the answer is that the count spread grows more slowly than $n$ does; take it offline rather
-than derive it here.
+Two and a half minutes, closing the session where it opened. The spread of the daily fraction,
+squared so that its two pieces stack. Blue is the sequencer's wobble, and depth is the only thing
+that moves it: wide at 100 reads, gone by 10,000. Green is the day-to-day movement of the gut,
+the same height at every depth because the sequencer never touches it; the only thing that moves
+green is the concentration, which Friday's *Three models, one mean* showed. The orange dots are
+this morning's three depths simulated in full, sitting on the top edge, which is why the printed
+standard deviations went 0.026, 0.024, 0.024 and stopped. The sentence to leave on is the one on
+the slide: each parameter reaches one level of the model, and that is what a two-level model is
+for. The closed form is written in *counts*, where the whole picture is multiplied by the depth
+and the split is hidden; no code or algebra is asked of anyone here.
 :::
 
 ## Working time — the rest of today
