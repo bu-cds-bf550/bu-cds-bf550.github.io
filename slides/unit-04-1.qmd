@@ -7,13 +7,6 @@ title: "Mix: which process produced this observation?"
 subtitle: "BF550 · Unit 4 · Session 1 — Fri Sep 25"
 ---
 
-## Under construction {.center}
-
-<!-- banner:under-construction -->
-
-⚠️ This deck is a **draft** — not yet instructor-reviewed, subject to change until the
-session it serves.
-
 # TODO-rename: the unit's opening question
 
 ## Check-in {.smaller}

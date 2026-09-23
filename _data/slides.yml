@@ -45,17 +45,17 @@
 - unit: unit-04
   session: 1
   date: "Fri Sep 25"
-  title: "Mix: which process produced this observation? (draft)"
+  title: "Mix: which process produced this observation?"
   file: unit-04-1
 - unit: unit-04
   session: 2
   date: "Mon Sep 28"
-  title: "Mix: which process produced this observation? (draft)"
+  title: "Mix: which process produced this observation?"
   file: unit-04-2
 - unit: unit-04
   session: 3
   date: "Wed Sep 30"
-  title: "Mix: which process produced this observation? (draft)"
+  title: "Mix: which process produced this observation?"
   file: unit-04-3
 - unit: unit-05
   session: 1
