@@ -1,41 +1,53 @@
 ---
-# Session 3 of unit 3. Rewritten 23 Sep 2026 to an arc rather than a list of failures.
+# Session 3 of unit 3. Rewritten 23 Sep 2026, twice in one morning.
 #
-# The old shape was "three ways this model is wrong", and the instructor's objection (23 Sep)
-# was that only the first is a wrong model: the second is a check that cannot detect a wrong
-# model, and the third is a correct model's consequence for experimental design. The three are
-# now staged as a sequence in which each part is motivated by the one before it — the model is
-# wrong, how would you find out, so what do you do instead — which also removes the deck's
-# reliance on the room recalling Friday and Monday unaided.
+# The first rewrite staged the chapter's three failures as an arc. The instructor's objection to
+# that (23 Sep) went deeper than the ordering: the session opened by showing someone build a
+# 95% band from the one-level model, two sessions after the room learned that nesting widens the
+# spread. Nobody who sat through Friday and Monday would do that, so the demonstration was
+# aimed at a practitioner who was not in the room, and it could only tell the students something
+# they already knew.
 #
-# Two other repairs in the same pass:
-#   * The band is built rather than asserted. `1.96` appears nowhere else in the course and
-#     "band" appears nowhere before this section, so the old *How the band was built* handed
-#     the room a formula out of an approximation nothing has taught. Three slides now show a
-#     one-level month, draw the lines on it, and only then name the pair of lines and give the
-#     shortcut that produced them.
-#   * Part 2 opens on this morning's check-in, which is the failure it teaches. The bank's own
-#     arc note says "Wednesday shows it done"; the deck never used it.
+# The session is now organised around the collaborator's own question, which she asked on
+# Friday and which nothing in the unit had yet answered: WHAT DO WE TELL HER? There are no
+# constructed mistakes in it. Monday's fitted concentration, the one result in the unit that
+# nothing used, is the engine of the whole session: it produces the range of ordinary days for
+# her gut, and her thirty days are read against it.
 #
-# The chapter's chunk is reused verbatim with its seed (23). sample_reads is defined in a
-# hidden chunk on the first callback slide. Chapter 3 froze on assignment (Fri 18 Sep), so the
-# chapter keeps its own framing and these are deck-side repairs, per
-# decisions/an-assigned-chapter-freezes.md. The chapter-side items are filed on issue #80.
+# §1 answers "is anything wrong" (nothing in her month is unusual, 0 of 30 outside), with the
+# one-level range as a CONTRAST rather than as an error anyone commits: two models, two answers,
+# the same thirty days, 25 of 30 flagged by the other one. §2 asks whether our own answer can be
+# trusted, motivated by our having just put our name on it, and uses this session's check-in
+# snippet. §3 answers what she should do next, and makes "replicate days, not reads"
+# quantitative.
 #
-# Numbers re-executed 23 Sep 2026: one-level days at 5,000 reads mean 300.0 sd 16.7; band
-# [267, 333]; 51 of 1,000 one-level days outside, 5%. The chapter's chunk is unchanged at
-# 5%, 54%, 87%. Part 2's table, 500 months of thirty days at 500 reads: nesting left out
-# 29.7 and 5.0, nesting in place 30.0 and 12.6.
+# All three of the chapter's declared misconceptions are still corrected: 3 in §1's contrast,
+# 1 in §2, 2 in §3's table. The chapter's content is all here; its ORDER is not — the repair
+# comes before the failure. That is a deliberate exception to
+# decisions/lectures-follow-chapter-order.md, taken on the instructor's ruling of 23 Sep 2026;
+# a record follows. Chapter 3 froze on assignment (Fri 18 Sep) so this is deck-side, per
+# decisions/an-assigned-chapter-freezes.md, and the chapter-side work is the new
+# "What do we tell our collaborator?" section the instructor asked for the same morning.
 #
-# Sizing: about 55 minutes, 24 content slides and two logistics slides
+# np.percentile is not in the construct inventory, so the chunk that uses it runs hidden and
+# the room is shown the figure and the two numbers, never the mechanics.
+#
+# Numbers re-executed 23 Sep 2026: her month at seed 17 is mean 322.0, sd 101.1, low 145, high
+# 580. Fitted mean abundance 0.0644 at ν = 100 gives an ordinary range of [125, 601] reads,
+# 2.5% to 12.0%, with 0 of her 30 days outside it. The one-level range around her own mean is
+# [288, 356] with 25 of 30 outside. §2's table: 29.7 and 5.0 against 30.0 and 12.6. §3's table
+# reads 0.456 / 0.451 / 0.449 across depth at thirty days and 0.456 / 0.309 / 0.224 down days
+# at 5,000 reads, so twice the thirty-day figure is the 0.9 points on the slide after it.
+#
+# Sizing: about fifty minutes, 21 content slides and two logistics slides
 # (decisions/decks-teach-the-material-a-second-way.md; authoring/slides.md, Sizing a deck).
 # The run-sheet (bf550-instructor lectures/unit03-runsheet.md) owns the clock and cites these
 # headings.
 #
-# Boundary: PS4 opens Friday on this unit's problem. This file is public, so the reserved
-# terms are not named here either; the list lives in lectures/unit03-runsheet.md (Do not give
-# away) and textbook-notes/ch03-nest.md (Boundary summary). Check any new slide against it.
-title: "Nest: when the model is wrong"
+# Boundary: PS4 opens Friday on this unit's problem. This file is public, so the reserved terms
+# are not named here; the list lives in lectures/unit03-runsheet.md (Do not give away) and
+# textbook-notes/ch03-nest.md (Boundary summary). Check any new slide against it.
+title: "Nest: what do we tell our collaborator?"
 subtitle: "BF550 · Unit 3 · Session 3 — Wed Sep 23"
 ---
 
@@ -49,13 +61,14 @@ Closed book, no AI, five minutes.
 The standing frame, verbatim. Code-reading kind. Bank `checkins/unit03/bank.md` session 3: Monday's
 loop with the setting line moved above the loop, under a comment that claims thirty fresh
 fractions. Compare the tally against Monday's edge case before the lecture starts. **Keep the
-snippet on the board, or keep the tab open — part 2 of today's lecture opens on it.**
+snippet to hand — §2 of today's lecture opens on it.**
 :::
 
-## Where we left it
+## Her question, four weeks on
 
 ```{python}
 #| echo: false
+#| fig-cap: "Her month: thirty days of reads for one organism, out of 5,000 a day."
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -68,251 +81,203 @@ def sample_reads(mean_abund, concentration, n_reads, n_days, rng):
                            (1 - mean_abund) * concentration)
         counts.append(rng.binomial(n_reads, p_today))
     return np.array(counts)
-```
 
-Friday: nesting leaves the mean alone and multiplies the spread.
+rng = np.random.default_rng(17)
+her_month = sample_reads(0.06, 100, 5000, 30, rng)
 
-. . .
-
-Monday: depth stops at a floor, and her month sits nearest $\nu$ = 100.
-
-. . .
-
-**Today: three questions you can ask about a model, in the order you would ask them.**
-
-::: {.notes}
-Two minutes. `sample_reads` is loaded behind this slide. Say the three questions out loud before
-the section slide comes up: is the model wrong, how would I find out, and what do I do about it.
-Then, no slide: where PS3 is stuck two days out, and write the answer down.
-:::
-
-# 1 · The model is wrong
-
-## A rule for what counts as unusual
-
-Her question, from Friday: **is my sequencing broken?**
-
-. . .
-
-To answer it you need a rule that says which days are out of the ordinary.
-
-. . .
-
-So: build one.
-
-::: {.notes}
-Ninety seconds. The bridge is the honest one, and it is worth being careful here. Unit 2 gave the
-room one move, simulate what the model produces and then see where the observation falls, and that
-move is about to be made with the only model they had on Friday. Nothing about it is careless.
-:::
-
-## A month with nothing but read noise
-
-```{python}
-#| echo: false
-#| fig-cap: "One thousand days when the true abundance never moves. Only the sequencer wobbles."
-rng = np.random.default_rng(23)
-one_level = rng.binomial(5000, 0.06, 1000)
-
-fig, ax = plt.subplots(figsize=(8, 3.2))
-ax.hist(one_level, bins=40, color="#2a78d6", alpha=0.85)
-ax.set_xlabel("reads for this organism, in one day")
-ax.set_ylabel("days")
-ax.set_xlim(230, 370)
+fig, ax = plt.subplots(figsize=(8, 2.9))
+ax.bar(np.arange(1, 31), her_month, color="#2a78d6")
+ax.set_xlabel("day")
+ax.set_ylabel("reads")
 ax.spines[["top", "right"]].set_visible(False)
 plt.show()
 ```
 
-Fixed truth at 6%, 5,000 reads a day. Mean **300**, spread **16.7**.
+Low day **145**, high day **580**, average **322**. *Is my sequencing broken?*
 
 ::: {.notes}
-Two minutes. The histogram is Friday's one-level model, drawn as a thousand days rather than
-thirty, and it is here so that 16.7 is a picture before it is a number. Say what every day in it has in common:
-the gut never changed, so every one of these days is ordinary by construction. Ask where they would
-draw a line to separate the ordinary days from the rest, before advancing.
+Two minutes. She asked this on day one and the unit has not answered her yet. Say the plan out
+loud: today we answer her, and every number we use we already have. Her swing is 2.9% to 11.6% of
+5,000 reads, which is where the "3% to 12%" from Friday comes from.
 :::
 
-## Where the ordinary days fall
+## What we have now
+
+Friday: a gut's true abundance **moves from day to day**, and that widens the spread of counts.
+
+. . .
+
+Monday: we measured how much **hers** moves. $\nu \approx 100$.
+
+. . .
+
+**Today we turn that measurement into something she can act on.**
+
+::: {.notes}
+Two minutes. Name the three questions the session answers, in order: is anything wrong, can we
+trust our own answer, and what should she do next. Monday's fit has sat unused until now, and it
+is worth saying that the whole session runs on it.
+:::
+
+# 1 · Is anything wrong?
+
+## What counts as ordinary for her gut?
+
+To say a day is unusual, we need the range of days **her own gut** produces.
+
+. . .
+
+We have a model of her gut. Run it and look.
+
+::: {.notes}
+Ninety seconds, a question slide. The move is unit 2's — ask what the model produces, then see
+where the observation falls — with one difference worth naming: the model we ask is the one we
+fitted to her, not a model we assumed.
+:::
+
+## Ask the model we fitted {.smaller}
+
+```{python}
+#| echo: true
+mean_abund = her_month.mean() / 5000          # her average abundance: 0.0644
+rng = np.random.default_rng(23)
+ordinary_days = sample_reads(mean_abund, 100, 5000, 100_000, rng)   # ν = 100, from Monday
+print(f"her average abundance: {mean_abund:.4f}")
+print(f"one hundred thousand ordinary days simulated from her own model")
+```
+
+::: {.notes}
+Two minutes. Two arguments and both are hers: the mean abundance read off her month, and the
+concentration Monday recovered. Nothing here is assumed. Say that the hundred thousand days are
+days her gut could have had, and none of them has anything wrong with it by construction.
+:::
+
+## Her ordinary range
 
 ```{python}
 #| echo: false
-#| fig-cap: "The same thousand days, with lines drawn to leave 5% of them outside."
-lo, hi = 300 - 1.96 * 16.8, 300 + 1.96 * 16.8
-outside = int((one_level < lo).sum() + (one_level > hi).sum())
+#| fig-cap: "Days her own gut produces, with the middle 95% marked."
+lo, hi = np.percentile(ordinary_days, [2.5, 97.5])
 
-fig, ax = plt.subplots(figsize=(8, 3.2))
-ax.hist(one_level, bins=40, color="#2a78d6", alpha=0.85)
+fig, ax = plt.subplots(figsize=(8, 3.0))
+ax.hist(ordinary_days, bins=80, color="#1baf7a", alpha=0.85)
 ax.axvline(lo, color="#eb6834", lw=2)
 ax.axvline(hi, color="#eb6834", lw=2)
 ax.set_xlabel("reads for this organism, in one day")
 ax.set_ylabel("days")
-ax.set_xlim(230, 370)
+ax.set_xlim(0, 900)
 ax.spines[["top", "right"]].set_visible(False)
 plt.show()
 
-print(f"lines at {lo:.0f} and {hi:.0f} reads")
-print(f"ordinary days falling outside them: {outside} of 1,000")
+print(f"ordinary for her gut: {lo:.0f} to {hi:.0f} reads "
+      f"({100 * lo / 5000:.1f}% to {100 * hi / 5000:.1f}%)")
 ```
 
 ::: {.notes}
-Two and a half minutes. The lines are placed to leave one day in twenty outside, and the printed
-count is the check: 51 of 1,000, which is 5%. The procedure is unit 2's exactly, ask what the model
-produces and then see where a day falls, and it is worth saying so, because that is the only method
-the course has taught for this. Nothing has been assumed about the shape of the histogram.
+Two and a half minutes. The lines leave 5% of her gut's own days outside, counted rather than
+computed from a formula. The number to let land is the width: ordinary runs from about 2.5% to
+about 12%, a fivefold range, and that is what a gut with her concentration does when nothing at all
+is happening to it. Ask whether that feels too wide before showing her month on it.
 :::
 
-## That pair of lines is the band
+## Her thirty days, against it
 
-A **95% band**: the range that leaves 5% of ordinary days outside it.
+```{python}
+#| echo: false
+#| fig-cap: "Her month against the range of ordinary days for her own gut."
+outside = int(((her_month < lo) | (her_month > hi)).sum())
 
-. . .
+fig, ax = plt.subplots(figsize=(8, 2.9))
+ax.axhspan(lo, hi, color="#1baf7a", alpha=0.18)
+ax.axhline(lo, color="#eb6834", lw=1.5)
+ax.axhline(hi, color="#eb6834", lw=1.5)
+ax.plot(np.arange(1, 31), her_month, "o-", color="#2a78d6", lw=1.5)
+ax.set_xlabel("day")
+ax.set_ylabel("reads")
+ax.set_ylim(0, 900)
+ax.spines[["top", "right"]].set_visible(False)
+plt.show()
 
-Here, **[267, 333] reads**.
-
-. . .
-
-The shortcut that placed them: `300 ± 1.96 × 16.8`, the mean and the spread of the month above.
+print(f"her days outside the ordinary range: {outside} of 30")
+```
 
 ::: {.notes}
-Two minutes, and it is a naming slide, so it comes after the thing has been shown. Two honest
-statements to make. The 1.96 is a multiplier that leaves 5% outside for count noise of this kind;
-we are using it as a convention and not deriving it, and nothing later in the course turns on it.
-And the picture is the definition — if the shortcut and the picture ever disagreed, the picture is
-what a band means. A student who asks where 1.96 comes from is asking a good question; the answer
-is that it is a property of the bell shape this histogram is close to, and it is in no chapter.
+Two and a half minutes, and it is the session's answer, so do not hurry it. Her worst day and her
+best day both sit inside the green. Point at day 13, the 580, and say that it looked alarming in
+isolation and is unremarkable against her own gut. One honest note: a 95% range would be expected
+to leave one or two of thirty outside, and hers leaves none, which is the luck of one month; say
+so rather than smoothing it over, because it is what 95% actually promises.
 :::
 
-## Built to flag one day in twenty
+## Nothing in her month is unusual
 
-Under the model it assumes, the band leaves out **5%** of ordinary days.
+Her sequencing is **not** broken.
 
 . . .
 
-That is the promise: flag one day in twenty, and only when something is off.
+The swing from 3% to 12% is her gut moving, and it is biology rather than instrument noise.
 
 ::: {.notes}
-Two minutes. State the promise carefully, because the beat is about to measure it against reality.
-Ask what would make you distrust the filter in practice: flagging almost nothing, or flagging
-almost everything. Someone in every lab has built a filter like this one, which is why it is worth
-an hour.
+Two minutes. The answer to the question she asked four weeks ago, said in one sentence, and it is
+worth pausing on. She can stop worrying about her protocol and her reagents. Do not cut this slide.
 :::
 
-## The band, applied to ordinary nested days
-
-Apply the band to **ordinary** nested days. No outbreaks, no contamination, nothing wrong.
-
-. . .
-
-**Predict first.** What fraction gets flagged at $\nu$ = 500, and at $\nu$ = 25?
-
-::: {.notes}
-Two and a half minutes, and collect the guesses. "About 5%, it is a 95% band" is the answer the
-beat corrects, and it is the reasonable one. Remind the room that $\nu$ = 500 is the *mild* nesting
-from Friday, the one whose extra spread was hard to see by eye. Misconception 3 of three.
-:::
-
-## The band, applied to ordinary nested days {.smaller}
+## The same month, asked of a one-level model {.smaller}
 
 ```{python}
 #| echo: true
-rng = np.random.default_rng(23)
-lo, hi = 300 - 1.96 * 16.8, 300 + 1.96 * 16.8      # the band, from the month above
-tests = {"fixed truth": rng.binomial(5000, 0.06, 1000),
-         "nested, ν=500": sample_reads(0.06, 500, 5000, 1000, rng),
-         "nested, ν=25": sample_reads(0.06, 25, 5000, 1000, rng)}
-print(f"band: [{lo:.0f}, {hi:.0f}] reads, built to flag 5%\n")
-for name, days in tests.items():
-    n_outside = (days < lo).sum() + (days > hi).sum()   # days below the band, plus days above it
-    frac = n_outside / len(days)
-    print(f"{name:>14}: flags {frac:.0%} of perfectly ordinary days")
+sd_one_level = np.sqrt(5000 * mean_abund * (1 - mean_abund))   # counting noise alone
+lo_1, hi_1 = her_month.mean() - 1.96 * sd_one_level, her_month.mean() + 1.96 * sd_one_level
+flagged = int(((her_month < lo_1) | (her_month > hi_1)).sum())
+print(f"ordinary, if her truth never moved: {lo_1:.0f} to {hi_1:.0f} reads")
+print(f"her days outside that range: {flagged} of 30")
 ```
 
 ::: {.notes}
-Two minutes. The chapter's chunk with the chapter's seed. Run it live. Every day going into this
-is ordinary by construction: the same gut, the same protocol, nothing to find. The only thing that
-changes between the three rows is how much the daily truth moves. The first row is the month from
-two slides ago, which is why it reproduces the 5%.
+Two and a half minutes, and the framing matters. Nobody in this room made a mistake here. The
+narrow range is what you get if you ask a model in which her gut's abundance is fixed and only the
+sequencer wobbles, which is the model every default tool reaches for when you do not tell it otherwise.
+Twenty-five of her thirty days come back flagged. Ask what she would have been told: that five days
+out of six were anomalous, and that her run was a disaster.
 :::
 
-## The band, applied to ordinary nested days
+## Two models, two answers, one month
 
-fixed truth: **5%** — exactly as promised.
-
-. . .
-
-nested, $\nu$ = 500: **54%**
-
-. . .
-
-nested, $\nu$ = 25: **87%**
-
-::: {.notes}
-Two and a half minutes. Let the 54% land before revealing the 87%. The mild nesting, the one the
-room could barely see on Friday's histogram, makes the filter flag more than half of ordinary days.
-Ask what someone would conclude after a week of this: that the sequencing is unreliable, which is
-where she started.
+::: {.incremental}
+- Her own fitted model: **0 of 30** days unusual.
+- A model where her truth never moves: **25 of 30** days unusual.
 :::
 
-## Nothing errored
-
-No exception. No warning. Every number printed.
-
 . . .
 
-The band is correct arithmetic on a correct spread.
-
-. . .
-
-**No line of the filter's code can tell you it is wrong.**
+Same thirty days. The answer came from **the model**, not from the data.
 
 ::: {.notes}
-Two minutes, and this is the slide that makes the lesson transferable, and the hinge into part 2.
-Testing would not have caught it: the function does what it says. The failure is in the match
-between the model the rule assumes and the process that made the data, and that match lives outside
-the code entirely. Leave the last line up while you ask the part-2 question.
+Two and a half minutes, and this is the sentence to keep. It is the chapter's first failure
+delivered as a comparison rather than as somebody's error. A rule for what counts as unusual is
+only ever as good as the model it got "ordinary" from, and no line of either calculation can tell
+you which one is right — that question lives outside the code. Chapter 6 meets the same sentence
+again with a classifier. Misconception 3 of three.
 :::
 
-## The sentence to keep
+# 2 · Can we trust our own answer?
 
-**The rule was correct for the model it was built from, and that model was not the process that
-produced the days.**
+## We just put our name on that
 
-::: {.notes}
-Two minutes, and say it twice. One sentence on the slide on purpose. The sentence is the unit's
-central lesson, and the check-in's question 3 tallied it as one of the chapter's three claims. Give
-the room a moment to write it down before advancing. The sentence is the one place in the unit
-where "the model is wrong" is meant literally: the one-level model of her gut is a wrong description of the
-process, and it cost nothing while we were estimating her average and everything here.
-:::
-
-## Where you will meet this again
-
-Chapter 6: a classifier that scores well on one set of data and is deployed on another.
+We told a collaborator her data is fine.
 
 . . .
 
-Same sentence, different tool.
-
-::: {.notes}
-Ninety seconds, first cut. The forward pointer is worth making because it tells the room this is
-not a microbiome quirk. Every evaluation in the rest of the course is an evaluation against an
-assumed process, and the question is always whether that is the process the data came from.
-:::
-
-# 2 · How would you find out?
-
-## So how would you catch it?
-
-No line of the filter's code could tell us the model was wrong.
+That answer rests entirely on **a simulation we wrote**.
 
 . . .
 
-**So what would?**
+**How would we know it is right?**
 
 ::: {.notes}
-Ninety seconds, a question slide, and it is the hinge the old deck was missing. Collect answers.
-"Test it" and "check it against the data" both come up, and both are right in spirit — the question
-is what you check, and the room is about to watch the obvious check fail. Do not answer it yet.
+Ninety seconds, a question slide, and the motivation is real rather than hypothetical: we have
+just given a scientist advice. Collect answers. "Test it" and "check it against her data" both come
+up and both are right in spirit; the question is what you check.
 :::
 
 ## The code you read this morning {.smaller}
@@ -327,13 +292,12 @@ for day in range(30):
 print(np.round(np.mean(counts), 1), np.round(np.std(counts), 1))
 ```
 
-One fraction, drawn once, above the loop. The nesting is **gone**.
+One fraction, drawn once, above the loop. The second level is **gone**.
 
 ::: {.notes}
 Two minutes, and it costs nothing because they argued about it twenty minutes ago. Do not re-teach
-it; ask the room to say what the line does and take the answer. The point to make is the one the
-check-in made: the comment states the model that was intended and the indentation states the model
-that runs. Now treat it as a simulation someone handed you, and ask how you would check it.
+it; ask someone to say what the line does and take the answer. Now treat it as the simulator our
+advice depends on, and ask how you would catch it.
 :::
 
 ## Its mean is right. Its spread is not. {.smaller}
@@ -355,40 +319,11 @@ for label, month_of in (("nesting left out", month_hoisted), ("nesting in place"
 ```
 
 ::: {.notes}
-Two and a half minutes. Five hundred months each way, so that neither side is one lucky draw. The
-averages agree to a third of a read; the spreads differ by a factor of two and a half. Say why the
-run is over many months rather than one: a single month from the broken version can have any
-average at all, because its one draw is a lottery, and the claim here is about what the broken
-version does on average. A test on the mean passes. A test on the spread does not.
-:::
-
-## Matching the mean is free
-
-```{python}
-#| echo: false
-#| fig-cap: "Friday again: a fixed truth, ν = 500 and ν = 25. One mean between them."
-rng = np.random.default_rng(11)
-models = [("fixed truth", rng.binomial(5000, 0.06, 2000)),
-          ("ν = 500", sample_reads(0.06, 500, 5000, 2000, rng)),
-          ("ν = 25", sample_reads(0.06, 25, 5000, 2000, rng))]
-
-fig, ax = plt.subplots(figsize=(8, 3.2))
-for name, days in models:
-    ax.hist(days, bins=60, histtype="step", lw=2, label=f"{name}  (sd {days.std():.0f})")
-ax.axvline(300, color="#1d1d1b", lw=1, ls="--")
-ax.set_xlabel("reads for this organism, in one day")
-ax.set_ylabel("days")
-ax.legend(frameon=False)
-ax.spines[["top", "right"]].set_visible(False)
-plt.show()
-```
-
-Every model in this chapter has the same mean. **A check on the mean distinguishes nothing.**
-
-::: {.notes}
-Two and a half minutes, and it generalizes the slide before it. The figure is Friday's *Three
-models, one mean*, put up again on purpose. It was a surprise on Friday and it is evidence today. The
-dashed line is 300 and every model sits on it. A check that every candidate passes is not a check.
+Two and a half minutes. Five hundred months each way, so neither side is one lucky draw. The
+averages agree to a third of a read and the spreads differ by a factor of two and a half. Say why
+it runs over many months rather than one: a single month from the broken version can have any
+average at all, because its one draw is a lottery. A check on the mean passes. A check on the
+spread does not. Misconception 1 of three.
 :::
 
 ## Check the property the model exists to produce
@@ -397,40 +332,50 @@ The mean is not what a two-level model is **for**.
 
 . . .
 
-Here the property is the **spread**, which is why the standard deviation has been the instrument
-since Friday.
+Here the property is the **spread** — which is why the standard deviation has been the instrument
+since Friday, and why her ordinary range is as wide as it is.
 
 . . .
 
-When you check a simulation — yours, a collaborator's, or an agent's — check the property it was
-built to get right.
+Whether the simulation is yours, a collaborator's, or an agent's, check the property it was built
+to get right.
 
 ::: {.notes}
-Two and a half minutes, and it is the answer to the question part 2 opened with. The habit is the
-one most likely to bite them personally, because a mean check is how a bug in your own simulation
-survives your own review. Ask what the property would be for a model built to predict rare events; the answer is
-not the mean either. Note plainly that nothing here says the model is wrong — it says the check
-could not have told you.
+Two and a half minutes, and it answers the question §2 opened with. Had our own simulator carried
+this bug, her ordinary range would have come out near the narrow one and we would have told her
+something false with complete confidence. Ask what the property would be for a model built to
+predict rare events; the answer is not the mean either.
 :::
 
-# 3 · So what do you do instead?
+# 3 · What should she do next?
 
-## Monday's two pieces, again
+## Her next question
+
+She is going to change something — a diet, a treatment, a time point.
+
+. . .
+
+**What size change could this experiment actually see?**
+
+::: {.notes}
+Ninety seconds, a question slide, and it is the question a collaborator asks immediately after
+being told their data is fine. Everything needed to answer it is already built.
+:::
+
+## Where her variation lives
 
 ```{python}
 #| echo: false
-#| fig-cap: "Monday's closing figure: the spread of the daily fraction, split by level."
-mean_abund, concentration = 0.06, 100
+#| fig-cap: "The spread of the daily fraction, split by level. Depth removes one and cannot touch the other."
 rng = np.random.default_rng(13)
-
-p_days = rng.beta(mean_abund * concentration, (1 - mean_abund) * concentration, size=100_000)
+p_days = rng.beta(mean_abund * 100, (1 - mean_abund) * 100, size=100_000)
 gut_piece = np.var(p_days)
 
 depth_grid = np.logspace(2, 5, 60)
 gut_curve = np.full_like(depth_grid, gut_piece)
 sequencer_curve = mean_abund * (1 - mean_abund) / depth_grid
 
-fig, ax = plt.subplots(figsize=(8, 3.2))
+fig, ax = plt.subplots(figsize=(8, 3.0))
 ax.stackplot(depth_grid, gut_curve, sequencer_curve, colors=["#1baf7a", "#2a78d6"], alpha=0.85,
              labels=["the gut's own movement", "the sequencer's wobble"])
 ax.set_xscale("log")
@@ -444,100 +389,77 @@ ax.spines[["top", "right"]].set_visible(False)
 plt.show()
 ```
 
-**Depth moves the blue. Nothing you buy moves the green.**
+**Depth moves the blue. Nothing she can buy moves the green.**
 
 ::: {.notes}
-Two minutes. Monday's closing figure, put back up, and this time it is being used to spend money
-rather than to explain the model. Blue is the sequencer's wobble and it is gone by 10,000 reads.
-Green is the gut moving, and it is the same height at every depth. Point at the right-hand edge:
-past 10,000 reads there is nothing left to buy.
+Two minutes. Monday's closing figure, now being used to spend her money. Blue is the sequencer's
+wobble and it is gone by 10,000 reads; green is her gut moving and it is the same height at every
+depth. Point at the right-hand edge: past 10,000 reads there is nothing left to buy.
 :::
 
-## "We'll sequence deeper"
+## What a month's average is worth {.smaller}
 
-The instinct is right for one-level data, and it is the request the core facility sells.
+```{python}
+#| echo: false
+def monthly_average_sd(n_days, depth, rng, n_months=3000):
+    """Spread of a month's average abundance, in percentage points."""
+    means = []
+    for _ in range(n_months):
+        p = rng.beta(mean_abund * 100, (1 - mean_abund) * 100, size=n_days)
+        means.append(rng.binomial(depth, p).mean() / depth)
+    return 100 * np.std(means)
+
+rng = np.random.default_rng(31)
+print(f"{'days':>6} {'5,000 reads':>13} {'50,000 reads':>14} {'500,000 reads':>15}")
+for n_days in (30, 60, 120):
+    row = [monthly_average_sd(n_days, d, rng) for d in (5_000, 50_000, 500_000)]
+    print(f"{n_days:>6} {row[0]:>12.3f} {row[1]:>14.3f} {row[2]:>15.3f}")
+```
+
+Across a row: **a hundredfold increase in sequencing changes nothing.** Down a column: days do all
+the work.
+
+::: {.notes}
+Two and a half minutes, and it is the slide to spend time on. Read one row aloud and then one
+column. Every number is the uncertainty on a monthly average abundance in percentage points. The
+row is flat because the sequencer's wobble was already negligible at 5,000 reads; the column falls
+because each new day is a fresh draw from her gut. Misconception 2 of three, and the answer to
+"should we sequence deeper" in a form she can take to a budget meeting.
+:::
+
+## Sequence deeper, or run longer?
+
+At thirty days, two months differ by about **0.9 percentage points** before anything is going on.
 
 . . .
 
-Monday's three depths: 500 → 5,000 → 50,000 reads a day.
+So a real change smaller than that is **invisible** to this design.
 
 . . .
 
-The spread of the daily fraction went **0.026 → 0.024 → 0.024**.
+Four times the days halves it. A hundredfold increase in depth does **nothing**.
 
 ::: {.notes}
-Two and a half minutes. A hundredfold increase in sequencing is a real budget line a collaborator
-has to defend, and it moved the third decimal place. Say the money part out loud. The slide is not a way the
-model is wrong. The model is right, and the model is what tells you where the variation lives,
-which is the whole return on having built two levels.
+Two and a half minutes. The slide is the design consequence, said as a number rather than a slogan.
+Deeper sequencing is the default request because it is the thing the core facility sells, and here
+it is the wrong purchase. The general question, worth stating: which level of variation are you
+trying to measure, because that is what decides where the money goes.
 :::
 
-## Replicate days, not reads
-
-If day-to-day variation is what you study, buy more **days**.
-
-. . .
-
-Thirty days chose between $\nu$ = 100 and $\nu$ = 250. More days is what buys a finer answer.
-
-::: {.notes}
-Two minutes, and it is the one sentence a collaborator can act on. The design question is always
-which level of variation you are trying to measure, and the answer decides where the money goes.
-A student who takes only one thing from today could take this.
-:::
-
-## Three questions, one model
+## What we tell her
 
 ::: {.incremental}
-1. **Is the model wrong?** The band said no and was flagging 54% of ordinary days.
-2. **How would I find out?** Not from the code, and not from the mean. Check the property the
-   model exists to produce.
-3. **So what do I do?** Spend on the level where the variation actually lives.
+1. **Nothing in your month is unusual.** Your sequencing is not broken.
+2. **The swing is your gut**, not the instrument. Ordinary for you runs from about 2.5% to 12%.
+3. **A change under about 0.9 points is invisible** at thirty days.
+4. **Buy days, not reads.** Depth will not help this question.
 :::
 
-. . .
-
-A two-level model is what let us answer all three.
-
 ::: {.notes}
-Two minutes, the summary slide, and it replaces the old *Three failures, one cause*. Read the three
-and let the room see that each one needed the one before it. Be straight about the difference
-between them: only the first is a model being wrong. The second is about what a check can see, and
-the third is a correct model paying for itself. None of the three is a coding error and none would
-be caught by a test suite.
-:::
-
-## What would a band have to know?
-
-To flag her unusual days honestly, the rule would need the width of ordinary at **both levels**.
-
-. . .
-
-Which means building it from a fitted two-level story, the way Monday fitted one.
-
-::: {.notes}
-Two minutes, second cut. Public chapter material, and the honest answer to the question the room
-will ask. Do not work the repair on any other dataset today; if someone asks about a scan with two
-groups, take it as a good question and say it is Friday's set. See *Do not give away* in the
-run-sheet.
-:::
-
-## What we can tell her
-
-Her swing from 3% to 12% is what a gut with $\nu$ near 100 **does**.
-
-. . .
-
-Her sequencing is not broken. The variation is real, and it is biological.
-
-. . .
-
-To see a genuine change, compare **months**, not days.
-
-::: {.notes}
-Two and a half minutes, and it closes the story the unit opened with. She came in worried that her
-data was garbage; three sessions later we can tell her it is not, say why, and give her a design
-that would answer her next question. Do not cut this slide. It is the only one that answers her.
+Two and a half minutes, and it is the session, so do not cut it. Read all four. Every one comes
+from work the room did this week: the first two from Monday's fit turned into a range, the last two
+from the depth experiment and the table. Say that this is what the three sessions were for — not a
+model for its own sake, but four sentences a scientist can act on.
 :::
 
 ## A count with no ceiling
@@ -553,10 +475,9 @@ Most count data has none: transcripts, colonies, reads assigned to a gene.
 Same problem, one level up. **Chapter 9 closes that gap.**
 
 ::: {.notes}
-Two minutes, third cut, the forward pointer, and the first time the room hears that the ceiling
-mattered. The binomial needs an $n$; a count with no ceiling needs a different draw method on the
-second level. Do not name the negative binomial before this slide. Lab 7 and lab 8 have already
-built both halves of it on plain values, which is worth saying here.
+Two minutes, first cut, and the first time the room hears that the ceiling mattered. The binomial
+needs an $n$; a count with no ceiling needs a different draw method on the second level. Lab 7 and
+lab 8 have already built both halves of it on plain values.
 :::
 
 ## Chapter 4, read before Friday
@@ -575,7 +496,8 @@ Deciding **which regime** a day came from is chapter 4's whole subject.
 Two and a half minutes, and it is the reading assignment, so do not cut it. Nesting and mixing are
 the same operation with a discrete truth instead of a continuous one, which is why chapter 4
 follows this one. Friday opens unit 4 and PS4, on this unit's problem, with our design in the
-notebook.
+notebook. The chapter's *When the model is wrong* section is theirs to read; §1's comparison and
+§2 are its first two failures, and §3 is its third.
 :::
 
 ## Working time — the rest of today
@@ -585,9 +507,9 @@ notebook.
 
 ::: {.notes}
 Lab 9 is *Reading drills: two levels deep*: which loop owns each draw, and a planted
-setting-outside-the-loop mismatch, which is this morning's check-in at full strength and part 2's
-opening slide. Forty minutes against a floor of thirty-five. Ask how far people are on PS3 and
-write the answer down.
+setting-outside-the-loop mismatch, which is this morning's check-in at full strength and §2's
+opening slide. Forty-three minutes against a floor of thirty-five. Ask how far people are on PS3
+and write the answer down; PS4 opens Friday and its envelope is unpiloted.
 :::
 
 ## Before next session
