@@ -37,9 +37,16 @@
 # 2.5% to 12.0%, with 0 of her 30 days outside it. The one-level range around her own mean is
 # [288, 356] with 25 of 30 outside. §2's table: 29.7 and 5.0 against 30.0 and 12.6. §3's table
 # reads 0.456 / 0.451 / 0.449 across depth at thirty days and 0.456 / 0.309 / 0.224 down days
-# at 5,000 reads, so twice the thirty-day figure is the 0.9 points on the slide after it.
+# at 5,000 reads, so twice the thirty-day figure is the 0.9 points on the slide after it. The
+# bridging histogram (seed 29, added 23 Sep at the instructor's request so the table does not
+# arrive unexplained) shows 2,000 periods of 30, 60 and 120 days at 5,000 reads with widths
+# 0.45 / 0.31 / 0.22, the table's first column by another seed. The read-range slide after
+# *Sequence deeper, or run longer?* (added 23 Sep at the instructor's request) reuses those
+# 2,000 periods in reads: the middle 95% of thirty-day averages is [280, 368], about 45 reads
+# either side of her 322; 60 and 120 days give about 30 and 22. Bullet 3 of *What we tell her*
+# states the 45.
 #
-# Sizing: about fifty minutes, 21 content slides and two logistics slides
+# Sizing: about fifty minutes, 23 content slides and two logistics slides
 # (decisions/decks-teach-the-material-a-second-way.md; authoring/slides.md, Sizing a deck).
 # The run-sheet (bf550-instructor lectures/unit03-runsheet.md) owns the clock and cites these
 # headings.
@@ -262,7 +269,7 @@ again with a classifier. Misconception 3 of three.
 
 # 2 · Can we trust our own answer?
 
-## We just put our name on that
+## We are now responsible for our answer
 
 We told a collaborator her data is fine.
 
@@ -328,7 +335,7 @@ spread does not. Misconception 1 of three.
 
 ## Check the property the model exists to produce
 
-The mean is not what a two-level model is **for**.
+Differences in mean is not what a two-level model is designed to identify.
 
 . . .
 
@@ -337,8 +344,7 @@ since Friday, and why her ordinary range is as wide as it is.
 
 . . .
 
-Whether the simulation is yours, a collaborator's, or an agent's, check the property it was built
-to get right.
+We must only check the property the model was built to examine.
 
 ::: {.notes}
 Two and a half minutes, and it answers the question §2 opened with. Had our own simulator carried
@@ -397,7 +403,46 @@ wobble and it is gone by 10,000 reads; green is her gut moving and it is the sam
 depth. Point at the right-hand edge: past 10,000 reads there is nothing left to buy.
 :::
 
-## What a month's average is worth {.smaller}
+## What if she collects more days?
+
+```{python}
+#| echo: false
+#| fig-cap: "The same design run 2,000 times over. Each period's average abundance, for periods of 30, 60 and 120 days at 5,000 reads."
+rng = np.random.default_rng(29)
+lengths = (30, 60, 120)
+period_means = {
+    n: np.array([sample_reads(mean_abund, 100, 5000, n, rng).mean() / 5000 * 100
+                 for _ in range(2000)])
+    for n in lengths
+}
+
+fig, axes = plt.subplots(3, 1, figsize=(8, 3.6), sharex=True)
+bins = np.linspace(4.8, 8.2, 60)
+colors = {30: "#2a78d6", 60: "#1baf7a", 120: "#e0812f"}
+for ax, n in zip(axes, lengths):
+    ax.hist(period_means[n], bins=bins, color=colors[n], alpha=0.85)
+    ax.text(0.99, 0.8, f"{n} days: spread {period_means[n].std():.2f} points",
+            transform=ax.transAxes, ha="right", va="top")
+    ax.set_yticks([])
+    ax.spines[["top", "right", "left"]].set_visible(False)
+axes[-1].set_xlabel("the period's average abundance (%)")
+plt.show()
+```
+
+Same gut, same sequencer, same 5,000 reads a day. **Only the number of days changes.**
+
+::: {.notes}
+Two minutes. This is the bridge from the picture to the table. One period is one of her months,
+simulated with Monday's model: each day a fresh fraction from her gut, then 5,000 reads counted
+from it. Do that 2,000 times and the period averages land in a heap, and the heap's width is
+what a month's average is worth. Read the three widths aloud: 0.45, 0.31, 0.22. Doubling the days
+does not halve the width; it takes four times the days to do that. The next slide puts these three
+numbers in a column and then asks the same question of depth.
+:::
+
+## What a extending the experiment is worth {.smaller}
+
+The standard deviation of the estimates goes down with the number of days we sampled.
 
 ```{python}
 #| echo: false
@@ -416,12 +461,15 @@ for n_days in (30, 60, 120):
     print(f"{n_days:>6} {row[0]:>12.3f} {row[1]:>14.3f} {row[2]:>15.3f}")
 ```
 
-Across a row: **a hundredfold increase in sequencing changes nothing.** Down a column: days do all
-the work.
+Across a row: **a hundredfold increase in sequencing changes very little about the standard deviation.**
+
+Down a column: tripling the length of the experiment **reduces it by half**.
 
 ::: {.notes}
-Two and a half minutes, and it is the slide to spend time on. Read one row aloud and then one
-column. Every number is the uncertainty on a monthly average abundance in percentage points. The
+Two and a half minutes, and it is the slide to spend time on. The first column is the three
+widths the room has just seen, and every other cell is the same experiment run at a deeper
+sequencer. Read one row aloud and then one column. Every number is the uncertainty on a monthly
+average abundance in percentage points. The
 row is flat because the sequencer's wobble was already negligible at 5,000 reads; the column falls
 because each new day is a fresh draw from her gut. Misconception 2 of three, and the answer to
 "should we sequence deeper" in a form she can take to a budget meeting.
@@ -429,15 +477,19 @@ because each new day is a fresh draw from her gut. Misconception 2 of three, and
 
 ## Sequence deeper, or run longer?
 
-At thirty days, two months differ by about **0.9 percentage points** before anything is going on.
+The variability caused by the number of days greatly exceeds that of read sampling variability
 
 . . .
 
-So a real change smaller than that is **invisible** to this design.
+Small true differences in the gut may not be detectable at 30 days, but might be at 120
 
 . . .
 
-Four times the days halves it. A hundredfold increase in depth does **nothing**.
+Adding more sequencing data doesn't reduce the variability caused by gut composition
+
+. . .
+
+Extending the length of the collection period does reduce the variability
 
 ::: {.notes}
 Two and a half minutes. The slide is the design consequence, said as a number rather than a slogan.
@@ -446,12 +498,50 @@ it is the wrong purchase. The general question, worth stating: which level of va
 trying to measure, because that is what decides where the money goes.
 :::
 
+## How big a change could she see?
+
+```{python}
+#| echo: false
+#| fig-cap: "Two thousand ordinary months of thirty days at 5,000 reads, as her monthly average in reads, with the middle 95% marked."
+month_reads = {n: period_means[n] / 100 * 5000 for n in lengths}
+band = {n: np.percentile(month_reads[n], [2.5, 97.5]) for n in lengths}
+half = {n: (band[n][1] - band[n][0]) / 2 for n in lengths}
+
+fig, ax = plt.subplots(figsize=(8, 2.6))
+lo, hi = band[30]
+ax.axvspan(lo, hi, color="grey", alpha=0.15)
+ax.hist(month_reads[30], bins=np.linspace(240, 410, 60), color="#2a78d6", alpha=0.85)
+ax.axvline(her_month.mean(), color="black", lw=0.8, ls="--")
+ax.text(lo, ax.get_ylim()[1] * 0.92, f"{lo:.0f}", ha="right", va="top")
+ax.text(hi, ax.get_ylim()[1] * 0.92, f"{hi:.0f}", ha="left", va="top")
+ax.set_xlabel("a thirty-day average, in reads out of 5,000")
+ax.set_yticks([])
+ax.spines[["top", "right", "left"]].set_visible(False)
+plt.show()
+```
+
+An ordinary thirty-day average lands between **280 and 368 reads**: within about **45 reads** of her true average.
+
+. . .
+
+A real change in her gut **smaller than that is invisible** at thirty days. At 120 days, the band is about **22 reads** either side.
+
+::: {.notes}
+Two minutes. The heaps from two slides ago, now in the unit she actually sees, and the same device
+as §1's *Her ordinary range* with months in place of days: mark the middle 95% and read off the
+edges. Anything inside the grey band is a month her own gut produces when nothing has changed, so
+a shift has to move her average past an edge before anyone could tell it from an ordinary month.
+That is about 45 reads out of 5,000 at thirty days; the 60- and 120-day bands are about 30 and
+22 reads either side. Say that this is the number she takes to a design meeting, and that it is
+in reads because that is what she ran.
+:::
+
 ## What we tell her
 
 ::: {.incremental}
 1. **Nothing in your month is unusual.** Your sequencing is not broken.
 2. **The swing is your gut**, not the instrument. Ordinary for you runs from about 2.5% to 12%.
-3. **A change under about 0.9 points is invisible** at thirty days.
+3. **A change under about 45 reads in your monthly average is invisible** at thirty days.
 4. **Buy days, not reads.** Depth will not help this question.
 :::
 
