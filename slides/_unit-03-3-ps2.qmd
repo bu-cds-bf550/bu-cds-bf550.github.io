@@ -1,0 +1,485 @@
+---
+# ALTERNATIVE deck for unit 3, session 3 (Wed Sep 23) — set 2 worked through, instead of the
+# chapter's last section. Written 23 Sep 2026 beside the rewritten unit-03-3.qmd so the
+# instructor can choose in the morning; only one of the two is delivered.
+#
+# NOT PUBLISHED. The leading underscore keeps it out of the project render
+# (slides/_quarto.yml: "Files starting with `_` are never rendered"), and it is not in
+# course/_data/slides.yml. That is deliberate: this deck is the set 2 answer key, and
+# publishing a key to the public site is a separate decision, not one to make by accident.
+# To preview it:  quarto render slides/_unit-03-3-ps2.qmd --to revealjs
+# To publish it:  drop the underscore and add an entry to _data/slides.yml.
+#
+# Source of truth for every answer here: assignments/ps02/.solutions/ps02-solutions.ipynb
+# and assignments/ps02.md (Verified numbers). The chunks below re-implement the key's
+# functions verbatim — in particular is_taster assigns both draws before the `or`, which is
+# what the key does; a short-circuiting version consumes a different number of draws and the
+# sweep numbers move. Re-executed 23 Sep 2026: the tolerance-2 sweep is 0.006, 0.056, 0.318,
+# 0.356, 0.130, 0.010 across 0.30 to 0.55, matching the sidecar's verified numbers; the
+# tolerance-0 peak is 0.096 and the tolerance-5 peak 0.728; Q7 prints 4,061 against 6,323.
+#
+# What this deck does NOT deliver, if it is the one chosen: chapter 3's last section, the
+# close of her story (*What we can tell her*), and the unit's central beat. The chapter-4
+# reading assignment and the PS3 due date are carried at the end here, because those two
+# cannot be dropped whichever deck runs.
+#
+# Sizing: about 52 minutes, 21 content slides and two logistics slides
+# (authoring/slides.md, Sizing a deck).
+#
+# Boundary: PS3 is open and PS4 opens Friday. Set 2 is closed, so its own material is free to
+# say. Nothing here touches unit 2's scan (PS3's problem) or this unit's (PS4's).
+title: "Set 2, worked through"
+subtitle: "BF550 · Unit 3 · Session 3 — Wed Sep 23"
+---
+
+## Check-in {.smaller}
+
+**[bf550.link/checkin](https://bu-cds-bf550.github.io/checkin/?session=09)** · `?session=09`
+
+Closed book, no AI, five minutes.
+
+::: {.notes}
+The standing frame, verbatim. Code-reading kind. Bank `checkins/unit03/bank.md` session 3: Monday's
+loop with the setting line moved above the loop, under a comment that claims thirty fresh
+fractions. Compare the tally against Monday's edge case before the lecture starts.
+:::
+
+# Set 2, worked through
+
+## What set 2 asked
+
+> A colleague runs the PTC strip demonstration in a 100-student class. **68 report bitter.**
+>
+> How common is the bitter-tasting allele in this population, and **how sure can you be?**
+
+. . .
+
+Two questions. The second one is the harder half, and it is the one this course is about.
+
+::: {.notes}
+Two minutes. Open by saying what today is: the set is submitted and graded feedback is coming as
+comments on your pull request, so this hour is about the moves rather than the marks. Ask who
+changed their answer to the second question while working, and take one or two.
+:::
+
+## Our design, in four moves
+
+::: {.incremental}
+- **Frame.** What process produced this data? Two allele copies per student, one is enough to taste.
+- **Decompose.** What has to be computed? One draw, one student, one class, one candidate, a grid.
+- **Select.** The method: run the process forward at many candidate truths.
+- **Verify.** The checks: boundaries, and relationships that hold in between.
+:::
+
+. . .
+
+Every set this term has the same four. **Decompose is the one that does the work.**
+
+::: {.notes}
+Two minutes. The point to land: the five Decompose lines in the notebook became questions 1 to 5,
+one each, and that is not a coincidence — the decomposition *is* the program. Students who found
+the set long usually started writing at question 1 without reading the decomposition.
+:::
+
+# The pieces — questions 1 to 3
+
+## One copy is enough
+
+A student is a **non-taster** only when **both** copies are t.
+
+. . .
+
+$$P(\text{non-taster}) = (1-p)^2 \qquad P(\text{taster}) = 1 - (1-p)^2$$
+
+. . .
+
+At $p$ = 0.4: non-tasters $0.6^2 = 0.36$, so **64%** taste.
+
+::: {.notes}
+Two and a half minutes, and it is the single most important line in the set. Everything in
+questions 1 to 3 is this sentence turned into code, and question 7's broken function is this
+sentence ignored. Ask the room for the non-taster probability before showing it. The common wrong
+answer is that 40% taste, which is the allele frequency read as a person frequency.
+:::
+
+## Three functions, one line of the story each {.smaller}
+
+```{python}
+#| echo: true
+import numpy as np
+import matplotlib.pyplot as plt
+
+def draw_allele(rng, allele_freq):
+    """One allele: True for T, with probability allele_freq."""
+    return rng.random() < allele_freq
+
+def is_taster(rng, allele_freq):
+    """One student: two allele draws; a taster if either is T."""
+    allele_1 = draw_allele(rng, allele_freq)
+    allele_2 = draw_allele(rng, allele_freq)
+    return allele_1 or allele_2
+
+def simulate_tasters(n_individuals, allele_freq, seed):
+    """The number of tasters in a class of n_individuals."""
+    rng = np.random.default_rng(seed)
+    tasters = 0
+    for _ in range(n_individuals):
+        if is_taster(rng, allele_freq):
+            tasters += 1
+    return tasters
+```
+
+::: {.notes}
+Two and a half minutes. Read the three names aloud in order and say that the stack is the Frame,
+one sentence per function: an allele, a student, a class. Two things to point at. `draw_allele`
+takes `rng` and does not make one, so the caller owns the stream and a seeded run is repeatable;
+`simulate_tasters` makes one, because it is the thing being repeated. And `is_taster` never touches
+`rng.random` directly — building on the piece below it is what makes question 7 catchable.
+:::
+
+## The number that catches everything
+
+```{python}
+#| echo: true
+rng = np.random.default_rng(2)
+students = [is_taster(rng, 0.4) for _ in range(10_000)]
+print("taster fraction at p = 0.4:", sum(students) / 10_000)
+```
+
+. . .
+
+**0.64, not 0.40.** A check on this number catches a simulator that draws one copy, and one that
+needs both.
+
+::: {.notes}
+Two minutes. The line is the relationship check from question 2, and it is the model for every
+check they will write from set 5 on. Say what it costs to write: one line, and the comment saying where
+0.64 came from. Say what it buys: it is the only check in questions 1 to 3 that can tell a correct
+simulator from two plausible wrong ones. Hold on to it: question 7 is where it catches a real bug.
+:::
+
+# The inversion — questions 4 and 5
+
+## The simulator runs the wrong way
+
+It takes $p$ and produces a **count**.
+
+. . .
+
+We have the count. We want $p$.
+
+. . .
+
+So run it forward at many candidate values of $p$, and keep the ones that routinely produce a class
+like this one.
+
+::: {.notes}
+Ninety seconds, a question slide, and the move is chapter 1's. Say plainly that this is the same
+thing Monday did with the concentration: candidates, score each one by running the model forward,
+keep the best. The room has now seen it twice and will see it again; it is the course's default
+answer to "I have data and I want a parameter".
+:::
+
+## How often does a candidate produce a class like this one? {.smaller}
+
+```{python}
+#| echo: true
+def fraction_consistent(allele_freq, observed, n_individuals, n_sims, tolerance, seed):
+    """Of n_sims simulated classes, the fraction within tolerance of observed."""
+    matches = 0
+    for i in range(n_sims):
+        count = simulate_tasters(n_individuals, allele_freq, seed + i)
+        if abs(count - observed) <= tolerance:
+            matches += 1
+    return matches / n_sims
+
+print("p = 0.45:", fraction_consistent(0.45, 68, 100, 500, 2, 1000))
+print("p = 0.20:", fraction_consistent(0.20, 68, 100, 500, 2, 1000))
+```
+
+::: {.notes}
+Two and a half minutes. The `seed + i` is the line worth stopping on: every simulated class needs
+to be different, and the whole run still needs to repeat tomorrow. Ask what happens if you pass
+`seed` instead of `seed + i` — five hundred identical classes, and the fraction becomes 0 or 1.
+A reused seed was the most common way to get a flat or square curve in this question.
+:::
+
+## Sweep the grid
+
+```{python}
+#| echo: false
+#| fig-cap: "Fraction of 500 simulated classes landing within ±2 of 68 tasters, at each candidate p."
+def sweep(grid, observed, n_individuals, n_sims, tolerance, seed):
+    return [fraction_consistent(p, observed, n_individuals, n_sims, tolerance, seed) for p in grid]
+
+grid = [round(p, 2) for p in np.arange(0.05, 0.96, 0.05)]
+consistent = sweep(grid, 68, 100, 500, 2, 1000)
+
+fig, ax = plt.subplots(figsize=(8, 3.2))
+ax.plot(grid, consistent, "o-", color="#2a78d6", lw=2)
+ax.set_xlabel("candidate allele frequency p")
+ax.set_ylabel("fraction of classes\nwithin ±2 of 68")
+ax.spines[["top", "right"]].set_visible(False)
+plt.show()
+
+for p, v in zip(grid, consistent):
+    if v > 0:
+        print(f"p = {p:.2f}: {v:.3f}")
+```
+
+::: {.notes}
+Two and a half minutes. Run it live. The curve is a hill with a peak at 0.45 and 0.40 close behind,
+and it is zero over most of the grid, which is the part worth pointing at: the data rules out far
+more than it picks out. Anyone whose curve was flat, square, or peaked at 0.65 has one of the three
+bugs — a reused seed, a tolerance that swallowed everything, or an `is_taster` that draws once.
+:::
+
+## The answer, and how sure
+
+**Most consistent: $p$ = 0.45**, with 0.40 close behind.
+
+. . .
+
+By hand: 68 of 100 taste, so 0.32 do not, so $(1-p)^2 = 0.32$ and $p = 1 - \sqrt{0.32} = 0.434$ —
+between the two grid points.
+
+. . .
+
+**Consistent range: roughly 0.35 to 0.50.** The width *is* the answer to "how sure".
+
+::: {.notes}
+Two and a half minutes. The hand calculation is here because a number you can get two ways is a
+number you can trust, and it is also the check that the simulation is not lying to you. On the
+range: there is no correct cutoff and the question said so; what earns credit is stating one and
+defending it in a sentence. Say which defences came up. The sentence to leave: a single number is
+not an answer to this question, and the curve's width is what a collaborator actually needs.
+:::
+
+# The tolerance was a choice — question 6
+
+## Three tolerances, one peak
+
+```{python}
+#| echo: false
+#| fig-cap: "The same sweep at tolerance 0, 2 and 5. The peak stays; the width does not."
+fig, ax = plt.subplots(figsize=(8, 3.2))
+for tol, colour in ((0, "#1baf7a"), (2, "#2a78d6"), (5, "#eb6834")):
+    values = sweep(grid, 68, 100, 500, tol, 1000)
+    ax.plot(grid, values, "o-", lw=2, color=colour, label=f"±{tol}")
+ax.set_xlabel("candidate allele frequency p")
+ax.set_ylabel("fraction of classes consistent")
+ax.legend(title="tolerance", frameon=False)
+ax.spines[["top", "right"]].set_visible(False)
+plt.show()
+```
+
+::: {.notes}
+Two and a half minutes. Three curves, same peak at 0.45 every time. The heights differ because a
+wider tolerance accepts more classes — that is arithmetic, not information. Ask what would worry
+you if the peak *had* moved: it would mean the estimate depends on a number we chose rather than on
+the data.
+:::
+
+## What moved, and what did not
+
+::: {.incremental}
+- The **estimate** did not move. 0.45 at every tolerance.
+- The **range** widened with the tolerance. ±0 is jagged and narrow; ±5 is broad and smooth.
+- The **heights** rose, and mean nothing on their own.
+:::
+
+. . .
+
+Report ±2, or something like it: wide enough to smooth the curve, narrow enough to still separate
+0.45 from 0.55.
+
+::: {.notes}
+Two minutes. Chapter 1 asks this same question of its own ±3, which is worth naming. The general
+habit is the one to state out loud: when a number in your analysis was chosen rather than measured,
+move it and see what happens to the conclusion. Moving it is a one-line experiment and almost nobody
+does it unasked.
+:::
+
+# Read this code — question 7
+
+## A colleague sends you this {.smaller}
+
+```{python}
+#| echo: true
+def count_tasters(n_individuals, allele_freq, rng):
+    """Simulate a population and return the number of PTC tasters.
+
+    n_individuals : number of people sampled
+    allele_freq   : frequency of the dominant T allele
+    """
+    return int(rng.binomial(n_individuals, allele_freq))
+```
+
+They say it does the same thing as your `simulate_tasters`. It runs. It returns sensible-looking
+counts.
+
+::: {.notes}
+Two minutes. No AI on this question, and it is the shape of both exams, so slow down here. Ask the
+three questions in order rather than giving the answer: what does it compute, does it match the
+docstring, and which of your checks would catch it. Take answers before advancing. Most of the room
+will say "it looks fine" first, which is the honest starting point.
+:::
+
+## Run it beside yours
+
+```{python}
+#| echo: true
+print("count_tasters:   ", count_tasters(10_000, 0.4, np.random.default_rng(0)))
+print("simulate_tasters:", simulate_tasters(10_000, 0.4, 0))
+```
+
+. . .
+
+About **4,000** against about **6,300**. One of them is 40% and the other is 64%.
+
+::: {.notes}
+Two minutes. Let the two numbers sit before naming the cause. 4,061 is 10,000 × 0.4 and 6,323 is
+10,000 × 0.64, and the room derived that 0.64 twenty minutes ago. The gap is not a rounding
+difference or a seed difference; it is a different model of a person.
+:::
+
+## What it actually computes
+
+It draws one binomial count, treating the **allele frequency** as the probability a **person**
+tastes.
+
+. . .
+
+The docstring promises a simulated population under the dominant model. It delivers a coin flip per
+person at the wrong rate.
+
+. . .
+
+**The two copies are gone.** There is no place in this function where a student has two of anything.
+
+::: {.notes}
+Two and a half minutes. The mismatch is precise and worth stating precisely: not "it is wrong" but
+"it treats p as a taster probability when p is an allele frequency". Say where this comes from in
+real life — it is the kind of thing an agent writes when you ask for a population simulator without
+saying what a person is, and it is also what a hurried person writes. The docstring is the tell,
+and reading the docstring against the body is a habit worth naming.
+:::
+
+## Which of your checks catch it?
+
+| Check | `count_tasters` |
+|---|---|
+| $p$ = 0: nobody tastes | **passes** |
+| $p$ = 1: everybody tastes | **passes** |
+| $p$ = 0.4: about 64% taste | **fails** |
+| 10,000 students at $p$ = 0.4 give about 6,400 | **fails** |
+
+. . .
+
+**Boundaries alone are not coverage.**
+
+::: {.notes}
+Two and a half minutes, and this is the slide the question exists for. Both boundary checks pass
+because at p = 0 and p = 1 every model agrees; the disagreement lives strictly in between. A test
+suite made only of edge cases is a test suite that cannot see the bug you are most likely to
+write. The sentence to carry into set 5, where the checks become theirs, is the one on the slide.
+:::
+
+# What the checks cannot see — question 8
+
+## Every check passed. The estimate can still be wrong.
+
+::: {.incremental}
+- **The four "maybe" students.** We counted them as tasters. Counting them as non-tasters gives 64,
+  and the peak moves toward 0.40. The data cannot say which is right.
+- **Whose population?** The class chose to take the course. $p$ is the frequency for students like
+  these, not for anyone else.
+- **Three versions of the gene, not two.** A three-parameter model is not separable from 100 yes/no
+  answers.
+:::
+
+::: {.notes}
+Two and a half minutes. These came out of *Facts we ignore, and why*, and that section
+exists to say that ignoring a fact is a decision you write down rather than one you make silently. The "maybe"
+students are the best example because the consequence is concrete and small: one modelling choice,
+one grid step. Ask who counted them the other way and what they got.
+:::
+
+## The residual is not a defect
+
+Thirty-one checks passed. The Frame is still a simplification, and every simplification has a
+consequence you can name.
+
+. . .
+
+**Naming it is the work.** A report that says "p ≈ 0.45" and stops has not done it.
+
+::: {.notes}
+Two minutes. Be clear about what the residual is: what is left over after an honest model, and
+every analysis has one. It is not a failure of the set or of their code. The difference between a
+good and a bad write-up of this problem is entirely in whether the residual is stated, and naming
+it is the habit both exams test in the reasoning questions.
+:::
+
+## The same lesson, one unit later
+
+Set 2: every check passed, and the estimate can still be wrong about the class.
+
+. . .
+
+Chapter 3: the filter ran with no error, and flagged **54%** of perfectly ordinary days.
+
+. . .
+
+**A check that passes does not tell you the model is right.** It tells you the check could not see
+the problem.
+
+::: {.notes}
+Two and a half minutes, and it is the bridge to the reading, so do not cut it. Chapter 3's last
+section is where this is worked in full, and it is theirs to read rather than something we did
+together today. Name the three things it covers: a rule that fails silently under the wrong model,
+a check on the mean that cannot see nesting, and why sequencing deeper does not buy what people
+think it buys. The 54% is the number to say out loud.
+:::
+
+## Chapter 4, read before Friday
+
+Suppose her gut had **two regimes**: quiet weeks and flare weeks.
+
+. . .
+
+A truth drawn from two possibilities is still nesting.
+
+. . .
+
+Deciding **which regime** a day came from is chapter 4's whole subject.
+
+::: {.notes}
+Two minutes, and it is the reading assignment, so do not cut it. Nesting and mixing are the same
+operation with a discrete truth instead of a continuous one, which is why chapter 4 follows this
+one. Friday opens unit 4 and PS4, on this unit's problem, with our design in the notebook.
+:::
+
+## Working time — the rest of today
+
+1. **Lab 9** — [unit-03-3.ipynb](https://github.com/bu-cds-bf550/bf550-unit03-labs/blob/main/unit-03-3.ipynb)
+2. PS3
+
+::: {.notes}
+Lab 9 is *Reading drills: two levels deep*: which loop owns each draw, and a planted
+setting-outside-the-loop mismatch, which is this morning's check-in at full strength. Forty minutes
+against a floor of thirty-five. Ask how far people are on PS3 and write the answer down; PS4 opens
+Friday and its envelope is unpiloted.
+:::
+
+## Before next session
+
+- **PS3 is due Friday, start of class**
+- Friday opens **unit 4** and **PS4**, on this unit's problem
+- Read **chapter 3's last section** and **chapter 4** before Friday
+
+::: {.notes}
+Say all four out loud. Chapter 3's *When the model is wrong* was not lectured today, so it has to be
+named as reading here, explicitly, rather than left to the general "read chapter 4". PS4 is on this
+unit's material with our design in the notebook, and nothing about its problem is said today.
+:::
