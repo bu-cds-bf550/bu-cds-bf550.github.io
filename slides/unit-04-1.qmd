@@ -51,7 +51,7 @@ PS4 opens today.
 
 ## A 40-base read from a two-organism community
 
-A collaborator grew two cultured organisms together as a control, sequenced the pool, and pulled
+A collaborator grew two cultured organisms together as a control, extracted DNA, sequenced the pool, and pulled
 out one 40-base read.
 
 ```
@@ -155,15 +155,15 @@ than it sounds.
 
 ## Every simulated read comes labeled
 
-We wrote the simulator, so each simulated read arrives with the organism that produced it attached.
+We wrote the simulator, so each simulated read is **labeled** with the organism that produced it attached.
 
 . . .
 
-The collaborator's data does not.
+The collaborator's data does not label each read.
 
 . . .
 
-That label is what lets us see how the model behaves. Chapter 12 takes it away again.
+That label is what lets us see how the model behaves.
 
 ::: {.notes}
 Ninety seconds. Unit 1's advantage, restated for this chapter: truth is an input to a simulation
@@ -197,6 +197,10 @@ be able to map each line to the slide before. Then the construct: this is the fi
 the course that returns two values, and the call unpacks the pair with `s, g = ...`. Say that out
 loud and show the unpacking on the next slide. Lab 10 assumes it.
 :::
+
+## New syntax: returning multiple values from a function
+
+
 
 ## One hundred thousand reads {.smaller}
 
@@ -258,10 +262,6 @@ Read the two curves at 25: A's is higher, B's is lower but not zero.
 How often an organism produces a read like the observed one is that organism's **likelihood** for
 that read.
 
-. . .
-
-You met the word in unit 1, on *So what is 61%, then?* — the chapter now says it in print.
-
 ::: {.notes}
 Two minutes, the first naming slide. Make the unit 1 callback explicit and say which slide, because
 for most of the room the word is one lecture old and the concept graph gives it to chapter 1. The
@@ -269,6 +269,15 @@ likelihood is a property of an organism and a read together, not of the read alo
 :::
 
 ## Ask every read at once
+
+```{python}
+#| echo: true
+is_a = (species == "A")
+print(len(species))
+print(species[:5])
+print(len(is_a))
+print(is_a[:5])
+```
 
 `species == "A"` does not ask about one read.
 
@@ -295,12 +304,14 @@ That array has a name. It is a **mask**.
 ```{python}
 #| echo: true
 is_a = (species == "A")     # the mask
-print(gc[is_a][:8])         # keeps exactly the reads that answered True
+print(is_a[:5])
+print(gc[:5])
+print(gc[is_a][:2])         # keeps exactly the reads that answered True
 ```
 
 . . .
 
-Lab 10 drills this for an hour: comparisons, counting, filtering, `|` and `&`.
+Lab 10 drills this: comparisons, counting, filtering, `|` and `&`.
 
 ::: {.notes}
 Two minutes, the naming slide after the demonstration. Name it before using it, because every
@@ -403,7 +414,7 @@ The simulation assumed $\pi_A = 0.5$.
 
 . . .
 
-Nothing in the read said so. We typed it in.
+Nothing in the read said so. Chose it from our knowledge of the experiment.
 
 . . .
 
@@ -434,7 +445,11 @@ quantity: it is the mixing proportion from the story slide, renamed once it is u
 probability. Say that explicitly. Three terms now stand: likelihood, posterior, prior.
 :::
 
-## Same read, rarer organism
+## What if we had a different prior?
+
+Suppose we decided that we believed the fraction of A was $\pi_A = 0.05$
+
+. . .
 
 The same read. The same two genomes.
 
@@ -456,9 +471,12 @@ say it before you run anything, and write it on the board next to the 0.83.
 
 ```{python}
 #| echo: true
+# Equal prior: 0.5
+# Rare A prior: 0.05
 for share_a in (0.5, 0.05):
     rng = np.random.default_rng(43)
     species_list, gc_list = [], []
+    # simulate 100,000 reads with share_a as prior
     for _ in range(100000):
         s, g = draw_gc_from_two_groups(share_a, 0.66, 0.48, 40, rng)
         species_list.append(s)
@@ -493,6 +511,45 @@ predicted "no change" were reasoning about the read, which did not change. Let t
 for a moment before the correction slide.
 :::
 
+## When A is rare, B's tail outnumbers A at 25
+
+```{python}
+#| echo: false
+#| fig-cap: A larger fraction of A's reads have a GC content of 25 than B. But **B has overall more reads with GC content of 25.**
+import matplotlib.pyplot as plt
+
+rng = np.random.default_rng(41)
+species_list_05, gc_list_05 = [], []
+for _ in range(100000):
+    s, g = draw_gc_from_two_groups(0.05, 0.66, 0.48, 40, rng)
+    species_list_05.append(s)
+    gc_list_05.append(g)
+species_05 = np.array(species_list_05)
+gc_05 = np.array(gc_list_05)
+
+fig, ax = plt.subplots(figsize=(7, 3.2))
+bins = np.arange(5.5, 40.5, 1)
+is_a_05 = (species_05 == "A")
+is_b_05 = (species_05 == "B")
+ax.hist(gc_05[is_a_05], bins=bins, histtype="step", lw=2, color="#eb6834", label="from A")
+ax.hist(gc_05[is_b_05], bins=bins, histtype="step", lw=2, color="#2a78d6", label="from B")
+ax.axvline(25, color="#52514e", ls=":", lw=1.5)
+ax.text(25.4, ax.get_ylim()[1] * 0.93, "observed read", color="#52514e")
+ax.set_xlabel("G or C bases, out of 40")
+ax.set_ylabel("reads")
+ax.legend(frameon=False)
+ax.spines[["top", "right"]].set_visible(False)
+plt.show()
+```
+
+::: {.notes}
+One minute. The chapter's second histogram, seed 41 as in the reading. Put it next to *Two
+histograms, overlapping at 25* in their heads: same genomes, same bins, same dotted line, and the
+orange curve has collapsed. Trace the line down again and read the two heights at 25; B's is now
+the taller one. That picture is the 0.21. Skip this slide if the clock is tight; the correction
+slide carries the sentence.
+:::
+
 ## The read did not change; the prior did
 
 **What you believe about a read depends on what it looks like and on how the community was mixed.**
@@ -504,14 +561,14 @@ When A is rare, most reads that look like A's are B reads at the GC-rich end of 
 
 . . .
 
-Judging a case by how well it matches a description, and ignoring the prior, is **base-rate
+Judging a case by how well it matches a description, and ignoring the prior, is called **base-rate
 neglect**.
 
 ::: {.notes}
 Two and a half minutes, the correction, and the first of the chapter's three misconceptions. Name
 base-rate neglect in one line, as the chapter does, and do not tell the taxicab story or any other
-outside example. The second histogram, with A rare, is in the reading; show it only if the clock
-allows.
+outside example. The previous slide is the chapter's second histogram, with A rare; point back
+at it for the "GC-rich end of B's range" line.
 :::
 
 ## PS4 opens today
