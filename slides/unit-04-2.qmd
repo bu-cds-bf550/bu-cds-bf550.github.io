@@ -450,8 +450,8 @@ if the clock slips — the reading carries it.
 2. PS4
 
 ::: {.notes}
-Lab 11 is *Keep the cases that match*: a simulated crowd of two kinds of morning, then the
-filtering fraction written as a function from a blank cell. Its empty-match snag points straight at
+Lab 11 is *Keep the reads that match*: the chapter's own simulator and filtering chunk at seed
+41, then the filtering fraction written as a function from a blank cell. Its empty-match snag points straight at
 *Zero from B*. Thirty-five minutes is the floor and this block has forty-eight, so there is room.
 Then PS4, due Friday.
 :::
