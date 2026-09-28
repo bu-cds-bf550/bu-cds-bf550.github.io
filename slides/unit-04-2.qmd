@@ -6,8 +6,8 @@
 # rare*. The run-sheet (bf550-instructor lectures/unit04-runsheet.md) owns the clock and cites
 # these headings.
 #
-# Chapter chunks are reused with the chapter's seeds (41 for the corpus, 43 for the rare-A
-# community). The seed-41 corpus and the drawing helper are rebuilt in a hidden chunk at the
+# Chapter chunks are reused with the chapter's seeds (41 for the simulated reads, 43 for the rare-A
+# community). The seed-41 simulated reads and the drawing helper are rebuilt in a hidden chunk at the
 # top, because each deck renders on its own; the printed numbers are the ones in the reading.
 # Authored to the run-sheet: 48 minutes, 24 content slides (authoring/slides.md, Sizing a
 # deck; decisions/decks-teach-the-material-a-second-way.md). The deck introduces every term it
@@ -213,7 +213,7 @@ print(f"Microbe B reads with GC of {observed}: {count_b_25} of {n_b}, likelihood
 ```
 
 ::: {.notes}
-Two minutes. Run it live on the seed-41 corpus. `gc[is_a]` is Friday's mask, pointed at A's
+Two minutes. Run it live on the seed-41 simulated reads. `gc[is_a]` is Friday's mask, pointed at A's
 reads only; `== observed` asks each of them whether it landed on 25. 5,846 of 50,333 and 1,211
 of 49,667: A produces such a read about 0.116 of the time, B about 0.024. Nearly five to one.
 :::
@@ -271,7 +271,7 @@ print(f"fraction of those from B:  {from_b.mean():.2f}")
 
 ::: {.notes}
 Two minutes. Friday's filter, run again, with two extra lines: the size of the subset as a fraction of
-the corpus, 0.071, and the counts from each organism, 5,846 and 1,211. The room has seen 0.83
+the simulated reads, 0.071, and the counts from each organism, 5,846 and 1,211. The room has seen 0.83
 before; the new thing to notice is that 5,846 is the same number as on the likelihood slide.
 :::
 
@@ -352,10 +352,9 @@ itself. Ask the room to say the three back before moving on.
 ![](img/illustrations/ch04-pile.drawio.svg){fig-align="center" width="85%"}
 
 ::: {.notes}
-Two and a half minutes, the fourth piece and the new one. Walk the picture top to bottom: the
-whole corpus split by organism; the two solid slivers, each organism's 25-GC reads at the left
+Two and a half minutes, the fourth piece and the new one. Walk the picture top to bottom: the whole set of simulated reads split by organism; the two solid slivers, each organism's 25-GC reads at the left
 of its segment, to scale; the same subset enlarged, 5,846 from A and 1,211 from B. The subset is
-7,057 reads, 0.071 of the corpus.
+7,057 reads, 0.071 of all simulated reads.
 :::
 
 ## The read subset on the histogram
@@ -429,7 +428,7 @@ The 50,333 cancels. The arithmetic and the filter are **one procedure**.
 
 ::: {.notes}
 Two and a half minutes, and the hinge of the hour. The prior's numerator is the likelihood's
-denominator, so their product is A's 25-GC reads over the whole corpus, which is A's part of the
+denominator, so their product is A's 25-GC reads over all the simulated reads, which is A's part of the
 subset. Divide by the subset and the 100,000 cancels too. Write the cancellation on the board if
 the projector is too small.
 :::
@@ -565,7 +564,7 @@ When the story's settings are known, no reads need simulating.
 
 ::: {.notes}
 Two minutes. `binom.pmf(k, n, p)` is the probability of exactly k successes in n tries. The
-counted and exact agree to the third decimal, and the exact needed no corpus. Say on screen that
+counted and exact agree to the third decimal, and the exact needed no simulated reads. Say on screen that
 this needs `conda install scipy` in the course env: it is not in the lab environment. Libraries
 are the required method from this unit on, and the next set names this call.
 :::

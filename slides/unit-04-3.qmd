@@ -14,7 +14,7 @@
 # Misconception 3, the zero, left the chapter with pseudocounts on 28 Sep 2026.
 #
 # Authored 24 Sep 2026: 47 minutes, 24 content slides. The first two beats use binom.pmf and no
-# simulation, so this deck does not rebuild the seed-41 corpus; the overlap beat uses the
+# simulation, so this deck does not rebuild the seed-41 simulated reads; the overlap beat uses the
 # chapter's seed 53. The chapter asserts "about five thousand bases" without a chunk; the slide
 # here computes it instead (100, 1,000 and 5,000 bases at 66% against 64%).
 #
