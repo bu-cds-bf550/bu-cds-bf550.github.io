@@ -10,7 +10,8 @@
 # section 1 asked and nothing in the unit had yet answered in one place. Decision 5 of that
 # record forbids staging a mistake nobody in the room would make, which is why the first beat
 # asks HOW FAR 0.83 moves rather than which way: the room settled the direction on Friday.
-# All three declared misconceptions are still corrected — 1 on Friday, 3 on Monday, 2 here.
+# Misconception 1 was corrected on Friday and again in session 2's beat; 2 is corrected here.
+# Misconception 3, the zero, left the chapter with pseudocounts on 28 Sep 2026.
 #
 # Authored 24 Sep 2026: 47 minutes, 24 content slides. The first two beats use binom.pmf and no
 # simulation, so this deck does not rebuild the seed-41 corpus; the overlap beat uses the
@@ -47,22 +48,27 @@ Closed book, no AI, five minutes.
 The standing frame, verbatim. Code-reading kind, bank `checkins/unit04/bank.md` session 3: a
 function that returns the likelihood ratio with the prior left out, under a comment claiming it
 accounts for the share. Questions 3 and 4 are the baseline for the first beat, which puts the
-prior back. Compare with Monday's edge tally.
+prior back. Compare with the last session's edge tally.
 :::
 
 # What we tell the collaborator
 
-## Monday: 537 reads at 33, and none from B
+## Last session: prior times likelihood over the pile is the posterior
 
-A zero from finite data says **how long you looked**, not what can occur.
+The likelihood, counted inside each organism's own reads: **0.116** and **0.024**.
 
 . . .
 
-The pseudocount took A's share from 1.0 to **0.998** and left the conclusion standing.
+The pile of reads that match: **7,057** of 100,000, and A's part of it over the pile: **0.83**.
+
+. . .
+
+Prior times likelihood is A's part of the pile. The four pieces, one formula.
 
 ::: {.notes}
-Two minutes, one slide of callback. Then, no slide: where PS4 is stuck two days out, and whether
-anyone's check cells are still white. Today spends Monday's arithmetic rather than adding to it.
+Two minutes, one slide of callback. Then, no slide: where PS4 is stuck, and whether anyone's
+check cells are still white. Today spends the last session's arithmetic rather than adding to
+it: the answer to the collaborator is those pieces, assembled.
 :::
 
 ## Which organism, and how certain is the call?
@@ -109,7 +115,7 @@ b_makes_it = binom.pmf(25, 40, 0.48)     # how often B does
 print(f"A: {a_makes_it:.3f}   B: {b_makes_it:.3f}   ratio: {a_makes_it / b_makes_it:.1f} to 1")
 ```
 
-No reads simulated. Monday's library call, applied to the observed read.
+No reads simulated. The last session's library call, applied to the observed read.
 
 ::: {.notes}
 Two minutes. A's genome produces a read with 25 of 40 bases G or C about 0.116 of the time, B's
