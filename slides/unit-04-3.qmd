@@ -53,17 +53,17 @@ prior back. Compare with the last session's edge tally.
 
 # What we tell the collaborator
 
-## Last session: prior times likelihood over the pile is the posterior
+## Last session: prior times likelihood over the subset is the posterior
 
 The likelihood, counted inside each organism's own reads: **0.116** and **0.024**.
 
 . . .
 
-The pile of reads that match: **7,057** of 100,000, and A's part of it over the pile: **0.83**.
+The subset of reads that match: **7,057** of 100,000, and A's part of it over the subset: **0.83**.
 
 . . .
 
-Prior times likelihood is A's part of the pile. The four pieces, one formula.
+Prior times likelihood is A's part of the subset. The four pieces, one formula.
 
 ::: {.notes}
 Two minutes, one slide of callback. Then, no slide: where PS4 is stuck, and whether anyone's

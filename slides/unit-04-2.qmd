@@ -71,12 +71,12 @@ def fraction_boxes(title, is_a, is_b, gc, observed, per_organism):
                 color="#0b0b0b", fontsize=12, va="center")
     plt.show()
 
-def stacked_pile(species, gc, observed, a_label_xy, b_label_xy):
+def stacked_subset(species, gc, observed, a_label_xy, b_label_xy):
     is_a = (species == "A")
     is_b = (species == "B")
-    pile = (gc == observed)
-    from_a = (species[pile] == "A")
-    from_b = (species[pile] == "B")
+    subset = (gc == observed)
+    from_a = (species[subset] == "A")
+    from_b = (species[subset] == "B")
     fig, ax = plt.subplots(figsize=(7, 3.2))
     bins = np.arange(5.5, 40.5, 1)
     ax.hist([gc[is_a], gc[is_b]], bins=bins, stacked=True, alpha=0.3,
@@ -270,7 +270,7 @@ print(f"fraction of those from B:  {from_b.mean():.2f}")
 ```
 
 ::: {.notes}
-Two minutes. Friday's filter, run again, with two extra lines: the pile's size as a fraction of
+Two minutes. Friday's filter, run again, with two extra lines: the size of the subset as a fraction of
 the corpus, 0.071, and the counts from each organism, 5,846 and 1,211. The room has seen 0.83
 before; the new thing to notice is that 5,846 is the same number as on the likelihood slide.
 :::
@@ -347,53 +347,53 @@ itself. Ask the room to say the three back before moving on.
 
 # The probability of the data
 
-## The pile: 7,057 of 100,000 reads match the observed one
+## The subset: 7,057 of 100,000 reads match the observed one
 
 ![](img/illustrations/ch04-pile.drawio.svg){fig-align="center" width="85%"}
 
 ::: {.notes}
 Two and a half minutes, the fourth piece and the new one. Walk the picture top to bottom: the
 whole corpus split by organism; the two solid slivers, each organism's 25-GC reads at the left
-of its segment, to scale; the same pile enlarged, 5,846 from A and 1,211 from B. The pile is
+of its segment, to scale; the same subset enlarged, 5,846 from A and 1,211 from B. The subset is
 7,057 reads, 0.071 of the corpus.
 :::
 
-## The pile on the histogram
+## The read subset on the histogram
 
 ```{python}
 #| echo: false
 #| fig-align: center
-stacked_pile(species, gc, observed, (30.5, 4200), (28.5, 8200))
+stacked_subset(species, gc, observed, (30.5, 4200), (28.5, 8200))
 ```
 
 ::: {.notes}
-Ninety seconds, the same pile one more way. Friday's histogram with the two organisms stacked
-rather than overlaid, and the bar at 25 in full colour: mostly orange, a blue cap. The pile is
+Ninety seconds, the same subset one more way. Friday's histogram with the two organisms stacked
+rather than overlaid, and the bar at 25 in full colour: mostly orange, a blue cap. The subset is
 one bar of the histogram, and its split is the posterior.
 :::
 
-## The probability of the data is the pile's size
+## The probability of the data is the size of the subset
 
 7,057 of 100,000: the fraction of all reads that look like the observed one, **whoever wrote them**.
 
 . . .
 
-It is the **denominator of the posterior**: A's part of the pile over the pile, B's part over the same pile.
+It is the **denominator of the posterior**: A's part of the subset over the subset, B's part over the same subset.
 
 . . .
 
-So the two shares add to one, and the pile's size cannot change which organism wins.
+So the two shares add to one, and the size of the subset cannot change which organism wins.
 
 ::: {.notes}
 Two minutes, the naming slide for the fourth piece. It is a question about the community's reads
 as a whole, not about either organism. Its whole job in this chapter is to sit under both parts
-of the pile. Say the last line slowly: dividing both parts by the same number cannot change
+of the subset. Say the last line slowly: dividing both parts by the same number cannot change
 which part is bigger.
 :::
 
 # Bayes' theorem
 
-## Prior times likelihood is A's part of the pile {.smaller}
+## Prior times likelihood is A's part of the subset {.smaller}
 
 ```{python}
 #| echo: true
@@ -402,7 +402,7 @@ likelihood_a_25 = count_a_25 / n_a
 likelihood_b_25 = count_b_25 / n_b
 a_and_25 = prior_a * likelihood_a_25          # from A AND lands on 25
 b_and_25 = prior_b * likelihood_b_25
-all_25 = a_and_25 + b_and_25                  # the pile's size, rebuilt
+all_25 = a_and_25 + b_and_25                  # the size of the subset, rebuilt
 print(f"fraction of reads with 25 GC bases, rebuilt: {all_25:.5f}")
 print(f"fraction of reads with 25 GC bases, counted: {looks_like_observed.mean():.5f}")
 print(f"share of 25-GC reads that came from A:      {a_and_25 / all_25:.4f}")
@@ -410,12 +410,12 @@ print(f"share of 25-GC reads that came from A:      {a_and_25 / all_25:.4f}")
 
 ::: {.notes}
 Two and a half minutes. A read from A had to pass two gates: chosen from A, then landing on 25.
-A count along a two-stage story is the product of the two stages. The rebuilt pile, 0.07057, is
-the counted pile exactly, and A's share is 0.8284, the filter's 0.83. Nothing was simulated on
+A count along a two-stage story is the product of the two stages. The rebuilt subset, 0.07057, is
+the counted subset exactly, and A's share is 0.8284, the filter's 0.83. Nothing was simulated on
 this slide.
 :::
 
-## Prior times likelihood over the pile is the posterior, exactly
+## Prior times likelihood over the subset is the posterior, exactly
 
 $$\frac{50{,}333}{100{,}000} \times \frac{5{,}846}{50{,}333} = \frac{5{,}846}{100{,}000}$$
 
@@ -430,7 +430,7 @@ The 50,333 cancels. The arithmetic and the filter are **one procedure**.
 ::: {.notes}
 Two and a half minutes, and the hinge of the hour. The prior's numerator is the likelihood's
 denominator, so their product is A's 25-GC reads over the whole corpus, which is A's part of the
-pile. Divide by the pile and the 100,000 cancels too. Write the cancellation on the board if
+subset. Divide by the subset and the 100,000 cancels too. Write the cancellation on the board if
 the projector is too small.
 :::
 
@@ -450,7 +450,7 @@ Posterior · likelihood · prior · the probability of the data. The four pieces
 ::: {.notes}
 Two and a half minutes, a binding slide and not first exposure. Point each symbol at the number
 it was on the previous slides: P(A) is 0.503, P(read | A) is 0.116, P(read) is 0.071, P(A | read)
-is 0.83. The vertical bar is unit 3's "given". The second line is the pile as A's part plus B's
+is 0.83. The vertical bar is unit 3's "given". The second line is the subset as A's part plus B's
 part, which the rebuild chunk printed.
 :::
 
@@ -481,11 +481,11 @@ The same read. The same two genomes. A is now **one read in twenty**.
 
 . . .
 
-The reads with 25 GC bases: still a pile.
+The reads with 25 GC bases: still a subset.
 
 . . .
 
-**Predict first.** Is that pile mostly A's reads, or mostly B's?
+**Predict first.** Is that subset mostly A's reads, or mostly B's?
 
 ::: {.notes}
 Two minutes, the beat's predict pause; collect aloud and write it down. Friday's version of this
@@ -494,7 +494,7 @@ A's curve is higher at 25": that is the likelihood answering a question the post
 and it is what the run corrects.
 :::
 
-## When A is rare, the pile is mostly B's
+## When A is rare, the subset is mostly B's
 
 ```{python}
 #| echo: false
@@ -507,11 +507,11 @@ for _ in range(100000):
     rare_gc_list.append(g)
 rare_species = np.array(rare_species_list)
 rare_gc = np.array(rare_gc_list)
-stacked_pile(rare_species, rare_gc, observed, (30.5, 3500), (29, 7500))
+stacked_subset(rare_species, rare_gc, observed, (30.5, 3500), (29, 7500))
 ```
 
 ::: {.notes}
-Two and a half minutes, the run, on the chapter's seed-43 community. The pile at 25 sits inside
+Two and a half minutes, the run, on the chapter's seed-43 community. The subset at 25 sits inside
 B's distribution: 587 from A, 2,169 from B. A still produces such reads five times as often
 per read, and there are nineteen times as many B reads. Mark the board against the predictions.
 :::
