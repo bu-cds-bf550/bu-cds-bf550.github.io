@@ -647,7 +647,7 @@ five minutes is the floor and this block has forty-five, so there is room. Then 
 - PS4 is due at the **start of the session after next** (was Fri Oct 2; the new date is announced in class)
 
 ::: {.notes}
-The next session opens with a function read cold that leaves the prior out, then the session
+The next session opens with a function whose organism argument the body never reads, then the session
 that answers the collaborator's question and closes the chapter. The calendar has shifted a day
 since the 28 Sep cancellation; say the PS4 due date aloud once it is settled. Read the two named
 sections before then.
