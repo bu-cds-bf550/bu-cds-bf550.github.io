@@ -46,3 +46,8 @@
   unit: unit-02
   date: "Wed Sep 16"
   title: "Reading drills: loops that repeat a model"
+- id: unit-05
+  path: "unit-05.ipynb"
+  unit: unit-05
+  date: "Fri Oct 2 · Mon Oct 5 · Wed Oct 7"
+  title: "Dictionaries, `and`, and sums of logs"
