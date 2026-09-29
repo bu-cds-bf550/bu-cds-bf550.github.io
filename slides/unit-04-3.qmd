@@ -1,27 +1,38 @@
 ---
 # Session 3 of unit 4. The chapter's last teaching section, "What do we tell our collaborator?",
-# with "When the model is wrong" drawn on for the two failures that section prices. Three beats:
-# *How far does 0.83 move?*, *Buy length, not depth*, *When the organisms look alike*. The
-# run-sheet (bf550-instructor lectures/unit04-runsheet.md) owns the clock and cites these
-# headings.
+# with "When the model is wrong" drawn on for the identifiability failure and the label
+# assumption. Two beats: *How far does 0.83 move?* and *What happens when the organisms look
+# alike?*. The read-length beat was cut on 29 Sep 2026 to follow the chapter's 28 Sep revision,
+# which dropped the lever and its genome-separation price because nothing in the chapter builds
+# them. The run-sheet (bf550-instructor lectures/unit04-runsheet.md) owns the clock and cites
+# these headings.
+#
+# Order: the collaborator section's community comparison is lectured first, then the
+# identifiability failure from "When the model is wrong", then the labels, which the collaborator
+# section itself assembles as "What we cannot tell her". The run-sheet's *Chapter order*
+# paragraph records that interleave.
 #
 # This session replaced a three-failure arc on 24 Sep 2026
 # (decisions/chapters-answer-the-collaborator.md). The session is organised around the question
 # section 1 asked and nothing in the unit had yet answered in one place. Decision 5 of that
 # record forbids staging a mistake nobody in the room would make, which is why the first beat
 # asks HOW FAR 0.83 moves rather than which way: the room settled the direction on Friday.
-# All three declared misconceptions are still corrected — 1 on Friday, 3 on Monday, 2 here.
+# Misconception 1 was corrected on Friday and again in session 2's beat; 2 is corrected here.
+# The chapter's third misconception, the zero, left with pseudocounts on 28 Sep 2026.
 #
-# Authored 24 Sep 2026: 47 minutes, 24 content slides. The first two beats use binom.pmf and no
-# simulation, so this deck does not rebuild the seed-41 corpus; the overlap beat uses the
-# chapter's seed 53. The chapter asserts "about five thousand bases" without a chunk; the slide
-# here computes it instead (100, 1,000 and 5,000 bases at 66% against 64%).
+# Authored 24 Sep 2026, cut to 39 minutes and 20 content slides on 29 Sep, swept by the slide
+# loop the same day. The first beat uses binom.pmf and no simulation, so this deck does not
+# rebuild the seed-41 simulated reads; the overlap beat uses the chapter's seed 53.
+#
+# Dates: Mon 28 Sep was cancelled, so this session is delivered Fri 2 Oct and the session after
+# it, which opens unit 5 and PS5, is Mon 5 Oct. The calendar is not yet updated; the slides say
+# "next session" and the instructor announces dates in the room.
 #
 # AUTHORING.md convention 20: the problem's objects are named by what they are, and the
 # collaborator is a role rather than a pronoun. Chapter 4 froze on 23 Sep and still says "her
 # read"; that gap is logged on bf550-instructor#95 and nothing is announced in the room.
 title: "Mix: which process produced this observation?"
-subtitle: "BF550 · Unit 4 · Session 3 — Wed Sep 30"
+subtitle: "BF550 · Unit 4 · Session 3 — Fri Oct 2"
 ---
 
 ```{python}
@@ -33,8 +44,6 @@ def draw_gc_from_two_groups(share_a, gc_a, gc_b, n_bases, rng):
     if rng.random() < share_a:
         return "A", rng.binomial(n_bases, gc_a)
     return "B", rng.binomial(n_bases, gc_b)
-
-even_share = 0.5
 ```
 
 ## Check-in {.smaller}
@@ -45,27 +54,34 @@ Closed book, no AI, five minutes.
 
 ::: {.notes}
 The standing frame, verbatim. Code-reading kind, bank `checkins/unit04/bank.md` session 3: a
-function that returns the likelihood ratio with the prior left out, under a comment claiming it
-accounts for the share. Questions 3 and 4 are the baseline for the first beat, which puts the
-prior back. Compare with Monday's edge tally.
+seven-line function over the two counts the filter produces, with an `organism` argument the
+body never reads, so it prints 0.8 whichever organism is named. Compare with the last session's
+edge tally. The first beat takes its baseline from its own predict pause, not from this check-in.
 :::
 
 # What we tell the collaborator
 
-## Monday: 537 reads at 33, and none from B
+## Last session built the posterior from prior times likelihood
 
-A zero from finite data says **how long you looked**, not what can occur.
+The likelihood, counted inside each organism's own reads: **0.116** and **0.024**.
 
 . . .
 
-The pseudocount took A's share from 1.0 to **0.998** and left the conclusion standing.
+The subset of reads that match: **7,057** of 100,000, and A's part of it over the subset: **0.83**.
+
+. . .
+
+Prior times likelihood is A's part of the subset.
+
+The four pieces, one formula.
 
 ::: {.notes}
-Two minutes, one slide of callback. Then, no slide: where PS4 is stuck two days out, and whether
-anyone's check cells are still white. Today spends Monday's arithmetic rather than adding to it.
+Two minutes, one slide of callback. Then, no slide: where PS4 is stuck, and whether anyone's
+check cells are still white. Today spends the last session's arithmetic rather than adding to
+it: the answer to the collaborator is those pieces, assembled.
 :::
 
-## Which organism, and how certain is the call?
+## Which organism, and how sure can we be?
 
 That is what the collaborator asked on Friday, about one 40-base read.
 
@@ -75,12 +91,16 @@ Every piece of the answer is now built.
 
 . . .
 
-Nothing in this unit has yet put the pieces together in one place. Today does.
+Nothing in this unit has yet put the pieces together in one place.
+
+. . .
+
+This session assembles them into an answer the collaborator can act on.
 
 ::: {.notes}
 Ninety seconds. Go back to session 1's opening slide if it is quick to reach. The room has spent
 two sessions on machinery and has not once been given the answer as a scientist would receive it.
-Say that plainly — it sets the contract for the hour.
+Say that plainly, because it sets the contract for the hour.
 :::
 
 ## Microbe A, with probability about 0.83
@@ -96,11 +116,11 @@ Two pieces make that number, and both can be shown to the collaborator:
 
 ::: {.notes}
 Two minutes. The headline first, then its two halves, which is the opposite of how the unit built
-it. A scientist wants the answer and then the warrant. The two bullets are the likelihood ratio and
-the prior, named in plain words rather than in the vocabulary.
+it. A scientist wants the answer and then the warrant. The two bullets are the two likelihoods
+set side by side and the prior, named in plain words rather than in the vocabulary.
 :::
 
-## Five to one, from the genomes {.smaller}
+## The genomes give roughly five to one for A {.smaller}
 
 ```{python}
 #| echo: true
@@ -109,31 +129,40 @@ b_makes_it = binom.pmf(25, 40, 0.48)     # how often B does
 print(f"A: {a_makes_it:.3f}   B: {b_makes_it:.3f}   ratio: {a_makes_it / b_makes_it:.1f} to 1")
 ```
 
-No reads simulated. Monday's library call, applied to the observed read.
+No reads simulated.
+
+The last session's library call, applied to the observed read.
+
+`conda install scipy` in the course environment.
 
 ::: {.notes}
 Two minutes. A's genome produces a read with 25 of 40 bases G or C about 0.116 of the time, B's
-about 0.024 — roughly five to one. That ratio is a property of the two genomes and nothing else,
-which is the fact the rest of the hour leans on. Say on screen that `scipy` needs
-`conda install scipy` in the course env.
+about 0.024, roughly five to one. That ratio is a property of the two genomes and nothing else,
+which is the fact the rest of the hour leans on. The install line is on the slide because scipy
+is not in the lab environment yet.
 :::
 
 ## An even mix leaves the five-to-one ratio intact {.smaller}
 
 ```{python}
 #| echo: true
+even_share = 0.5
 a_and = binom.pmf(25, 40, 0.66) * even_share
 b_and = binom.pmf(25, 40, 0.48) * (1 - even_share)
 print(f"P(A | the observed read), in the mock community: {a_and / (a_and + b_and):.2f}")
 ```
 
-The mock community was built about evenly, so the prior does not tilt the ratio.
+The two cultures were mixed about evenly, so the prior does not tilt the ratio.
+
+Five of every six matching reads are A's: 5/6 ≈ 0.83.
 
 ::: {.notes}
-Two minutes. Five-to-one odds carried through almost unchanged gives 0.83, matching Friday's
-filtered simulation to two decimals. Worth saying: the arithmetic and the simulation are the same
+Two minutes. Five to one carried through almost unchanged gives 0.83, matching Friday's filtered
+simulation to two decimals. Worth saying: the arithmetic and the simulation are the same
 computation, and the room has now seen the answer arrive both ways.
 :::
+
+# Where the answer travels
 
 ## How far does 0.83 move?
 
@@ -141,14 +170,20 @@ The temptation is to file **0.83** as a fact about the sequence.
 
 . . .
 
-Same read. Same genomes. A screening sample where A is **one part in a thousand**.
+At one in twenty, Friday's same read scored **0.21**.
 
 . . .
 
-**Predict first: how far does the number move?** Commit to a number.
+Same read, same genomes, and a sample where A is **one part in a thousand**.
+
+. . .
+
+**Predict first: how far does the number move?**
+
+Commit to a number.
 
 ::: {.notes}
-Two minutes. Ask for a magnitude, not a direction — the room settled the direction on Friday with
+Two minutes. Ask for a magnitude, not a direction: the room settled the direction on Friday with
 0.84 against 0.21, and asking which way would be staging a mistake nobody here would make. The
 open question is the size. Most rooms guess something like "down to 0.5". Write the guesses down.
 :::
@@ -158,14 +193,14 @@ open question is the size. Most rooms guess something like "down to 0.5". Write 
 ```{python}
 #| echo: true
 for share_a in (0.5, 0.05, 0.001):
-    numer_a = binom.pmf(25, 40, 0.66) * share_a
-    numer_b = binom.pmf(25, 40, 0.48) * (1 - share_a)
-    print(f"A's share of the community {share_a:>5}: "
-          f"P(A | the observed read) = {numer_a / (numer_a + numer_b):.3f}")
+    a_and = binom.pmf(25, 40, 0.66) * share_a
+    b_and = binom.pmf(25, 40, 0.48) * (1 - share_a)
+    print(f"A's share of the community {share_a}: "
+          f"P(A | the observed read) = {a_and / (a_and + b_and):.3f}")
 ```
 
 ::: {.notes}
-Ninety seconds. Three communities, one read, no new simulation — the likelihoods are computed once
+Ninety seconds. Three communities, one read, no new simulation: the likelihoods are computed once
 and only the share changes. Point at the single quantity that varies across the loop.
 :::
 
@@ -175,7 +210,7 @@ and only the share changes. Point at the single quantity that varies across the 
 
 . . .
 
-More than a hundredfold, from the same forty bases.
+More than a hundred times smaller, from the same forty bases.
 
 ::: {.notes}
 Two and a half minutes. Mark the board. The hundredfold is the number to leave them with: a
@@ -183,17 +218,17 @@ posterior is not a slightly adjustable summary of the read, it is dominated by t
 the community is lopsided. This corrects the unit's second misconception.
 :::
 
-## The genomes did not change; the community did
+## Only the community changed between the three answers
 
 **That number describes the community, not the read.**
 
 . . .
 
-Likelihoods travel: A's genome writes reads the same way in any sample.
+Likelihoods travel: A's genome produces reads the same way in any sample.
 
 . . .
 
-Priors stay home: the mixing proportion was measured in one community.
+Priors belong to the community they were measured in.
 
 . . .
 
@@ -201,88 +236,42 @@ Priors stay home: the mixing proportion was measured in one community.
 
 ::: {.notes}
 Two and a half minutes, four reveals, the correction, and the unit's central lesson. The practical
-form: when someone hands you a classifier, ask in which community its prior was measured, before
-asking how accurate it is. That question is worth more than an accuracy figure and students can
-start asking it this week.
+form: when someone hands you a classifier, a method that assigns each read to an organism, ask in
+which community its prior was measured before asking how accurate it is. That question is worth
+more than an accuracy figure and students can start asking it this week.
 :::
 
-## What buys a more certain call?
-
-0.83 is an honest answer. It is not a confident one.
-
-. . .
-
-Suppose the larger experiment needs per-read calls. **What should the lab spend on?**
-
-::: {.notes}
-Ninety seconds, a question slide. Take answers. "Sequence more" is the answer almost everyone
-gives, and it is the one the next beat corrects. Do not resolve it here.
-:::
-
-## Buy length, not depth
-
-**Predict first.** Which moves 0.83?
-
-- ten times as many 40-base reads
-- the same read, at a hundred bases
-
-::: {.notes}
-Two minutes. Collect a show of hands on each. "More reads" is the answer the beat exists to
-correct, and it is the instinct a sequencing budget usually follows. Get somebody to say why
-before running anything.
-:::
-
-## Buy length, not depth {.smaller}
-
-```{python}
-#| echo: true
-print(f"{'read length':>12} {'P(A | a read this GC-rich)':>28}")
-for n_bases in (40, 100, 400):
-    gc_count = round(0.625 * n_bases)        # the same GC fraction as the observed read
-    a_side = binom.pmf(gc_count, n_bases, 0.66) * even_share
-    b_side = binom.pmf(gc_count, n_bases, 0.48) * (1 - even_share)
-    print(f"{n_bases:>12} {a_side / (a_side + b_side):>28.3f}")
-```
-
-::: {.notes}
-Ninety seconds. The same GC fraction, 62.5%, read at three lengths. Nothing about the community or
-the genomes changes across the loop; only how much evidence one read carries.
-:::
-
-## Buy length, not depth
-
-**0.830** at 40 bases · **0.973** at 100 · **1.000** at 400.
-
-. . .
-
-More 40-base reads say something about **other** reads. They do nothing for this one.
-
-. . .
-
-A longer read is forty bases of evidence becoming a hundred.
-
-::: {.notes}
-Two and a half minutes. The instruction is concrete and a collaborator can act on it this week: if
-per-read calls matter to the larger experiment, build the library for longer reads. Depth and
-length are different resources and only one of them touches this question.
-:::
+# When the genomes look alike
 
 ## What if the organisms were more alike?
 
-Microbe A is 66% GC. Microbe B is 48%.
+Hold the community at half.
+
+Now move the genomes.
 
 . . .
 
-What if B were 58%? Or 64%?
+Microbe A is 66% GC.
+
+Microbe B is 48%.
+
+. . .
+
+What if B were 58%?
+
+Or 64%?
 
 ::: {.notes}
-Ninety seconds, a question slide opening the last failure. The two genomes have been 18 points
-apart all unit, which is a comfortable gap. Nothing guarantees it.
+Ninety seconds, a question slide. Say the turn aloud: the community stays at half from here, and
+what moves is the genomes. They have been 18 points apart all unit, which is a comfortable gap,
+and nothing guarantees it.
 :::
 
-## When the organisms look alike
+## What happens when the organisms look alike?
 
-**Predict first.** Move B's composition from 0.48 toward A's 0.66, through 0.58 to 0.64.
+**Predict first.**
+
+Move B's GC content from 0.48 toward A's 0.66, through 0.58 to 0.64.
 
 What happens to the posterior for the observed read?
 
@@ -292,7 +281,7 @@ the useful prediction is what exactly 0.5 would mean. Ask that: what does a post
 about the data?
 :::
 
-## When the organisms look alike {.smaller}
+## What happens when the organisms look alike? {.smaller}
 
 ```{python}
 #| echo: true
@@ -305,7 +294,7 @@ for gc_b in (0.48, 0.58, 0.64):
         gc_list.append(g)
     sp, gcs = np.array(species_list), np.array(gc_list)
     matching = (gcs == 25)
-    print(f"B's composition {gc_b}: P(A | the observed read) = {(sp[matching] == 'A').mean():.2f}")
+    print(f"B's GC content {gc_b}: P(A | the observed read) = {(sp[matching] == 'A').mean():.2f}")
 ```
 
 ::: {.notes}
@@ -314,23 +303,28 @@ compared on the same draws. Back to simulation and filtering for this one, becau
 about the overlap of two distributions rather than about a single read.
 :::
 
-## When the organisms look alike
+## What happens when the organisms look alike?
 
 **0.83** · **0.53** · **0.48**
 
 . . .
 
-At 0.64 against 0.66, the answer is **0.48** — the prior, untouched by forty bases of data.
+At 0.64 against 0.66, the answer is **0.48**: the prior, untouched by forty bases of data.
+
+. . .
+
+The prior was 0.5; the simulation's own spread puts it at 0.48.
 
 ::: {.notes}
 Two and a half minutes. The posterior came back to where it started. Forty bases were collected,
 the arithmetic ran, and the answer carries no information the room did not have before the read
-arrived. Let that land before naming it.
+arrived. The 0.48 is 0.5 seen through a finite simulation; say so before anyone asks why it is
+not exactly the prior. Let it land before naming it.
 :::
 
-## Components this close are unidentifiable
+## Organisms as alike as these cannot be told apart
 
-When two components of a mixture are close enough, observations carry almost no information about
+When two organisms of a mixture are alike enough, observations carry almost no information about
 which produced them.
 
 . . .
@@ -339,36 +333,18 @@ The posterior reports that by **returning the prior**.
 
 . . .
 
-This limit is called **identifiability**.
+Whether the data can tell the two apart is a property called **identifiability**.
 
 ::: {.notes}
-Two minutes, the naming slide after the demonstration. More data narrows the limit at the margins
-and no algorithm removes it, because it is a property of the two compositions. A method that
-returns confident labels here is reporting a confidence the data do not support.
+Two minutes, the naming slide after the demonstration. Identifiability is a property of the two
+compositions, not of the method. More data narrows the limit at the margins and no algorithm
+removes it. A method that returns confident labels here is reporting a confidence the data do not
+support.
 :::
 
-## Two genomes 2% apart need five thousand bases {.smaller}
+## Chapter 1's mixture was an identifiability limit
 
-```{python}
-#| echo: true
-for n_bases in (100, 1000, 5000):
-    gc_count = round(0.66 * n_bases)         # a read typical of A
-    a_side = binom.pmf(gc_count, n_bases, 0.66) * even_share
-    b_side = binom.pmf(gc_count, n_bases, 0.64) * (1 - even_share)
-    print(f"{n_bases:>5} bases, A at 66% against B at 64%: {a_side / (a_side + b_side):.3f}")
-```
-
-At 66% against 48%, a hundred bases was enough.
-
-::: {.notes}
-Two minutes, the slide that joins the last two beats: how much length buys depends on how far apart
-the genomes are, and that is not something a lab can purchase. Two points of separation instead of
-eighteen turns a hundred bases into about five thousand. The identifiability limit, priced.
-:::
-
-## Chapter 1's blend was the same limit
-
-Practice problem 1.2: one site could not tell two populations apart from their blend.
+Practice problem 1.2: two populations mixed at one site, and the site could not tell them apart.
 
 . . .
 
@@ -381,75 +357,99 @@ this limit before without a name for it, and will meet it again as the central q
 unit. Say the ch12 line once.
 :::
 
+# What we cannot tell the collaborator
+
 ## The labels are a model
 
-Every estimate this week counted **within a label**.
+Every estimate this unit counted **within a label**.
 
 . . .
 
-The simulator's labels are true by construction. Real labels came from a culture that could be
-impure, or a database entry that could be misfiled.
+In a real analysis, 66%, 48% and A's share are counted from reads of labeled cultures.
 
 . . .
 
-If 2% of the reads labeled B are really A's, both compositions move together, and every posterior
+Ours are true because we wrote the simulator.
+
+A culture can be impure; a database entry can be misfiled.
+
+. . .
+
+If 2% of the reads labeled B are really A's, the two GC contents move closer and every posterior
 slides toward the prior.
 
-. . .
-
-Nothing in the data announces it.
-
 ::: {.notes}
-Two and a half minutes, prose, no chunk, four reveals. The third failure, and the honest residual
-of the whole answer. It is the identifiability limit reached by another route. The checks that
-catch this are the ones designed on purpose, with truth as an input, which is unit 1's advantage
-stated for the last time this unit.
+Two and a half minutes, prose, no chunk, four reveals: the first of the three things the chapter
+cannot tell the collaborator. Here 66% and 48% came from melting temperature and the share was
+chosen; in the collaborator's analysis all three are counted from labeled reads, which the second
+reveal says. Label error pushes the two GC contents together, so it is the overlap of the beat before by
+another route, and nothing in the data announces it. Only a check designed with truth as an input catches it.
 :::
 
-## What to tell the collaborator, in four sentences
+## The prior rests on the labels, and one read was answered
 
-1. **Microbe A, with probability about 0.83** — five-to-one odds from the genomes, in a community
+The mixing proportion is counted from the **same labeled reads**, so it carries the same assumption.
+
+. . .
+
+No number here says anything about **any read other than the one observed**.
+
+::: {.notes}
+Ninety seconds, the other two things the chapter says it cannot tell the collaborator. The prior
+was counted inside the labels too, so a label error moves it as well as the compositions. And
+the whole hour was about one 40-base read; a second read starts the arithmetic again with its own
+GC count.
+:::
+
+## The collaborator can act on three sentences
+
+1. **Microbe A, with probability about 0.83**: five to one from the genomes, in a community
    mixed about evenly.
-2. **That figure belongs to this community.** Where A is one part in a thousand, the same read
-   scores 0.005.
-3. **For more certain calls, buy read length, not read depth.** A hundred bases takes 0.83 to 0.97.
-4. **The calls rest on the culture labels being right.**
+2. **That figure belongs to this community**, and where A is one part in a thousand the same
+   read scores 0.005.
+3. **The answer rests on the culture labels being right.**
 
 ::: {.notes}
-Two and a half minutes, and the slide the whole unit was built to produce. Read all four aloud.
-This is what a scientist could act on: an answer, its scope, a purchasing decision, and the
-assumption that would undo it. Every number on it was computed in this room.
+Two and a half minutes, and the slide the whole unit was built to produce. Read all three aloud.
+A scientist can act on it: an answer, its scope, and the assumption that would undo it. Every
+number on it was computed in this room, and the three sentences follow the chapter's own closing
+list.
 :::
 
-## One feature, then twenty
+# The next unit
 
-The filter worked because a read has **one** GC count, and thousands of simulated reads share it.
+## The filter breaks at twenty features per read
+
+The filter worked because a read has **one** feature, its GC count, and thousands of simulated
+reads share it.
 
 . . .
 
-With twenty features per read, almost no simulated read matches exactly. The corner is empty.
+With twenty features per read, almost no simulated read matches on all twenty at once.
 
 ::: {.notes}
 Two minutes, the forward pointer. The room should leave knowing that the method they just learned
-breaks, and roughly where. Do not name Naive Bayes yet — the next slide does.
+breaks, and roughly where. Do not name Naive Bayes yet; the next slide does.
 :::
 
-## Chapter 5, read before Friday
+## Read chapter 5 before unit 5 opens
 
-The same two steps. Twenty features instead of one.
+The same two steps.
 
-. . .
-
-**Naive Bayes** is what replaces the filter — and the reading says what the replacement costs.
+Twenty features instead of one.
 
 . . .
 
-**PS5 opens Friday**, on this unit's problem.
+**Naive Bayes** is what replaces the filter, and the reading says what the replacement assumes.
+
+. . .
+
+**PS5 opens next session**, on this unit's problem.
 
 ::: {.notes}
 Ninety seconds. The reading assignment, said out loud, and the chapter goes out today so the room
-has it before Friday. PS5's subject stays off this slide and out of every answer: this file is
-public and the run-sheet's *Do not give away* block holds the reserved terms.
+has it before the next session. PS5's subject stays off this slide and out of every answer: this
+file is public and the run-sheet's *Do not give away* block holds the reserved terms.
 :::
 
 ## Working time — the rest of today
@@ -459,18 +459,19 @@ public and the run-sheet's *Do not give away* block holds the reserved terms.
 
 ::: {.notes}
 Lab 12 is *Reading drills: masks everywhere*: three masks traced by hand, and a mask built on the
-wrong array. Thirty-five minutes is the floor and this block has forty-six. Ask how far people are
-on PS4 and write the answer down — it is the only calibration PS5's estimate will have.
+wrong array. Thirty-five minutes is the floor and this block has fifty-four. Ask how far people are
+on PS4 and write the answer down: it is the only calibration PS5's estimate will have.
 :::
 
 ## Before next session
 
-- **Friday:** unit 5 opens, and **PS5** with it
-- **PS4 is due Friday**, start of class
-- Read **chapter 5** before Friday
+- **Next session:** unit 5 opens, and **PS5** with it
+- **PS4 is due at the start of next session** (was Fri Oct 2; the new date is announced in class)
+- Read **chapter 5** before next session
 
 ::: {.notes}
-Say the due date out loud. Chapter 4's practice problems and its worked design ship with the
-chapter and are not assigned; mention them once as reading and assign nothing. Friday is the last
-day of PS4 and the first of PS5.
+Say the due date out loud once it is settled; the calendar shifted a day with the 28 Sep
+cancellation. Chapter 4's practice problems and its worked design ship with the chapter and are
+not assigned; mention them once as reading and assign nothing. The next session is the last day
+of PS4 and the first of PS5.
 :::
