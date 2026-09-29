@@ -3,6 +3,7 @@
 numpy==2.1.*
 scipy==1.14.*
 matplotlib==3.9.*
+scikit-learn==1.5.*    # ch05's Toolbox (BernoulliNB), 28 Sep 2026; chapters 6-12 need it too
 jupyter==1.*
 pyyaml==6.*
 # Assembles the .pptx beside each PDF from decktape's screenshots (tools/pptx_from_screenshots.py).
