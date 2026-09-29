@@ -5,9 +5,10 @@ toc: true
 toc_sticky: true
 ---
 
-Every class meeting has a lab: the material you work through during working time, with instructors
-and TAs in the room. Work at your own pace, and finish one after class if you do not get all the
-way through.
+Every unit has a lab: the material you work through during working time, with instructors and TAs
+in the room. From unit 5 on, a unit's lab is **one notebook with a part for each class meeting**.
+If you do not finish a part in class, carry on with it after class or at the start of the next
+meeting, in the same notebook. Units 1 to 4 had a separate notebook for each meeting.
 
 The first lab is a page on this site. It sets up your toolchain and walks you through your first
 `gh student accept`. **Every lab after it is a Jupyter notebook in its unit's public lab
@@ -28,7 +29,7 @@ units 1 and 2 and is no longer updated; the same notebooks are in `bf550-unit01-
 Nothing is submitted from a lab. A lab that produces something worth keeping feeds that unit's
 problem set instead.
 
-| Unit | Meeting | Lab |
+| Unit | Meetings | Lab |
 |---:|---|---|
 {% for lab in site.data.labs -%}
 | {{ lab.unit | remove: "unit-" | plus: 0 }} | {{ lab.date }} | [{{ lab.title }}]({% if lab.path %}{{ site.labs_org }}/bf550-{{ lab.unit | remove: "-" }}-labs/blob/main/{{ lab.path }}{% else %}{{ site.baseurl }}/labs/{{ lab.id }}/{% endif %}) |

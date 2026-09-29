@@ -1,15 +1,21 @@
-# Published labs. One entry per lab, wherever it lives; the unit pages, the schedule and
-# /labs/ all read this list, so adding a lab means adding a line here.
+# Published labs. One entry per lab, wherever it lives; the unit pages and /labs/ read this
+# list, so adding a lab means adding a line here.
 #
-#   id      lab 1 is a course-site page: docs/labs/<id>.md -> /labs/<id>/. Every lab from 2
-#           on is a notebook in its unit's public template repo, bu-cds-bf550/bf550-unitNN-labs,
+# From unit 5 on, a unit has ONE lab notebook, worked on across its three sessions in one part
+# per session: one entry, id unit-NN, path unit-NN.ipynb, date listing the unit's sessions.
+# Units 1-4 (delivered) and any unit not yet converted have one notebook per meeting, one entry
+# each, id unit-NN-M, dated to its meeting.
+#
+#   id      lab 1 is a course-site page: docs/labs/<id>.md -> /labs/<id>/. Every other lab is a
+#           notebook in its unit's public template repo, bu-cds-bf550/bf550-unitNN-labs,
 #           which students accept through Classroom50 at the unit's first meeting; those carry
 #           `path` too.
 #   path    optional: the notebook's path inside the unit's template repo (built from
 #           site.labs_org in _config.yml and the entry's `unit`). Present => the lab links
 #           there; absent => it links to its own page under /labs/.
 #   unit    the unit page it surfaces on, matching _units/<unit>.md
-#   date    the meeting it belongs to, spelled as the schedule spells it
+#   date    the meeting it belongs to, or for a unit lab the unit's meetings joined by " · ",
+#           spelled as the schedule spells them
 #   title   the lab's subject, without the "Lab N ·" prefix the page's own title carries
 - id: unit-01-1
   unit: unit-01
