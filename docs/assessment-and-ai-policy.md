@@ -18,8 +18,8 @@ finals period** — the term closes with the project.
 | Component | What it measures | AI level | Weight |
 |---|---|:--:|--:|
 | Problem sets (10) | problem framing + applied ML + code literacy + agent use | per question | 40% |
-| Written midterm — Fri Nov 6 (code reading) | Acts I–II, under exam conditions | 1 | 10% |
-| Act III exam — Wed Dec 2 (code reading) | units 10–12, under exam conditions | 1 | 10% |
+| Written midterm — Mon Nov 9 (code reading) | Acts I–II, under exam conditions | 1 | 10% |
+| Act III exam — Fri Dec 4 (code reading) | units 10–12, under exam conditions | 1 | 10% |
 | Synthesis project | end-to-end judgment on a problem you chose | 4 | 35% |
 | Participation | engagement in working sessions | — | 5% |
 
@@ -58,9 +58,9 @@ Each act of the course closes with a **closed-book, no-AI code-reading exam (lev
 provided snippets, describe their behavior, recover their intent, spot edge cases and bugs —
 the same skill every set's no-AI questions rehearse, assessed all at once.
 
-- **Midterm — Fri Nov 6:** Acts I and II — simulating processes, estimation, Bayes, evaluation, and
+- **Midterm — Mon Nov 9:** Acts I and II — simulating processes, estimation, Bayes, evaluation, and
   regression through generalized linear models.
-- **Act III exam — Wed Dec 2:** units 10–12 — trees and forests, dimensionality reduction, and
+- **Act III exam — Fri Dec 4:** units 10–12 — trees and forests, dimensionality reduction, and
   clustering.
 
 ### Synthesis project

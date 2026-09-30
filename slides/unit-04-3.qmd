@@ -25,8 +25,7 @@
 # rebuild the seed-41 simulated reads; the overlap beat uses the chapter's seed 53.
 #
 # Dates: Mon 28 Sep was cancelled, so this session is delivered Fri 2 Oct and the session after
-# it, which opens unit 5 and PS5, is Mon 5 Oct. The calendar is not yet updated; the slides say
-# "next session" and the instructor announces dates in the room.
+# it, which opens unit 5 and PS5, is Mon 5 Oct. course/docs/schedule.md carries the new calendar.
 #
 # AUTHORING.md convention 20: the problem's objects are named by what they are, and the
 # collaborator is a role rather than a pronoun. Chapter 4 froze on 23 Sep and still says "her
@@ -465,13 +464,13 @@ on PS4 and write the answer down: it is the only calibration PS5's estimate will
 
 ## Before next session
 
-- **Next session:** unit 5 opens, and **PS5** with it
-- **PS4 is due at the start of next session** (was Fri Oct 2; the new date is announced in class)
+- **Next session, Mon Oct 5:** unit 5 opens, and **PS5** with it
+- **PS4 is due Mon Oct 5, at the start of next session**
 - Read **chapter 5** before next session
 
 ::: {.notes}
-Say the due date out loud once it is settled; the calendar shifted a day with the 28 Sep
-cancellation. Chapter 4's practice problems and its worked design ship with the chapter and are
+Say the due date out loud: PS4 moved from Fri Oct 2 to Mon Oct 5 with the 28 Sep cancellation,
+so the set has one more weekend. Chapter 4's practice problems and its worked design ship with the chapter and are
 not assigned; mention them once as reading and assign nothing. The next session is the last day
 of PS4 and the first of PS5.
 :::

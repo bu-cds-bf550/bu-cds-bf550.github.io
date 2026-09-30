@@ -644,11 +644,11 @@ five minutes is the floor and this block has forty-five, so there is room. Then 
 ## Before next session
 
 - **Next session:** *When the model is wrong* and *What do we tell our collaborator?*
-- PS4 is due at the **start of the session after next** (was Fri Oct 2; the new date is announced in class)
+- PS4 is due **Mon Oct 5, start of class**, the session after next
 
 ::: {.notes}
 The next session opens with a function whose organism argument the body never reads, then the session
-that answers the collaborator's question and closes the chapter. The calendar has shifted a day
-since the 28 Sep cancellation; say the PS4 due date aloud once it is settled. Read the two named
-sections before then.
+that answers the collaborator's question and closes the chapter. Say the PS4 due date aloud: it
+moved from Fri Oct 2 to Mon Oct 5 with the 28 Sep cancellation. Read the two named sections before
+then.
 :::

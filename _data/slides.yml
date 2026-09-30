@@ -49,27 +49,27 @@
   file: unit-04-1
 - unit: unit-04
   session: 2
-  date: "Mon Sep 28"
+  date: "Wed Sep 30"
   title: "Mix: which process produced this observation?"
   file: unit-04-2
 - unit: unit-04
   session: 3
-  date: "Wed Sep 30"
+  date: "Fri Oct 2"
   title: "Mix: which process produced this observation?"
   file: unit-04-3
 - unit: unit-05
   session: 1
-  date: "Fri Oct 2"
+  date: "Mon Oct 5"
   title: "Naive Bayes: classification as a generative story (draft)"
   file: unit-05-1
 - unit: unit-05
   session: 2
-  date: "Mon Oct 5"
+  date: "Wed Oct 7"
   title: "Naive Bayes: classification as a generative story (draft)"
   file: unit-05-2
 - unit: unit-05
   session: 3
-  date: "Wed Oct 7"
+  date: "Fri Oct 9"
   title: "Naive Bayes: classification as a generative story (draft)"
   file: unit-05-3
 - unit: unit-02

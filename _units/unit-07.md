@@ -4,9 +4,9 @@ title: "Unit 7 — Logistic regression: modeling the boundary directly"
 
 **Act II** · composition operation: **condition**
 
-**Sessions:** Fri **Oct 16** · Mon **Oct 19** · Wed **Oct 21**
+**Sessions:** Mon **Oct 19** · Wed **Oct 21** · Fri **Oct 23**
 
-**PS6** is due at the start of the first session, Fri **Oct 16** · **PS7** (on unit 6's material) is assigned in that same session · due Fri **Oct 23**
+**PS6** is due at the start of the first session, Mon **Oct 19** · **PS7** (on unit 6's material) is assigned in that same session · due Mon **Oct 26**
 
 > *Is this variant pathogenic?*
 

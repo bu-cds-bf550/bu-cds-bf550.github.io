@@ -4,9 +4,9 @@ title: "Unit 12 — Clustering: mixture models → k-means; validating *k*"
 
 **Act III** · composition operation: **mix, hidden**
 
-**Sessions:** Fri **Nov 20** · Mon **Nov 23** · Mon **Nov 30**
+**Sessions:** Mon **Nov 23** · Mon **Nov 30** · Wed **Dec 2**
 
-**PS10** is due at the start of the first session, Fri **Nov 20** · **no new set is assigned** — this unit is the run-up to the Act III exam, Wed Dec 2
+**PS10** is due at the start of the first session, Mon **Nov 23** · **no new set is assigned** — this unit is the run-up to the Act III exam, Fri Dec 4
 
 > *Do these cells form distinct types — and how many?*
 

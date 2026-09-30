@@ -4,9 +4,9 @@ title: "Unit 5 — Naive Bayes: classification as a generative story"
 
 **Act II** · composition operation: **mix + repeat**
 
-**Sessions:** Fri **Oct 2** · Mon **Oct 5** · Wed **Oct 7**
+**Sessions:** Mon **Oct 5** · Wed **Oct 7** · Fri **Oct 9**
 
-**PS4** is due at the start of the first session, Fri **Oct 2** · **PS5** (on unit 4's material) is assigned in that same session · due Fri **Oct 9**
+**PS4** is due at the start of the first session, Mon **Oct 5** · **PS5** (on unit 4's material) is assigned in that same session · due Tue **Oct 13**
 
 > *Which reads are rRNA, and how confident can you be about any single call?*
 

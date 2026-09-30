@@ -14,10 +14,9 @@
 # slide before the story uses them.
 #
 # Dates: Mon 28 Sep was cancelled, and every meeting after it moved one place later. The
-# subtitle keeps the date course/docs/schedule.md still spells until the calendar is updated;
-# the instructor announces dates in the room.
+# subtitle and due dates follow the updated course/docs/schedule.md.
 title: "Naive Bayes: classification as a generative story"
-subtitle: "BF550 · Unit 5 · Session 1 — Fri Oct 2"
+subtitle: "BF550 · Unit 5 · Session 1 — Mon Oct 5"
 ---
 
 ## Under construction {.center}
@@ -644,7 +643,7 @@ From this set on, **you write the check cells**.
 
 . . .
 
-**Due Fri Oct 9, start of class**, as the calendar stands; confirmed in class.
+**Due Tue Oct 13, start of class.**
 
 ::: {.notes}
 Title and one teaser sentence only; the notebook carries the problem and its *More background*.
@@ -672,10 +671,10 @@ thirty-eight, so the lecture ending at 0:58 is a hard mark. Then PS5.
 
 - **Next session:** where the tables come from, what a small labeled set does to them, and how to
   grade the classifier
-- PS5 is open, due **Fri Oct 9** as the calendar stands; confirmed in class
+- PS5 is open, due **Tue Oct 13**, start of class
 
 ::: {.notes}
-Say the due date out loud once it is settled; the calendar shifted with the 28 Sep cancellation.
+Say the due date out loud: Tue Oct 13 is BU's Monday-schedule day and unit 6's first session.
 Chapter 5's practice problems ship with worked solutions and are not assigned this offering;
 mention them once as extra reading and assign nothing.
 :::

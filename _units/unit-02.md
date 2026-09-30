@@ -24,8 +24,8 @@ they are the cheapest way to find out whether the reading landed.
 The topic opens in the first meeting. The rest of the unit is working sessions on the problem set,
 with instructors and TAs in the room.
 
-This is the first unit on the term's steady rhythm: the topic and the new problem open Friday, and
-Monday and Wednesday are working sessions.
+Units 2 to 4 run Friday, Monday, Wednesday, and unit 2 is the first of them. The topic and the new
+problem open Friday, and Monday and Wednesday are working sessions.
 
 ## Where this fits
 

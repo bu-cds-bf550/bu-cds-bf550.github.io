@@ -16,6 +16,10 @@
 # decisions/name-the-problem-not-the-person.md). Chapter 4 was assigned Wed 23 Sep and froze
 # before this unit opened, so the reading still says "her read" where this deck says "the
 # observed read"; that gap is logged on bf550-instructor#95 and nothing is announced.
+#
+# Delivered Fri 25 Sep with PS4 due Fri 2 Oct. Class on Mon 28 Sep was cancelled, and on 29 Sep the
+# due date on the two PS4 slides became Mon 5 Oct to match course/docs/schedule.md. The rest of the
+# deck, including "Monday" on the closing slide, is left as delivered.
 title: "Mix: which process produced this observation?"
 subtitle: "BF550 · Unit 4 · Session 1 — Fri Sep 25"
 ---
@@ -579,7 +583,7 @@ A herd-level scan, and a band that has to survive a second level of variation.
 
 . . .
 
-Graded on the checks passing and on your answers. **Due Fri Oct 2, start of class.**
+Graded on the checks passing and on your answers. **Due Mon Oct 5, start of class.**
 
 ::: {.notes}
 Title and one teaser sentence only; the notebook carries the problem and our design of it. Never
@@ -605,7 +609,7 @@ Then PS4.
 ## Before next session
 
 - **Monday:** where 0.66 and 0.5 came from, and the one place counting fails quietly
-- PS4 is open, due **Fri Oct 2**
+- PS4 is open, due **Mon Oct 5**
 
 ::: {.notes}
 Monday and Wednesday are working sessions on PS4 with us in the room, each opening with a check-in

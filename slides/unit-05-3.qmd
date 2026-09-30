@@ -12,9 +12,9 @@
 # chapter 6.
 #
 # Dates: Mon 28 Sep was cancelled, and every meeting after it moved one place later. The
-# subtitle keeps the date course/docs/schedule.md still spells until the calendar is updated.
+# subtitle and due dates follow the updated course/docs/schedule.md.
 title: "Naive Bayes: classification as a generative story"
-subtitle: "BF550 · Unit 5 · Session 3 — Wed Oct 7"
+subtitle: "BF550 · Unit 5 · Session 3 — Fri Oct 9"
 ---
 
 ```{python}
@@ -664,12 +664,13 @@ checks.
 
 ## Before next session
 
-- **Next session:** unit 6 opens, and the next problem set with it
-- **PS5 is due at the start of next session** (Fri Oct 9 as the calendar stands; confirmed in class)
+- **Next session, Tue Oct 13:** unit 6 opens, and the next problem set with it
+- **PS5 is due Tue Oct 13, at the start of next session**
 - Read **chapter 6** before next session
 
 ::: {.notes}
-Say the due date out loud once it is settled; the calendar shifted with the 28 Sep cancellation.
+Say the due date out loud: Mon Oct 12 is a holiday, and BU runs a Monday schedule on Tue Oct 13,
+so the next session is a Tuesday.
 Chapter 5's practice problems and its worked design ship with the chapter and are not assigned;
 mention them once as reading and assign nothing.
 :::

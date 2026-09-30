@@ -46,7 +46,8 @@
 > **Two numbers below are superseded — do not quote them.** §7's weights line
 > (30 · 10 · 15 · 15 · 30) predates the published **40 · 10 · 10 · 35 · 5** in
 > [`docs/assessment-and-ai-policy.md`](../docs/assessment-and-ai-policy.md). §4.1's
-> "41 meetings, 13 cycles" predates the calendar's **40 meetings**. The *posture* in §7 stands;
+> "41 meetings, 13 cycles" predates the calendar's **39 meetings** (40 until class on Mon Sep 28
+> was cancelled). The *posture* in §7 stands;
 > the arithmetic does not. The
 > [ML topic inventory](ml-topic-inventory.md) and
 > [practice/assessment review](practice-assessment-alignment.md) record why the change was made.

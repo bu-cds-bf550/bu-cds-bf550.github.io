@@ -267,8 +267,8 @@ More detail and guidance to come...
 | Component | Weight |
 |---|---:|
 | Problem sets (10) | 40% |
-| Written midterm — Fri Nov 6 | 10% |
-| Act III exam — Wed Dec 2 | 10% |
+| Written midterm — Mon Nov 9 | 10% |
+| Act III exam — Fri Dec 4 | 10% |
 | Synthesis project | 35% |
 | Participation | 5% |
 

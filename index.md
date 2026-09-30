@@ -57,15 +57,15 @@ progression and the three-act arc.
 
 See [Assessment & AI Policy]({{ site.baseurl }}/assessment/). Your grade comes
 from ten problem sets (each with three no-AI reasoning questions), two written code-reading
-exams (no AI: a midterm on Fri Nov 6 and an Act III exam on Wed Dec 2), a synthesis project, and
+exams (no AI: a midterm on Mon Nov 9 and an Act III exam on Fri Dec 4), a synthesis project, and
 participation. **There is no exam during finals period** — the synthesis project is the culminating
-assessment, and unit 13 — the term's last four meetings — belongs to it.
+assessment, and unit 13, the term's last three meetings, belongs to it.
 
 | Component | Weight |
 |---|---:|
 | Problem sets (10) | 40% |
-| Written midterm — Fri Nov 6 | 10% |
-| Act III exam — Wed Dec 2 | 10% |
+| Written midterm — Mon Nov 9 | 10% |
+| Act III exam — Fri Dec 4 | 10% |
 | Synthesis project | 35% |
 | Participation | 5% |
 

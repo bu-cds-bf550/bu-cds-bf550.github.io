@@ -14,9 +14,9 @@
 # requirements.txt. Authored 29 Sep 2026: about 45 minutes, 21 content slides.
 #
 # Dates: Mon 28 Sep was cancelled, and every meeting after it moved one place later. The
-# subtitle keeps the date course/docs/schedule.md still spells until the calendar is updated.
+# subtitle and due dates follow the updated course/docs/schedule.md.
 title: "Naive Bayes: classification as a generative story"
-subtitle: "BF550 · Unit 5 · Session 2 — Mon Oct 5"
+subtitle: "BF550 · Unit 5 · Session 2 — Wed Oct 7"
 ---
 
 ```{python}
@@ -638,9 +638,9 @@ questions.
 
 - **Next session:** the notation, what the independence assumption costs, and what we tell the
   collaborator
-- PS5 is due **Fri Oct 9** as the calendar stands; confirmed in class
+- PS5 is due **Tue Oct 13**, start of class
 
 ::: {.notes}
-Say the due date out loud once it is settled; the calendar shifted with the 28 Sep cancellation.
+Say the due date out loud: Tue Oct 13 is BU's Monday-schedule day and unit 6's first session.
 Session 3's lecture breaks the model on purpose and grades it again with today's bookkeeping.
 :::

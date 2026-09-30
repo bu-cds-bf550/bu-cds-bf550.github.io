@@ -148,7 +148,7 @@ its [AI level](https://aiassessmentscale.com/) — not every assignment, every q
 - **Reading our design, reading code, and saying what the checks cannot see — no AI.** Three
   questions in every set. These are the skills that quietly disappear if you delegate them, and
   they are exactly what the exams assess.
-- **The two exams — no AI.** A midterm (Fri Nov 6) and an Act III exam (Wed Dec 2), closed-book, both
+- **The two exams — no AI.** A midterm (Mon Nov 9) and an Act III exam (Fri Dec 4), closed-book, both
   code-reading.
 
 The no-AI questions exist for your benefit as much as ours. Research on novices using AI finds that
@@ -163,8 +163,8 @@ One notebook per set: your code, your figures, and your answers in complete sent
 | | Weight | AI level |
 |---|---:|---|
 | Problem sets (10) | 40% | Stated per question — two are no-AI in every set |
-| Written midterm (Fri Nov 6) | 10% | None |
-| Act III exam (Wed Dec 2) | 10% | None |
+| Written midterm (Mon Nov 9) | 10% | None |
+| Act III exam (Fri Dec 4) | 10% | None |
 | Synthesis project | 35% | Full |
 | Participation | 5% | — |
 

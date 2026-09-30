@@ -27,7 +27,8 @@ they are the cheapest way to find out whether the reading landed.
   with instructors and TAs in the room.
 
 The term begins on a Wednesday, and Labor Day falls inside this unit — so unit 1 runs Wed · Fri · Wed
-rather than the Fri · Mon · Wed the rest of the term settles into.
+rather than the Fri · Mon · Wed of units 2 to 4. From unit 5 on, most units run Mon · Wed · Fri, because
+class on Mon Sep 28 was cancelled and every meeting after it moved one place later.
 
 ## Where this fits
 
