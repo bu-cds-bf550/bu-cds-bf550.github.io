@@ -23,8 +23,11 @@
 # Authored 24 Sep 2026, cut to 39 minutes and 20 content slides on 29 Sep, swept by the slide
 # loop the same day. On 2 Oct 2026 the *Where the answer travels* divider came out, its first
 # slide was retitled *How much does our prior change our answer?*, and the identifiability beat
-# gained three histogram slides showing B's distribution slide onto A's. 42 minutes and 23
-# content slides. The first beat uses binom.pmf and no simulation, so this deck does not rebuild
+# gained three histogram slides showing B's distribution slide onto A's. A second pass the same
+# day gave every number on a slide the quantity it measures, which is why the beat's two remaining
+# slides read *How far does the posterior of 0.83 move?*, and cut *Chapter 1's mixture was an
+# identifiability limit*, whose two pointers now sit in the naming slide's notes. 40.5 minutes and
+# 22 content slides. The first beat uses binom.pmf and no simulation, so this deck does not rebuild
 # the seed-41 simulated reads; the overlap beat uses the chapter's seed 53.
 #
 # Dates: Mon 28 Sep was cancelled, so this session is delivered Fri 2 Oct and the session after
@@ -65,11 +68,12 @@ edge tally. The first beat takes its baseline from its own predict pause, not fr
 
 ## Last session built the posterior from prior times likelihood
 
-The likelihood, counted inside each organism's own reads: **0.116** and **0.024**.
+The likelihood, counted inside each organism's own reads: **0.116** for A, **0.024** for B.
 
 . . .
 
-The subset of reads that match: **7,057** of 100,000, and A's part of it over the subset: **0.83**.
+The subset of reads that match: **7,057** of 100,000 reads, and A's part of that subset is a
+posterior of **0.83**.
 
 . . .
 
@@ -156,7 +160,7 @@ print(f"P(A | the observed read), in the mock community: {a_and / (a_and + b_and
 
 The two cultures were mixed about evenly, so the prior does not tilt the ratio.
 
-Five of every six matching reads are A's: 5/6 ≈ 0.83.
+Five of every six matching reads are A's: a posterior of 5/6 ≈ 0.83.
 
 ::: {.notes}
 Two minutes. Five to one carried through almost unchanged gives 0.83, matching Friday's filtered
@@ -166,11 +170,11 @@ computation, and the room has now seen the answer arrive both ways.
 
 ## How much does our prior change our answer?
 
-The temptation is to file **0.83** as a fact about the sequence.
+The temptation is to file the posterior of **0.83** as a fact about the sequence.
 
 . . .
 
-At one in twenty, Friday's same read scored **0.21**.
+At one in twenty, Friday's same read scored a posterior of **0.21**.
 
 . . .
 
@@ -188,7 +192,7 @@ Two minutes. Ask for a magnitude, not a direction: the room settled the directio
 open question is the size. Most rooms guess something like "down to 0.5". Write the guesses down.
 :::
 
-## How far does 0.83 move? {.smaller}
+## How far does the posterior of 0.83 move? {.smaller}
 
 ```{python}
 #| echo: true
@@ -204,9 +208,11 @@ Ninety seconds. Three communities, one read, no new simulation: the likelihoods 
 and only the share changes. Point at the single quantity that varies across the loop.
 :::
 
-## How far does 0.83 move?
+## How far does the posterior of 0.83 move?
 
-**0.830**  ·  **0.205**  ·  **0.005**
+Posterior for the observed read, as A's share falls:
+
+**0.830** at one half · **0.205** at one in twenty · **0.005** at one in a thousand
 
 . . .
 
@@ -253,13 +259,13 @@ Now move the genomes.
 
 Microbe A is 66% GC.
 
-Microbe B is 48%.
+Microbe B is 48% GC.
 
 . . .
 
-What if B were 58%?
+What if B were 58% GC?
 
-Or 64%?
+Or 64% GC?
 
 ::: {.notes}
 Ninety seconds, a question slide. Say the turn aloud: the community stays at half from here, and
@@ -271,7 +277,7 @@ and nothing guarantees it.
 
 **Predict first.**
 
-Move B's GC content from 0.48 toward A's 0.66, through 0.58 to 0.64.
+Move B's GC content from 48% toward A's 66%, through 58% to 64%.
 
 What happens to the posterior for the observed read?
 
@@ -305,15 +311,17 @@ about the overlap of two distributions rather than about a single read.
 
 ## What happens when the organisms look alike?
 
-**0.83** · **0.53** · **0.48**
+Posterior for the observed read, as B's GC climbs toward A's 66%:
+
+**0.83** at 48% · **0.53** at 58% · **0.48** at 64%
 
 . . .
 
-At 0.64 against 0.66, the answer is **0.48**: the prior, untouched by forty bases of data.
+At 64% GC against 66%, the posterior is **0.48**: the prior, untouched by forty bases of data.
 
 . . .
 
-The prior was 0.5; the simulation's own spread puts it at 0.48.
+The prior was 0.5, and the simulation's own spread puts the posterior at 0.48.
 
 ::: {.notes}
 Two and a half minutes. The posterior came back to where it started. Forty bases were collected,
@@ -418,22 +426,10 @@ Whether the data can tell the two apart is a property called **identifiability**
 Two minutes, the naming slide after the demonstration. Identifiability is a property of the two
 compositions, not of the method. More data narrows the limit at the margins and no algorithm
 removes it. A method that returns confident labels here is reporting a confidence the data do not
-support.
-:::
-
-## Chapter 1's mixture was an identifiability limit
-
-Practice problem 1.2: two populations mixed at one site, and the site could not tell them apart.
-
-. . .
-
-Chapter 12 inherits it with the labels gone, where it becomes **how many clusters are really
-there?**
-
-::: {.notes}
-Ninety seconds. Two pointers, one back and one forward, and neither is developed. The room has met
-this limit before without a name for it, and will meet it again as the central question of the last
-unit. Say the ch12 line once.
+support. Two pointers had a slide of their own until 2 Oct 2026 and are spoken here if the clock
+allows. Practice problem 1.2 mixed two populations at one site that could not tell them apart.
+Chapter 12 inherits the limit with the labels gone, where it becomes how many clusters are really
+there. Neither is developed, and both can go.
 :::
 
 # What we cannot tell the collaborator
@@ -444,7 +440,8 @@ Every estimate this unit counted **within a label**.
 
 . . .
 
-In a real analysis, 66%, 48% and A's share are counted from reads of labeled cultures.
+In a real analysis, A's 66% GC, B's 48% GC and A's share are counted from reads of labeled
+cultures.
 
 . . .
 
@@ -485,7 +482,7 @@ GC count.
 1. **Microbe A, with probability about 0.83**: five to one from the genomes, in a community
    mixed about evenly.
 2. **That figure belongs to this community**, and where A is one part in a thousand the same
-   read scores 0.005.
+   read scores a posterior of 0.005.
 3. **The answer rests on the culture labels being right.**
 
 ::: {.notes}
