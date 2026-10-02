@@ -1,11 +1,11 @@
 ---
 # Session 3 of unit 4. The chapter's last teaching section, "What do we tell our collaborator?",
 # with "When the model is wrong" drawn on for the identifiability failure and the label
-# assumption. Two beats: *How far does 0.83 move?* and *What happens when the organisms look
-# alike?*. The read-length beat was cut on 29 Sep 2026 to follow the chapter's 28 Sep revision,
-# which dropped the lever and its genome-separation price because nothing in the chapter builds
-# them. The run-sheet (bf550-instructor lectures/unit04-runsheet.md) owns the clock and cites
-# these headings.
+# assumption. Two beats: *How much does our prior change our answer?* and *What happens when the
+# organisms look alike?*. The read-length beat was cut on 29 Sep 2026 to follow the chapter's
+# 28 Sep revision, which dropped the lever and its genome-separation price because nothing in the
+# chapter builds them. The run-sheet (bf550-instructor lectures/unit04-runsheet.md) owns the
+# clock and cites these headings.
 #
 # Order: the collaborator section's community comparison is lectured first, then the
 # identifiability failure from "When the model is wrong", then the labels, which the collaborator
@@ -21,8 +21,11 @@
 # The chapter's third misconception, the zero, left with pseudocounts on 28 Sep 2026.
 #
 # Authored 24 Sep 2026, cut to 39 minutes and 20 content slides on 29 Sep, swept by the slide
-# loop the same day. The first beat uses binom.pmf and no simulation, so this deck does not
-# rebuild the seed-41 simulated reads; the overlap beat uses the chapter's seed 53.
+# loop the same day. On 2 Oct 2026 the *Where the answer travels* divider came out, its first
+# slide was retitled *How much does our prior change our answer?*, and the identifiability beat
+# gained three histogram slides showing B's distribution slide onto A's. 42 minutes and 23
+# content slides. The first beat uses binom.pmf and no simulation, so this deck does not rebuild
+# the seed-41 simulated reads; the overlap beat uses the chapter's seed 53.
 #
 # Dates: Mon 28 Sep was cancelled, so this session is delivered Fri 2 Oct and the session after
 # it, which opens unit 5 and PS5, is Mon 5 Oct. course/docs/schedule.md carries the new calendar.
@@ -161,9 +164,7 @@ simulation to two decimals. Worth saying: the arithmetic and the simulation are 
 computation, and the room has now seen the answer arrive both ways.
 :::
 
-# Where the answer travels
-
-## How far does 0.83 move?
+## How much does our prior change our answer?
 
 The temptation is to file **0.83** as a fact about the sequence.
 
@@ -319,6 +320,85 @@ Two and a half minutes. The posterior came back to where it started. Forty bases
 the arithmetic ran, and the answer carries no information the room did not have before the read
 arrived. The 0.48 is 0.5 seen through a finite simulation; say so before anyone asks why it is
 not exactly the prior. Let it land before naming it.
+:::
+
+## At 48% GC, B's curve barely overlaps A's
+
+```{python}
+#| echo: false
+#| fig-cap: "One hundred thousand simulated reads, the community held at half. Eighteen points of GC content apart, the two organisms share only their tails."
+import matplotlib.pyplot as plt
+
+def simulate_pair(gc_b):
+    rng = np.random.default_rng(53)
+    species_list, gc_list = [], []
+    for _ in range(100000):
+        s, g = draw_gc_from_two_groups(0.5, 0.66, gc_b, 40, rng)
+        species_list.append(s)
+        gc_list.append(g)
+    return np.array(species_list), np.array(gc_list)
+
+overlap_bins = np.arange(5.5, 40.5, 1)
+overlap_draws = {gc_b: simulate_pair(gc_b) for gc_b in (0.48, 0.58, 0.64)}
+overlap_top = 1.15 * max(
+    np.histogram(gcs[sp == label], bins=overlap_bins)[0].max()
+    for sp, gcs in overlap_draws.values() for label in ("A", "B")
+)
+
+def overlap_figure(gc_b):
+    sp, gcs = overlap_draws[gc_b]
+    fig, ax = plt.subplots(figsize=(7, 3.2))
+    ax.hist(gcs[sp == "A"], bins=overlap_bins, histtype="step", lw=2,
+            color="#eb6834", label="from A, 66% GC")
+    ax.hist(gcs[sp == "B"], bins=overlap_bins, histtype="step", lw=2,
+            color="#2a78d6", label=f"from B, {gc_b:.0%} GC")
+    ax.axvline(25, color="#52514e", ls=":", lw=1.5)
+    ax.text(25.4, overlap_top * 0.93, "observed read", color="#52514e")
+    ax.set_xlabel("G or C bases, out of 40")
+    ax.set_ylabel("reads")
+    ax.set_ylim(0, overlap_top)
+    ax.legend(frameon=False)
+    ax.spines[["top", "right"]].set_visible(False)
+    plt.show()
+
+overlap_figure(0.48)
+```
+
+::: {.notes}
+One minute. The picture behind the three numbers, drawn on the axes of Friday's *Two histograms,
+overlapping at 25*, with the same bins, the same colours and the same dotted line at the observed
+read. Trace the dotted line down and read the two heights. A's curve is well above B's, which is
+where five to one and the 0.83 come from. Hold the axes in their heads, because the next two
+slides change nothing but B.
+:::
+
+## At 58% GC, B's curve covers most of A's
+
+```{python}
+#| echo: false
+#| fig-cap: "The same community and the same read. B has moved eight points toward A, and the two curves now share most of their range."
+overlap_figure(0.58)
+```
+
+::: {.notes}
+One minute. Only B moved. The two heights at the dotted line are close now, and close heights are
+a posterior near a half, which is the 0.53 the loop printed. Ask what a read of 25 bases is worth
+on these two curves, and let someone say that it barely distinguishes them.
+:::
+
+## At 64% GC, the two curves are nearly one
+
+```{python}
+#| echo: false
+#| fig-cap: "Two points of GC content apart. At the observed read the two curves are the same height, so the read says nothing about which organism produced it."
+overlap_figure(0.64)
+```
+
+::: {.notes}
+One minute. The last picture is the 0.48. The curves are not quite on top of each other, and at
+the dotted line they are indistinguishable, which is all the posterior ever sees. Nothing about
+the simulation is broken. The read genuinely carries no information about which organism produced
+it, and the next slide gives that failure its name.
 :::
 
 ## Organisms as alike as these cannot be told apart
