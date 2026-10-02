@@ -19,13 +19,6 @@ title: "Naive Bayes: classification as a generative story"
 subtitle: "BF550 · Unit 5 · Session 1 — Mon Oct 5"
 ---
 
-## Under construction {.center}
-
-<!-- banner:under-construction -->
-
-⚠️ This deck is a **draft** — not yet instructor-reviewed, subject to change until the
-session it serves.
-
 ## Check-in {.smaller}
 
 **[bf550.link/checkin](https://bu-cds-bf550.github.io/checkin/?session=13)** · `?session=13`

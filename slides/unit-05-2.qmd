@@ -62,13 +62,6 @@ like_nonrrna = likelihood(new_read, presence_prob["non-rRNA"])
 posterior_given = like_rrna * 0.15 / (like_rrna * 0.15 + like_nonrrna * 0.85)
 ```
 
-## Under construction {.center}
-
-<!-- banner:under-construction -->
-
-⚠️ This deck is a **draft** — not yet instructor-reviewed, subject to change until the
-session it serves.
-
 ## Check-in {.smaller}
 
 **[bf550.link/checkin](https://bu-cds-bf550.github.io/checkin/?session=14)** · `?session=14`

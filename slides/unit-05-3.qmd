@@ -118,13 +118,6 @@ for _ in range(10000):
     fresh_posteriors.append(posterior_rrna_of(read, trained_rrna, trained_nonrrna, pi_hat))
 ```
 
-## Under construction {.center}
-
-<!-- banner:under-construction -->
-
-⚠️ This deck is a **draft** — not yet instructor-reviewed, subject to change until the
-session it serves.
-
 ## Check-in {.smaller}
 
 **[bf550.link/checkin](https://bu-cds-bf550.github.io/checkin/?session=15)** · `?session=15`

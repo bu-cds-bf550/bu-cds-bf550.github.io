@@ -60,17 +60,17 @@
 - unit: unit-05
   session: 1
   date: "Mon Oct 5"
-  title: "Naive Bayes: classification as a generative story (draft)"
+  title: "Naive Bayes: classification as a generative story"
   file: unit-05-1
 - unit: unit-05
   session: 2
   date: "Wed Oct 7"
-  title: "Naive Bayes: classification as a generative story (draft)"
+  title: "Naive Bayes: classification as a generative story"
   file: unit-05-2
 - unit: unit-05
   session: 3
   date: "Fri Oct 9"
-  title: "Naive Bayes: classification as a generative story (draft)"
+  title: "Naive Bayes: classification as a generative story"
   file: unit-05-3
 - unit: unit-02
   session: 2
