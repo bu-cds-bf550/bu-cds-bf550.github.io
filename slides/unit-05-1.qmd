@@ -8,7 +8,7 @@
 #
 # Chapter chunks are reused with the chapter's seeds (61, 67, 126), in the chapter's order, so
 # the numbers projected here are the numbers in the reading. Authored 29 Sep 2026 to the
-# run-sheet: about 46 minutes, 22 content slides (authoring/slides.md, Sizing a deck). The deck
+# run-sheet: about 47 minutes, 23 content slides (authoring/slides.md, Sizing a deck). The deck
 # introduces every term it uses before the slide that uses it, because the reading is not
 # assumed to have landed; unit 4's prior, likelihood and posterior are recalled on their own
 # slide before the story uses them.
@@ -18,19 +18,6 @@
 title: "Naive Bayes: classification as a generative story"
 subtitle: "BF550 · Unit 5 · Session 1 — Mon Oct 5"
 ---
-
-## Check-in {.smaller}
-
-**[bf550.link/checkin](https://bu-cds-bf550.github.io/checkin/?session=13)** · `?session=13`
-
-Closed book, no AI, five minutes.
-
-::: {.notes}
-The standing frame, verbatim: the check-in shows us what to spend today on, and no score from it
-reaches anyone's grade. Closed book and no AI, five minutes. Code-reading kind, drawing on units 1
-to 4 only. Bank `checkins/unit05/bank.md` session 1. A weak tally on the mask questions says to slow
-down at *The story's two steps are two blocks of code*, whose `present` line is a mask.
-:::
 
 ## The turn-in
 
@@ -44,23 +31,27 @@ Then, no slide: what the room found hardest in PS4. Do not compare PS4's questio
 Five minutes for this block. Say once, plainly, that PS5 opens today, at the end of the lecture.
 :::
 
-# Reads to delete
+# Cleaning RNA reads
 
-## Some of 100,000 reads are ribosomal RNA
+## Ribosomal RNA in transcriptome sequencing
 
-A collaborator sequenced the RNA in a tissue sample.
-
-. . .
-
-**Ribosomal RNA** (**rRNA**) builds the ribosome.
+A collaborator sequenced the RNA in a tissue sample and obtained 100,000 sequence reads.
 
 . . .
 
-The kit that prepared the sample claims to remove rRNA.
+Most RNA in a cell is **Ribosomal RNA** (**rRNA**), which builds the ribosome.
 
 . . .
 
-**100,000 reads** came back, and some are rRNA reads the kit missed.
+rRNA is useless for studying the thousands of other genes in the genome.
+
+. . .
+
+rRNA can be reduced in the sample using **rRNA depletion kits**.
+
+. . .
+
+rRNA depletion kits miss some of the rRNA, leaving them in the sequenced reads.
 
 ::: {.notes}
 Two minutes, and no method yet. Most of a cell's RNA is rRNA. A read is a short piece of sequence from one molecule, as in
@@ -69,9 +60,18 @@ before anything downstream counts them. Say the word aloud, "r-R-N-A", so the ro
 once before reading it.
 :::
 
-## Two mistakes are possible, and they cost different things
+## Objective: identify and remove rRNA reads
 
-Delete a read that was **not** rRNA: real signal is lost.
+Some of the reads we obtained came from rRNA molecules.
+
+. . .
+
+We seek to examine each read for evidence that it is a rRNA sequence and then
+either **keep it** or **remove it** from downstream analysis.
+
+. . .
+
+Remove a read that was **not** rRNA: real signal is lost.
 
 . . .
 
@@ -90,6 +90,22 @@ on what the analysis downstream needs, which is the collaborator's choice, and s
 back to it with numbers. The two bullets are the two halves of the question the whole unit
 answers.
 :::
+
+## Depletion kits remove most rRNA but leave some behind
+
+![](img/rrna-depletion.drawio.svg){fig-align="center" width="85%" fig-alt="Two pie charts joined by an arrow labeled rRNA depletion kit. The left pie, Total RNA, is mostly rRNA with a small non-rRNA wedge. The right pie, Sequenced RNA, keeps the same non-rRNA wedge, a thin rRNA sliver, and a large dashed empty region labeled depleted rRNA."}
+
+::: {.notes}
+One minute. The left pie is all the RNA in the tissue, most of it rRNA. The kit removes most of
+the rRNA before sequencing; the dashed region is what it removed. The orange wedge is the same
+size in both pies, because the kit leaves the non-rRNA alone. The thin blue wedge is the rRNA the
+kit missed, and those reads are the ones this unit sets out to find. The wedge sizes are drawn,
+not measured, though the sliver is 15% of what was sequenced, the share the simulator uses later.
+:::
+
+## rRNA genes are a specific family of DNA sequences
+
+{TODO} 4-5 brief bullets on how the rRNA specific sequences have different content than protein coding genes, and that we will examine *sequence content* using *k-mers*
 
 ## A k-mer is a window of k bases
 
@@ -145,6 +161,10 @@ A fixed **panel** of twenty k-mers, each present or absent in the read.
 
 . . .
 
+{TODO} add a couple examples of kmer mappings, e.g. k-mer 0 = ATGCGT, k-mer 1 = GTACGT, etc
+
+. . .
+
 The twenty answers are the read's **profile**.
 
 ::: {.notes}
@@ -164,11 +184,11 @@ For each of the 100,000 reads: which class produced it?
 
 . . .
 
-And is the answer confident enough to delete the read?
+And is the answer confident enough to remove the read?
 
 ::: {.notes}
-Ninety seconds, the question slide. The two questions are the two halves from *Two mistakes are
-possible*: the call and the probability. Unit 4 answered the same question for one measurement
+Ninety seconds, the question slide. The two questions are the two halves from *Objective: identify and
+remove rRNA reads*: the call and the probability. Unit 4 answered the same question for one measurement
 per read, and the next slide recalls its three words. Nothing is answered today until the lecture's
 last slide, *The new read is rRNA with posterior 0.92*.
 :::
@@ -618,7 +638,7 @@ The read's true label is rRNA.
 Two and a half minutes. Both likelihoods are tiny because twenty numbers below 1 were multiplied.
 The prior odds, 0.18, bring 67 to 1 down to 12 to 1, because rRNA is only 15% of reads. The other 0.08 matters for the
 collaborator: under the model, about 8 in 100 reads with this profile are non-rRNA, so deleting
-every such read deletes some real signal. Session 2's first slide starts from this 0.92; never cut
+every such read removes some real signal. Session 2's first slide starts from this 0.92; never cut
 this slide.
 :::
 
@@ -657,7 +677,7 @@ file is public.
 The unit 5 lab is one notebook, `unit-05.ipynb`, worked across all three sessions. Today is part 1,
 questions 1 to 3: dictionaries and `len`, two lookups in a row through a dictionary of
 dictionaries, and counting into a dictionary. Thirty-five minutes is the floor, and this block has
-thirty-eight, so the lecture ending at 0:58 is a hard mark. Then PS5.
+thirty-seven, so the lecture ending at 0:59 is a hard mark. Then PS5.
 :::
 
 ## Before next session
