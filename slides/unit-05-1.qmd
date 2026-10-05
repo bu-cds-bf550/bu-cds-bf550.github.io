@@ -8,7 +8,7 @@
 #
 # Chapter chunks are reused with the chapter's seeds (61, 67, 126), in the chapter's order, so
 # the numbers projected here are the numbers in the reading. Authored 29 Sep 2026 to the
-# run-sheet: about 47 minutes, 23 content slides (authoring/slides.md, Sizing a deck). The deck
+# run-sheet: about 50 minutes, 25 content slides (authoring/slides.md, Sizing a deck). The deck
 # introduces every term it uses before the slide that uses it, because the reading is not
 # assumed to have landed; unit 4's prior, likelihood and posterior are recalled on their own
 # slide before the story uses them.
@@ -105,7 +105,24 @@ not measured, though the sliver is 15% of what was sequenced, the share the simu
 
 ## rRNA genes are a specific family of DNA sequences
 
-{TODO} 4-5 brief bullets on how the rRNA specific sequences have different content than protein coding genes, and that we will examine *sequence content* using *k-mers*
+A cell's rRNA comes from a few **rRNA genes**, each repeated many times in the genome.
+
+. . .
+
+- Every copy has nearly the same sequence.
+- rRNA is never translated into protein.
+- Short stretches of sequence common in rRNA are rare in other RNA, and the reverse.
+
+. . .
+
+So we examine each read's **sequence content**, using *k-mers*.
+
+::: {.notes}
+Ninety seconds. A read carries evidence of where it came from. rRNA is a small family of nearly
+identical sequences, and it is not built like a protein-coding gene. So the short stretches of
+sequence it is made of differ from those of other RNA. *Sequence content* means which
+short stretches a read contains. The next slide defines the k-mer; here it is only named.
+:::
 
 ## A k-mer is a window of k bases
 
@@ -161,15 +178,18 @@ A fixed **panel** of twenty k-mers, each present or absent in the read.
 
 . . .
 
-{TODO} add a couple examples of kmer mappings, e.g. k-mer 0 = ATGCGT, k-mer 1 = GTACGT, etc
+Each number names one k-mer: k-mer 0 is `ATGCGT`, k-mer 1 is `GTACGT`, and so on to k-mer 19.
 
 . . .
 
 The twenty answers are the read's **profile**.
 
 ::: {.notes}
-Two minutes. The panel was chosen by an earlier analysis: each of the twenty k-mers is more
-common in rRNA than in other RNA, or less common. Blue is present, white is absent, and the
+Two and a half minutes. The panel was chosen by an earlier analysis: each of the twenty k-mers is more
+common in rRNA than in other RNA, or less common. The two sequences on the slide are examples to
+show what a number stands for; the chapter numbers the panel and never spells it out. In this
+profile k-mer 1 is blue: `GTACGT` occurs somewhere in the read. k-mer 0 is white, so `ATGCGT`
+occurs nowhere in it. Blue is present, white is absent, and the
 panel's k-mers are numbered 0 to 19. This profile was typed in by hand to show the shape. How many
 times a k-mer occurs is thrown away; only present or absent is kept.
 :::
@@ -195,6 +215,10 @@ last slide, *The new read is rRNA with posterior 0.92*.
 
 ## Unit 4 turned one measurement into a posterior
 
+Our measurement from unit 4 was a single number per read - the GC content.
+
+. . .
+
 The **prior**: a class's share, before the read.
 
 . . .
@@ -207,7 +231,7 @@ The **posterior**: the class's probability, after the read.
 
 . . .
 
-This unit uses twenty measurements per read.
+This unit uses **twenty measurements** per read: yes or no for each of 20 k-mers in the profile.
 
 ::: {.notes}
 Two minutes, the bridge from last unit's words. Unit 4 used one measurement per read, its GC
@@ -240,6 +264,29 @@ Two and a half minutes, the model itself. Keep the reveals moving; the picture's
 named on the next two lines. Step 1 is unit 4's step 1 with new names: there Microbe A and Microbe
 B, here rRNA and non-rRNA. Step 2 is twenty draws, one per k-mer, each from the class's own table.
 Point at the two boxes in the picture as the two tables.
+:::
+
+## Example k-mer probabilities
+
+The rRNA table, five of its twenty k-mers:
+
+| k-mer $i$ | 0 | 1 | 2 | … | 18 | 19 |
+|---|:-:|:-:|:-:|:-:|:-:|:-:|
+| sequence | `ATGCGT` | `GTACGT` | `AGTCCA` | … | `CCGATA` | `TTGCAG` |
+| has it: **yes**, $p_i$ | 0.41 | 0.69 | 0.62 | … | 0.16 | 0.17 |
+| has it: **no**, $1 - p_i$ | 0.59 | 0.31 | 0.38 | … | 0.84 | 0.83 |
+
+. . .
+
+Each column adds to 1. The non-rRNA table has twenty numbers of its own.
+
+::: {.notes}
+One minute. The slide shows five columns of the rRNA table in the simulator the deck runs later,
+seed 61, so the numbers match the code. The sequences are examples, as on the profile slide;
+the three after `GTACGT` are made up in the same way. The top row is $p_i$, the chance an rRNA read has k-mer $i$; the
+bottom row is the chance it does not. Read one column aloud: an rRNA read has k-mer 1 with
+probability 0.69 and lacks it with probability 0.31. k-mer 0's 0.41 and k-mer 1's 0.69 come back
+in *What does independence look like in counts?*.
 :::
 
 ## Independent draws leave each other's probabilities unchanged
@@ -472,7 +519,6 @@ advance until somebody has committed to a number. Never cut this beat.
 
 ```{python}
 #| echo: true
-#| output-location: slide
 n_matching = 0
 for read in reads:
     # compare the twenty answers: True where this read agrees with the new read
@@ -552,9 +598,15 @@ prints 0.412, 0.691, then 0.285 for both, and 0.284 for the product. Never cut t
 
 ## A profile's probability is a product of twenty factors
 
-Both, 0.285; each times each, 0.284.
+The probability of two independent events is the *product of each event's individual probabilities*
 
-For independent draws, **both is each times each**: 0.412 × 0.691.
+. . .
+
+$P(k\text{-mer}_0) = p_0 = 0.412$
+
+$P(k\text{-mer}_1) = p_1 = 0.691$
+
+$P(k\text{-mer}_0) * P(k\text{-mer}_1) = 0.284$
 
 . . .
 
@@ -563,9 +615,6 @@ So one rRNA profile's probability multiplies twenty factors:
 - $p_i$ for each k-mer $i$ that is present
 - $1 - p_i$ for each k-mer $i$ that is absent
 
-. . .
-
-No matching read is needed.
 
 ::: {.notes}
 Two minutes, the correction and the arithmetic before the run. $p_i$ is the class's table entry
@@ -610,25 +659,33 @@ unchanged: likelihood times share, over the total. P(profile | rRNA) reads "the 
 profile, given rRNA".
 :::
 
-## The new read is rRNA with posterior 0.92
+## The new read is rRNA with posterior 0.92 {.smaller}
 
-`3.65e-06` means 3.65 × 10⁻⁶: about four in a million.
-
-. . .
-
-The likelihoods favor rRNA **67 to 1**.
+`3.65e-06` means $3.65 \times 10^{-6}$: about four in a million.
 
 . . .
 
-Prior odds, rRNA's share over non-rRNA's: 0.15 ÷ 0.85 ≈ 0.18.
+The likelihoods favor rRNA **67 to 1**:
+
+$$\frac{P(\text{profile} \mid \text{rRNA})}{P(\text{profile} \mid \text{non-rRNA})} = \frac{3.65 \times 10^{-6}}{5.49 \times 10^{-8}} \approx 67$$
 
 . . .
 
-67 × 0.18 ≈ 12 to 1.
+Prior odds, rRNA's share over non-rRNA's:
+
+$$\frac{0.15}{0.85} \approx 0.18$$
 
 . . .
 
-12 to 1 is 12 rRNA reads in every 13: 12 ÷ 13 ≈ **0.92**.
+Posterior odds, 12 to 1:
+
+$$67 \times 0.18 \approx 12$$
+
+. . .
+
+12 rRNA reads in every 13:
+
+$$P(\text{rRNA} \mid \text{profile}) = \frac{12}{12 + 1} \approx \mathbf{0.92}$$
 
 . . .
 
@@ -677,7 +734,7 @@ file is public.
 The unit 5 lab is one notebook, `unit-05.ipynb`, worked across all three sessions. Today is part 1,
 questions 1 to 3: dictionaries and `len`, two lookups in a row through a dictionary of
 dictionaries, and counting into a dictionary. Thirty-five minutes is the floor, and this block has
-thirty-seven, so the lecture ending at 0:59 is a hard mark. Then PS5.
+thirty-four, one under the floor, so the lecture ending at 1:02 is a hard mark. Then PS5.
 :::
 
 ## Before next session
