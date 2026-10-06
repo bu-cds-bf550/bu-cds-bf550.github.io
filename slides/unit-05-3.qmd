@@ -11,6 +11,19 @@
 # 29 Sep 2026: about 46 minutes, 21 content slides. Session 3 closes the chapter and leads into
 # chapter 6.
 #
+# Revised 6 Oct 2026. "The notation" is gone: its section slide and its two slides were absorbed
+# into the chapter's new section 0, "The method", and delivered in session 2. A one-slide Method
+# callback replaces them. The ten minutes that freed carry the unit's LLM block, four content
+# slides at the end: an LLM writes this classifier, the returned code drops the complement factor
+# for absent k-mers, the wrong version still grades well, and the prompting move that catches it.
+# The block is anchored on this unit's own classifier, carries no chapter content and is cut
+# first in full. Now about 53 minutes, 24 content slides.
+#
+# The block's defect must stay inside the likelihood. PS5's Q8 asks the student to read a
+# classifier with no prior in it, a defect withheld to its key, so no slide here may show a
+# classifier that omits the prior or suggest a missing prior is the thing to look for. See the
+# run-sheet's "Do not give away".
+#
 # Dates: Mon 28 Sep was cancelled, and every meeting after it moved one place later. The
 # subtitle and due dates follow the updated course/docs/schedule.md.
 title: "Naive Bayes: classification as a generative story"
@@ -148,56 +161,25 @@ student-written checks are going. Today writes the model down in symbols, then b
 purpose and runs this same bookkeeping again.
 :::
 
-# The notation
+## The method said the assumption would cost the confidence
 
-## The posterior is proportional to prior times the profile's probability
-
-$$
-P(c \mid x_1, \dots, x_K) \;\propto\; P(c)\;P(x_1, \dots, x_K \mid c)
-$$
+$$P(c \mid x_1, \dots, x_K) \;\propto\; P(c) \prod_{i=1}^{K} P(x_i \mid c)$$
 
 . . .
 
-$c$: the class.
-
-$x_1, \dots, x_K$: the read's answers.
-
-$K = 20$, the panel size, not the k of k-mer.
+That product line **is** the independence assumption. Last session we adopted it knowing it is
+false.
 
 . . .
 
-The bar reads **given**, the comma **and**, and $\propto$ **is proportional to**.
+What it costs: the **ranking** survives, the **probability** does not. Today we measure both.
 
 ::: {.notes}
-Two and a half minutes. Read $x_1, \dots, x_K$ as "x one through x K". Capital K is the number of k-mers in the panel, a different quantity from
-the lowercase k of k-mer; say that aloud. The comma means the whole profile at once. $P(c)$ is the prior,
-the class's share. Proportional means: divide by the total over the classes and it becomes an
-equals sign, which is what the posterior line in session 1's code did.
-:::
-
-## The notation's product over k-mers is the independence assumption
-
-$$
-P(x_1, \dots, x_K \mid c) \;=\; \prod_{i=1}^{K} P(x_i \mid c)
-$$
-
-. . .
-
-$\Pi$, capital pi, means **multiply these together**.
-
-. . .
-
-$P(x_i \mid c)$ is session 1's factor: $p_i$ if k-mer $i$ is present, $1 - p_i$ if absent.
-
-. . .
-
-On the log scale, $\Pi$ becomes $\Sigma$, capital sigma: **add these together**.
-
-::: {.notes}
-Two and a half minutes. $\Pi$ is not the prior $\pi$, and it is the `for` loop in `likelihood`. Point each symbol at the code: $x_i$ is `present[i]`; $P(x_i \mid c)$ is
-one factor, $p_i$ if present and $1 - p_i$ if absent. The formula counts
-$i$ from 1 to 20, and the code counts k-mers from 0 to 19; say the offset. The sum is session 2's
-`log_likelihood`.
+Thirty seconds, the Method callback, nothing run. Last session's equation back on screen for one
+reveal. Do not re-teach the notation — capital pi, the comma and the whole formula were delivered
+in session 2 inside the Method block, and repeating them here spends the time the LLM block needs
+at the end. Point at the product line and move on. Never cut this slide; it is the unit's one
+callback to the method, and everything today measures the line it names.
 :::
 
 # When the model is wrong
@@ -643,6 +625,117 @@ the one word, calibration, already named. Never cut this slide. The next set ope
 the run-sheet's *Do not give away* block holds the reserved terms, and this file is public.
 :::
 
+# Getting an LLM to write this classifier
+
+## An LLM writes this classifier in seconds
+
+**The prompt:** *"Each read gives twenty yes-or-no answers about k-mers. I have, for each of two
+classes, the probability that each k-mer is present, plus the share of reads in each class.
+Write Python that returns the posterior that a read is rRNA."*
+
+. . .
+
+```python
+def classify(read, p_rrna, p_other, prior_rrna):
+    like_r, like_o = 1.0, 1.0
+    for i in range(20):
+        if read[i]:
+            like_r = like_r * p_rrna[i]
+            like_o = like_o * p_other[i]
+    score_r = like_r * prior_rrna
+    score_o = like_o * (1 - prior_rrna)
+    return score_r / (score_r + score_o)
+```
+
+::: {.notes}
+Two and a half minutes. Read it aloud the way part 3 of the lab reads `likelihood` cold: what
+does each line compute from its arguments? It imports nothing, it runs, it returns a number
+between 0 and 1, and it uses the prior correctly. Do not say yet what is wrong with it. Ask the
+room to compare it against the equation on the callback slide, line by line.
+:::
+
+## The returned code drops the factor for an absent k-mer
+
+The method needs **one factor per measurement** — $p_i$ when the answer is yes, $1 - p_i$ when it
+is no.
+
+. . .
+
+The `for` loop has an `if` and no `else`. A k-mer the read does **not** have contributes nothing.
+
+. . .
+
+Nineteen absent k-mers, nineteen missing factors. $\prod_{i=1}^{K}$ means all $K$ of them.
+
+::: {.notes}
+Three minutes, and this is the step the room can only take because session 2 stated the formula
+before the story. Put the callback equation beside the code and point at the product symbol: it
+runs from 1 to K, not over the subset that came back yes. This is the same complement the method
+block flagged on its three-measurement slide, where answer 2 came back no and took 1 minus its
+probability. Name the shape of the defect: it is not a crash and not a typo, it is a formula
+implemented short.
+:::
+
+## The accuracy barely moves; the discards collapse
+
+```{python}
+#| echo: false
+def likelihood_llm(present, probs):           # the returned code's likelihood: present k-mers only
+    out = 1.0
+    for i in range(len(probs)):
+        if present[i]:
+            out = out * probs[i]
+    return out
+
+llm_posteriors = []
+for read in fresh_reads:
+    score_r = likelihood_llm(read, trained_rrna) * pi_hat
+    score_o = likelihood_llm(read, trained_nonrrna) * (1 - pi_hat)
+    llm_posteriors.append(score_r / (score_r + score_o))
+
+print("the returned code, graded on the same 10,000 fresh reads:")
+_ = grade(llm_posteriors, fresh_truths)
+print()
+print("our own classifier, for comparison:")
+_ = grade(fresh_posteriors, fresh_truths)
+```
+
+. . .
+
+Accuracy 0.930 against 0.939. **Reads discarded: 99 against 603.**
+
+::: {.notes}
+Two and a half minutes. Let the accuracy line land first — 0.930 against 0.939, nine tenths of a
+point. Anyone checking this code the way code usually gets checked would pass it. Then the
+discard line, which is the slide: 99 reads discarded where the right classifier discarded 603.
+The collaborator's actual decision is which reads to throw away, and that number is wrong by a
+factor of six while the headline number looks fine. Dropping nineteen factors flattened the
+posteriors, so almost nothing clears the 0.9 threshold. The lesson is not "AI code is bad" — it
+is that the number you would think to check and the number the work depends on are not the same
+number, and only the formula tells you which is which. Running it would not have found this;
+reading it against the formula did.
+:::
+
+## Ask the model which formula it is implementing
+
+Reading code against a formula only works if you have the formula.
+
+. . .
+
+So ask for it first: *"before you write any code, write the expression you are implementing."*
+
+. . .
+
+Then check the loop against the expression — which is the move we just made by hand.
+
+::: {.notes}
+Two minutes, the block's point, and the last slide before working time. This is the whole
+argument for stating the method before the story: the room could audit the model's output because
+the room had the equation. Keep this general — it is about naive Bayes today and about every
+method in the rest of the course. Cut the entire block, from the section slide on, if the clock
+is behind; it carries no chapter content, which is why it sits here.
+:::
+
 ## Working time — the rest of today
 
 1. **Unit 5 lab**, part 3: reading drills — [unit-05.ipynb](https://github.com/bu-cds-bf550/bf550-unit05-labs/blob/main/unit-05.ipynb)
@@ -650,7 +743,7 @@ the run-sheet's *Do not give away* block holds the reserved terms, and this file
 
 ::: {.notes}
 Part 3 of the unit 5 lab, questions 7 to 9: a two-level lookup traced by hand, a comparison made on
-the probability and the log scales, and the chapter's `likelihood` and `log_likelihood` read cold. Thirty-five minutes is the floor and this block has forty-seven.
+the probability and the log scales, and the chapter's `likelihood` and `log_likelihood` read cold. Thirty-five minutes is the floor and this block has thirty-seven, so the LLM block is the first thing cut.
 Ask how far people are on PS5 and write the answer down: it is the first set with student-written
 checks.
 :::

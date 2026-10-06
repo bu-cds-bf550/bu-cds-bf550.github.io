@@ -13,6 +13,17 @@
 # the chapter's seeds 79 and 73. The Toolbox chunk needs scikit-learn, pinned in
 # requirements.txt. Authored 29 Sep 2026: about 45 minutes, 21 content slides.
 #
+# Revised 6 Oct 2026. The deck now opens on chapter section 0, "The method", which states the
+# statistics before the story and absorbs what used to be section 6, "The notation": seven
+# content slides and about fourteen minutes, with no chunk shown on the page. It is exposition
+# and not a beat, and under the run-sheet's standing rule it is never the block that gets cut.
+# Paid for by cutting two slides in the order the old cut list already gave: the BernoulliNB
+# Toolbox slide became a sentence on the slide before it, and "Real data come without ten
+# thousand labeled fresh reads" became a bullet on the close. Now about 52 minutes, 26 content
+# slides. The setup chunk also computes the method block's three-measurement example, so every
+# number on those slides is printed rather than typed. The chapter is frozen for this offering,
+# so section 0 reaches the room through this deck only.
+#
 # Dates: Mon 28 Sep was cancelled, and every meeting after it moved one place later. The
 # subtitle and due dates follow the updated course/docs/schedule.md.
 title: "Naive Bayes: classification as a generative story"
@@ -60,6 +71,35 @@ def likelihood(present, probs):
 like_rrna = likelihood(new_read, presence_prob["rRNA"])
 like_nonrrna = likelihood(new_read, presence_prob["non-rRNA"])
 posterior_given = like_rrna * 0.15 / (like_rrna * 0.15 + like_nonrrna * 0.85)
+
+# The method block's three-measurement example. Every number it shows is printed from here,
+# so nothing on those slides is typed by hand.
+m_p = [0.80, 0.30, 0.60]          # P(answer i is yes | class A)
+m_q = [0.20, 0.70, 0.50]          # P(answer i is yes | class B)
+m_share_a, m_share_b = 0.40, 0.60
+m_answers = [True, False, True]   # the object we observed: yes, no, yes
+
+def m_factors(probs):
+    out = []
+    for i in range(3):
+        if m_answers[i]:
+            out.append(probs[i])
+        else:
+            out.append(1 - probs[i])
+    return out
+
+m_fac_a, m_fac_b = m_factors(m_p), m_factors(m_q)
+m_like_a = m_fac_a[0] * m_fac_a[1] * m_fac_a[2]
+m_like_b = m_fac_b[0] * m_fac_b[1] * m_fac_b[2]
+m_joint_a, m_joint_b = m_like_a * m_share_a, m_like_b * m_share_b
+m_post_a = m_joint_a / (m_joint_a + m_joint_b)
+m_post_b = m_joint_b / (m_joint_a + m_joint_b)
+
+# the combination count, for the obstacle slide
+m_sizes = [1, 2, 5, 10, 20]
+m_combos = []
+for k in m_sizes:
+    m_combos.append(2 ** k)
 ```
 
 ## Check-in {.smaller}
@@ -74,6 +114,164 @@ dictionary of two short tables looked up by a class name, and a loop that multip
 per answer. Read the lookup tally before *Training a table means counting, one k-mer at a time*;
 a weak tally says to slow that slide down. The edge case is an empty list of answers, which
 prints 1.0; no table entry in the snippet is zero, because a zero entry is today's first beat.
+:::
+
+# The method
+
+## The method takes yes-or-no measurements and names a class
+
+You have an object. Several **yes-or-no measurements** on it. Two **classes** it could belong to.
+
+. . .
+
+You want the class — and a probability, because the decision it feeds costs something either way.
+
+. . .
+
+Unit 4 answered this for **one** measurement:
+
+$$P(c \mid x) \;\propto\; P(x \mid c)\,P(c)$$
+
+::: {.notes}
+Two and a half minutes. Exposition, not a beat: nothing is predicted and nothing is run.
+Say at the top that this is new, and that it is not in the reading yet — it goes into the
+chapter at the next revision. Keep every word of this block general: an object, a measurement,
+a class. No read, no k-mer, no panel until the last slide of the block. The equation is unit 4's
+own, in unit 4's symbols, and the room has used it. What is new starts when there is more than
+one measurement.
+:::
+
+## Twenty yes-or-no answers make about a million combinations
+
+The reasonable first move: find the labeled objects whose answers **all match**, and read off the shares.
+
+. . .
+
+```{python}
+#| echo: false
+for i in range(len(m_sizes)):
+    print(f"{m_sizes[i]:2d} yes-or-no answers -> {m_combos[i]:,} combinations")
+```
+
+. . .
+
+$K$ answers make $2^K$ combinations. No labeled set fills a million of them.
+
+::: {.notes}
+Two minutes. The obstacle is stated here, not staged. Last session the room ran exactly this
+move and got zero matches out of 100,000 — this is the reason behind that number, and it is why
+the method has to build the probability of a combination instead of looking it up. The table is
+printed rather than typed. Do not re-run the matching demonstration; the room has seen it.
+:::
+
+## Independence lets a combination's probability be a product
+
+**The assumption**: once you know the class, one answer tells you nothing about any other.
+
+. . .
+
+It is **false** for real objects — measurements that overlap come together.
+
+. . .
+
+Assume it anyway, and the probability of all the answers becomes the product of each answer's
+probability. Those are numbers the model already has.
+
+. . .
+
+The method is named for the assumption, not for the arithmetic.
+
+::: {.notes}
+Two minutes. Assumption first in plain words, then declared false, then adopted on purpose. This
+is the chapter's clearest case of a simplification chosen with eyes open, and the room should
+hear it as a choice rather than a technicality. Nothing has to be counted that was not already
+counted — that is the whole trade.
+:::
+
+## Capital pi means multiply these together
+
+$\Pi$ — multiply these together, one factor per index. A `for` loop with one multiplication in it.
+
+. . .
+
+$\Sigma$ — add them instead. Same loop, `+` for `*`.
+
+. . .
+
+The comma in $P(x_1, \dots, x_K \mid c)$ reads as **and**: the probability of all the answers at
+once, given the class. One probability, not a list.
+
+::: {.notes}
+Two minutes, and this is the only new notation in the block. Everything else on the next slide
+the room already owns: P-given, P-of-c and the proportional sign are unit 4's, the subscript is
+unit 3's, pi for a share is unit 4's. Both of these came forward from what used to be session
+3's notation slides. Read the capital pi aloud as a loop before writing it as a symbol.
+:::
+
+## The posterior is the share times a product of factors
+
+$$P(c \mid x_1, \dots, x_K) \;\propto\; P(c) \prod_{i=1}^{K} P(x_i \mid c)$$
+
+. . .
+
+$P(c)$ the class's share · $x_i$ answer $i$ · $K$ how many answers · $P(x_i \mid c)$ one factor.
+
+. . .
+
+The independence assumption **is** the product line. Without it nothing factors, and no loop
+computes it.
+
+::: {.notes}
+Two and a half minutes. Credit each symbol to the unit the room met it in, out loud. Then the
+last reveal, which is the point of the whole block: independence is not a remark about the
+formula, it is one line of the formula. Everything this unit does afterwards — training the
+tables, the zero cell, the log scale, the doubled k-mers in session 3 — hangs off this line.
+:::
+
+## Three measurements and two classes fit on one slide
+
+```{python}
+#| echo: false
+print("                     class A    class B")
+for i in range(3):
+    print(f"P(answer {i + 1} is yes)    {m_p[i]:.2f}       {m_q[i]:.2f}")
+print(f"class share          {m_share_a:.2f}       {m_share_b:.2f}")
+print()
+print("the object we observed:  yes, no, yes")
+```
+
+. . .
+
+Answer 2 came back **no**, so its factor is $1 - P(\text{yes})$ — the step most often dropped.
+
+::: {.notes}
+One and a half minutes. All six probabilities are supplied, so the arithmetic is the only thing
+on show. Say the complement rule aloud and point at answer 2 in both columns: 0.70 under A and
+0.30 under B, not 0.30 and 0.70. This is the error the room will meet again in session 3, in
+code an LLM wrote.
+:::
+
+## Four multiplications give the two posteriors
+
+```{python}
+#| echo: false
+print(f"class A:  {m_fac_a[0]:.2f} x {m_fac_a[1]:.2f} x {m_fac_a[2]:.2f} = {m_like_a:.4f}"
+      f"   x share {m_share_a:.2f} = {m_joint_a:.4f}")
+print(f"class B:  {m_fac_b[0]:.2f} x {m_fac_b[1]:.2f} x {m_fac_b[2]:.2f} = {m_like_b:.4f}"
+      f"   x share {m_share_b:.2f} = {m_joint_b:.4f}")
+print()
+print(f"posterior for A: {m_joint_a:.4f} / ({m_joint_a:.4f} + {m_joint_b:.4f}) = {m_post_a:.3f}")
+print(f"posterior for B: {m_joint_b:.4f} / ({m_joint_a:.4f} + {m_joint_b:.4f}) = {m_post_b:.3f}")
+print(f"they sum to {m_post_a + m_post_b:.1f}")
+```
+
+::: {.notes}
+One and a half minutes, output on its own screen. Walk the two rows with a finger. The two
+posteriors summing to 1 is all the proportional sign was standing in for — divide each by the
+total. Then the sentence this block exists for: the rest of this unit is this table with twenty
+measurements instead of three, and the tables counted from labeled reads instead of given.
+Then, no slide, make the identification: a measurement is a panel k-mer, a class is rRNA or not,
+K is 20. Now today's section.
 :::
 
 # Where the numbers come from
@@ -296,38 +494,16 @@ k-mers". The output screen: 0.125 three times and 0.875 twice, the arithmetic fr
 before. On all 100,000 reads the first four rRNA cells are 0.41, 0.69, 0.62 and 0.65,
 the model's settings to two decimals. The trained share, 0.14974, is the fraction of labeled reads
 that are rRNA; it is the prior from here on.
+
+Then the Toolbox, in one sentence on the last reveal rather than its own slide (cut 6 Oct 2026 to
+pay for the Method block): the library's `BernoulliNB` trains this same classifier in one call,
+its `alpha` is the pseudocount, and the chapter prints its 0.923 beside ours. The reading carries
+the full comparison; say that out loud so nobody thinks it was skipped.
 :::
 
-## The library's BernoulliNB trains the same classifier {.smaller}
+. . .
 
-```{python}
-#| echo: true
-#| output-location: slide
-from sklearn.naive_bayes import BernoulliNB
-
-model = BernoulliNB(alpha=1)                  # alpha is the pseudocount
-model.fit(np.array(reads), labels)            # train on the same 100,000 labeled reads
-library_posterior = model.predict_proba(np.array([new_read]))
-print("classes, in the library's order:", model.classes_)
-print("library posterior for the new read:", np.round(library_posterior[0], 3))
-score_r = likelihood(new_read, trained_rrna) * pi_hat
-score_n = likelihood(new_read, trained_nonrrna) * (1 - pi_hat)
-print(f"our posterior for the new read, rRNA: {score_r / (score_r + score_n):.3f}")
-```
-
-*Bernoulli*: a present-or-absent draw.
-
-*NB*: naive Bayes.
-
-`conda install scikit-learn` in the course environment.
-
-::: {.notes}
-Two minutes, the Toolbox; first cut if it is 0:28 and this slide has not started, to one
-sentence. Read `model.fit(...)` as "train on these reads and labels", and `predict_proba` on
-`[new_read]` as "the posterior for each class, for the one new read". The output slide lists the classes in the library's order, non-rRNA first,
-so the second number, 0.923, is rRNA, and our own functions print 0.923 too. It differs from
-session 1's 0.922 because trained tables replaced the given ones.
-:::
+The library's `BernoulliNB(alpha=1)` trains this in one call — `alpha` is the pseudocount. See the chapter.
 
 ## What does the product print for 2,000 k-mers?
 
@@ -597,24 +773,6 @@ how likely the class is, under the model. Never cut this slide; it is the only p
 is corrected.
 :::
 
-## Real data come without ten thousand labeled fresh reads
-
-We graded on fresh reads because we could make fresh reads, with the truth as an input.
-
-. . .
-
-The collaborator's labeled reads all go into training, so no fresh labeled set is left.
-
-. . .
-
-Chapter 6 opens on what to do then.
-
-::: {.notes}
-Ninety seconds. Unit 1's advantage, one more time: in a simulation the truth is an input, and on
-real data the true labels are unknown. Third cut, to one sentence. Do not preview chapter 6's methods; the sentence is a promise, and
-session 3's last slide assigns the reading.
-:::
-
 ## Working time — the rest of today
 
 1. **Unit 5 lab**, part 2: `and`, and the product that reaches 0.0 — [unit-05.ipynb](https://github.com/bu-cds-bf550/bf550-unit05-labs/blob/main/unit-05.ipynb)
@@ -623,17 +781,23 @@ session 3's last slide assigns the reading.
 ::: {.notes}
 Part 2 of the unit 5 lab, questions 4 to 6: `and` and `or`, a product of many probabilities that
 reaches exactly 0.0, and the log sum, which stays finite. Part 2 is today's second beat at hand size. Thirty-five minutes is the floor and
-this block has forty-eight. Then PS5, where the first student-written checks are the likely
+this block has forty-one. Then PS5, where the first student-written checks are the likely
 questions.
 :::
 
 ## Before next session
 
-- **Next session:** the notation, what the independence assumption costs, and what we tell the
-  collaborator
+- We graded on fresh reads because we could **make** them. The collaborator cannot — chapter 6
+  opens on what to do then.
+- **Next session:** what the assumption costs, what we tell the collaborator, and an LLM writing
+  this classifier
 - PS5 is due **Tue Oct 13**, start of class
 
 ::: {.notes}
+The first bullet is the slide that was cut to pay for the Method block: in a simulation the truth
+is an input, and on real data the labels are unknown. One sentence, no preview of chapter 6's
+methods. The notation is **not** in session 3 any more — it was today, inside the Method block;
+do not promise it again.
 Say the due date out loud: Tue Oct 13 is BU's Monday-schedule day and unit 6's first session.
 Session 3's lecture breaks the model on purpose and grades it again with today's bookkeeping.
 :::
