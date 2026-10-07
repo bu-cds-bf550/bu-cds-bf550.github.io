@@ -1,4 +1,8 @@
 ---
+# HIDDEN, 7 Oct 2026: the leading underscore keeps this deck out of the render, so it is neither
+# published nor linked, and its _data/slides.yml entry is removed. The instructor is authoring a
+# new session 3 deck (record bf550-instructor decisions/human-authored-content-first.md); this
+# assistant-authored draft is kept for reference.
 # Session 3 of unit 5. The chapter's last three teaching sections in order: "The notation",
 # "When the model is wrong" (doubled evidence, a batch with a different rRNA share, a class the
 # training never saw) and "What do we tell our collaborator?". Three beats: *Do a k-mer and its

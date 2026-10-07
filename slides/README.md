@@ -59,8 +59,12 @@ is published at `slides/unit-NN-M-shadow.html` (with its PDF and PowerPoint) and
 there, but it has **no entry in `_data/slides.yml`**, so no unit page, schedule row or
 [`/slides/`](https://bu-cds-bf550.github.io/slides/) listing links to it. Its front matter adds a
 `noindex, nofollow` robots tag. Unlinked is not private: anyone with the URL can open it, and the
-content gate and `strip-notes.lua` apply to it as to any deck. The first is
-[`unit-05-2-shadow.qmd`](unit-05-2-shadow.qmd), 7 Oct 2026.
+content gate and `strip-notes.lua` apply to it as to any deck. The first,
+[`unit-05-2-shadow.qmd`](unit-05-2-shadow.qmd), was swapped with the linked deck on 7 Oct 2026:
+the instructor's deck is now `unit-05-2.qmd`, and the shadow holds the previous one.
+
+A deck **hidden** until it is authored takes a leading underscore (`_unit-05-3.qmd`), so it is
+not rendered at all, and leaves `_data/slides.yml`.
 
 ### Speaker notes
 

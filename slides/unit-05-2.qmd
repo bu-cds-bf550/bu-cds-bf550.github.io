@@ -1,34 +1,10 @@
 ---
-# Session 2 of unit 5. The chapter's "Where the numbers come from", in its own order: training
-# by counting, the cells a small labeled set leaves at exactly 0 and 1, the pseudocount, the
-# library call, the underflow and the log scale, then the grading on fresh reads, the
-# expected-false accounting and the distinction between a posterior and a p-value. Three beats: *What does a
-# zero cell do to the product?*, *What does the product print for 2,000 k-mers?*, and *How
-# many of the discarded reads are non-rRNA?*; *A posterior and a p-value answer different
-# questions* is the prose slide for misconception 1. The run-sheet (bf550-instructor lectures/unit05-runsheet.md) owns the
-# clock and cites these headings.
-#
-# A hidden chunk at the top rebuilds session 1's tables, simulated reads and new read from the
-# chapter's seeds 61, 67 and 126, so every number on this deck is the chapter's; the beats use
-# the chapter's seeds 79 and 73. The Toolbox chunk needs scikit-learn, pinned in
-# requirements.txt. Authored 29 Sep 2026: about 45 minutes, 21 content slides.
-#
-# Revised 6 Oct 2026. The deck now opens on chapter section 0, "The method", which states the
-# statistics before the story and absorbs what used to be section 6, "The notation". Rebuilt the
-# same day under decisions/slides-carry-whole-messages.md as a worked example in subgoal steps:
-# ten content slides and about twenty minutes, with no chunk shown on the page. It is exposition
-# and not a beat, and under the run-sheet's standing rule it is never the block that gets cut.
-# Paid for by cutting two slides in the order the old cut list already gave: the BernoulliNB
-# Toolbox slide became a sentence on the slide before it, and "Real data come without ten
-# thousand labeled fresh reads" became a bullet on the close, and the call and discard slides
-# merged. Now about 59 minutes, 28 content slides plus five output screens: two over the window,
-# under the four conditions in authoring/slides.md, Sizing a deck. The setup chunk also computes the method block's three-measurement example, so every
-# number on those slides is printed rather than typed. The chapter is frozen for this offering,
-# so section 0 reaches the room through this deck only.
-#
-# Dates: Mon 28 Sep was cancelled, and every meeting after it moved one place later. The
-# subtitle and due dates follow the updated course/docs/schedule.md.
-title: "Naive Bayes: classification as a generative story"
+# Unit 5, session 2 (Wed Oct 7): classification, from unit 4's one-feature read to the
+# multiclass Bayes classifier. Human-authored by the instructor, 7 Oct 2026; it replaced the
+# assistant-authored deck, which now lives unlinked at unit-05-2-shadow.qmd (record
+# bf550-instructor decisions/human-authored-content-first.md). The setup chunk below is the
+# previous deck's, kept so the chapter's seeds and tables stay available to later slides.
+title: "Classification"
 subtitle: "BF550 · Unit 5 · Session 2 — Wed Oct 7"
 ---
 
@@ -123,759 +99,231 @@ def f4(x):
     return f"{x:.4f}"
 ```
 
-## Check-in {.smaller}
+# Classification Primer
 
-**[bf550.link/checkin](https://bu-cds-bf550.github.io/checkin/?session=14)** · `?session=14`
+## Classification
 
-Closed book, no AI, five minutes.
+- **Classification** is a family of machine learning algorithms that assign a *label* to *data* based on its characteristics
+- Labels are discrete values that represent **classes** of data
+    - e.g. Microbe A or Microbe B, cancer or non-cancer
 
-::: {.notes}
-The standing frame, verbatim. Code-reading kind, bank `checkins/unit05/bank.md` session 2: a
-dictionary of two short tables looked up by a class name, and a loop that multiplies one factor
-per answer. Read the lookup tally before *Training a table means counting, one k-mer at a time*;
-a weak tally says to slow that slide down. The edge case is an empty list of answers, which
-prints 1.0; no table entry in the snippet is zero, because a zero entry is today's first beat.
-:::
+## Classification terminology
 
-# The method: naive Bayes
+- **feature**: a characteristic or property of an instance that can be used to distinguish it from other instances
+    - The features can be discrete or continuous
+- **feature space**: a set of features chosen to represent the data
+- **instance**: a single observation of data we wish to classify
+- **classifier**: a rule that assigns a label to an instance based on its features
+- Classification maps features to labels -- $C(\text{data}) \to \text{label}$
+    - $C(\text{data})$ represents the label assigned to the instance by the classifier
 
-<!-- Rebuilt 6 Oct 2026 under decisions/slides-carry-whole-messages.md. The headlines, read in
-order, are the argument: naive Bayes decides a class from yes-or-no measurements; each class has a
-share and a probability of yes per measurement; step 1, measurement 1 alone gives A 0.727; prior
-times likelihood, divided by the total, is Bayes' theorem; the table gives single answers, not the
-combination; naive Bayes assumes answers within a class leave each other's probabilities alone;
-step 2, the likelihood is a product of three factors; step 3, the room computes A's posterior; the
-whole method is one formula; counting one measurement twice shows the assumption's cost. Every
-number is printed by the setup chunk, through inline expressions or a chunk. -->
+## A simple classification example
 
-## Naive Bayes decides which class an object belongs to, using yes-or-no measurements
+```{python}
+#| echo: false
+# Unit 4's read and genomes: 25 G or C bases of 40, Microbe A 66% GC, Microbe B 48%, an even mix.
+from scipy.stats import binom
+import matplotlib.pyplot as plt
 
-|  | our example today | in this unit |
-|---|---|---|
-| the object | one object | one sequencing read |
-| the classes | A and B | rRNA and non-rRNA |
-| the yes-or-no measurements | 3 | 20, each asking whether one k-mer is present |
-| the object's answers | yes, no, yes | the read's profile |
+u4_like_a = binom.pmf(25, 40, 0.66)
+u4_like_b = binom.pmf(25, 40, 0.48)
+u4_post_a = u4_like_a * 0.5 / (u4_like_a * 0.5 + u4_like_b * 0.5)
+u4_post_b = 1 - u4_post_a
+u4_ratio = u4_post_a / u4_post_b
+```
 
-. . .
-
-Which class is the object from, and how sure can we be about that answer?
-
-::: {.notes}
-The goal today is to decide which class an object belongs to, which is called classification,
-and naive Bayes also gives the probability of each class. The probability matters because
-removing a read wrongly has a cost. We work the method on the small
-example in the middle column, three measurements, so every multiplication fits on a slide.
-New material, not yet in the reading. Ninety seconds, one reveal for the question.
-:::
-
-## Each class has a share and a probability of yes for every measurement
-
-|  | class A | class B |
-|---|:---:|:---:|
-| share of all objects: the **prior** | `{python} f2(m_share_a)` | `{python} f2(m_share_b)` |
-| probability that measurement 1 is yes | `{python} f2(m_p[0])` | `{python} f2(m_q[0])` |
-| probability that measurement 2 is yes | `{python} f2(m_p[1])` | `{python} f2(m_q[1])` |
-| probability that measurement 3 is yes | `{python} f2(m_p[2])` | `{python} f2(m_q[2])` |
-
-The probability of an answer within a class is its **likelihood**. The class table's eight numbers
-are given today, and later in this session we count them from data.
-
-::: {.notes}
-To answer the question we need two kinds of number for each class. The prior is a class's share of
-all objects, before we look at any answer. Read one row aloud: among class A objects, measurement
-1 is yes 80 percent of the time. The columns differ, so each answer carries evidence. A column
-does not add to 1, because each row is a different measurement. Ninety seconds, no reveals.
-:::
-
-## Step 1: using measurement 1 alone, class A has a posterior of `{python} f3(m1_post_a)`
-
-The first answer is **yes**, so for each class we multiply the prior by the likelihood of yes:
-
-- class A: `{python} f2(m_share_a)` × `{python} f2(m_p[0])` = `{python} f2(m1_joint_a)`
-- class B: `{python} f2(m_share_b)` × `{python} f2(m_q[0])` = `{python} f2(m1_joint_b)`
+Which microbe is this read from based on GC content? Microbe A has 66% GC, Microbe B has 48% GC.
 
 . . .
 
-Divide each result by the total, `{python} f2(m1_total)`, to get the **posterior**, the probability of
-the class after the answer:
+```
+ATGCACCCTGTGGGCGAGCTGCCTATCGGCCGAAATACGC
+```
 
-- class A: `{python} f2(m1_joint_a)` ÷ `{python} f2(m1_total)` = **`{python} f3(m1_post_a)`**
-- class B: `{python} f2(m1_joint_b)` ÷ `{python} f2(m1_total)` = **`{python} f3(m1_post_b)`**
+25 of 40 bases are G or C, so the GC content is $\frac{25}{40} = 0.625$.
 
-::: {.notes}
-We start with only the first row of the table. Multiply, out loud, for A and then for B. Then
-divide by the total, so the two numbers add up to 1. Ask: why is A ahead, when B is the larger
-class? Because a yes is four times as common in A. Two minutes, one reveal between the multiply
-step and the divide step.
-:::
+. . .
 
-## Prior times likelihood, divided by the total, is Bayes' theorem
+This read is an **instance** of data we wish to classify.
+
+The **feature** we computed is GC content: the fraction of G or C bases.
+
+We chose to represent this data with *only one feature*: the feature space contains only one feature → GC content.
+
+## A simple classification example (cont.)
+
+We previously computed the posterior probability that a read came from Microbe A or Microbe B, given the observed GC content:
+
+```{python}
+#| echo: false
+#| fig-align: center
+gc_counts = np.arange(0, 41)
+fig, ax = plt.subplots(figsize=(7, 2.6))
+ax.plot(gc_counts, binom.pmf(gc_counts, 40, 0.66), "o-", ms=3, lw=2, color="#eb6834",
+        label="Microbe A, 66% GC")
+ax.plot(gc_counts, binom.pmf(gc_counts, 40, 0.48), "o-", ms=3, lw=2, color="#2a78d6",
+        label="Microbe B, 48% GC")
+ax.axvline(25, color="#52514e", ls=":", lw=1.5)
+ax.text(25.4, ax.get_ylim()[1] * 0.9, "observed read", color="#52514e")
+ax.set_xlabel("G or C bases, out of 40")
+ax.set_ylabel("probability")
+ax.set_xlim(5, 40)
+ax.legend(frameon=False)
+ax.spines[["top", "right"]].set_visible(False)
+plt.show()
+```
+
+```{python}
+#| echo: false
+#| output: asis
+print(rf"$P(A \mid \text{{read}}) = {u4_post_a:.2f}$ and $P(B \mid \text{{read}}) = {u4_post_b:.2f}$")
+```
+
+## A simple classification example (cont.)
+
+```{python}
+#| echo: false
+#| output: asis
+print(rf"$P(A \mid \text{{read}}) = {u4_post_a:.2f}$ and $P(B \mid \text{{read}}) = {u4_post_b:.2f}$")
+```
+
+. . .
+
+```{python}
+#| echo: false
+#| output: asis
+print(rf"$$\frac{{P(A \mid \text{{read}})}}{{P(B \mid \text{{read}})}} = \frac{{{u4_post_a:.2f}}}{{{u4_post_b:.2f}}} = {u4_ratio:.1f}$$")
+```
+
+. . .
+
+Our simple classifier: is the ratio greater than 1?
+
+- If ratio > 1:
+    - → classify the read as Microbe A
+- If ratio < 1:
+    - → classify the read as Microbe B
+- If ratio == 1:
+    - → the classifier is uncertain, and we cannot classify the read
+
+## Our simple classifier is a *Bayes classifier*
+
+- Bayes classifiers use the posterior probability to classify data
+- The posterior probability of data belonging to class A is given by Bayes' theorem:
+  $$ \text{posterior} = \frac{\text{likelihood} \times \text{prior}}{\text{evidence}} $$
+  $$ P(A \mid \text{read}) = \frac{P(\text{read} \mid A) \times P(A)}{P(\text{read})} $$
+  $$ P(B \mid \text{read}) = \frac{P(\text{read} \mid B) \times P(B)}{P(\text{read})} $$
+- The Bayes classifier assigns the read to the class with the highest posterior probability
+
+## Two-class classifiers are called *binary classifiers*
+
+- A *binary classifier* is a classifier that assigns data to one of two classes
+- Our simple classifier is a binary classifier
+  - → we can compute the ratio of the posterior probabilities to make a decision
+- Classifiers that predict multiple classes are called *multiclass classifiers*
+  - → we label the data with the class that has the highest posterior probability
+
+## Multiclass Bayes classifier
+
+- A multiclass Bayes classifier assigns data to one of multiple classes based on the posterior probabilities
+- The mathematical notation for a multiclass Bayes classifier is:
+  $$ P(C_k \mid \text{data}) = \frac{P(\text{data} \mid C_k) \times P(C_k)}{P(\text{data})} $$
+  where $C_k$ is the k-th class, and $k = 1, 2, \dots, K$ for $K$ classes
+- And the classifier function:
+  $$ C(\text{data}) = \arg\max_{k} P(C_k \mid \text{data}) $$
+
+## A three-class example
+
+```{python}
+#| echo: false
+# Three microbes in an even mix, scoring the same 25-of-40 read as before.
+three_gc = {"A": 0.66, "B": 0.48, "X": 0.55}
+three_prior = 1 / 3
+three_like = {k: binom.pmf(25, 40, p) for k, p in three_gc.items()}
+three_total = sum(three_like[k] * three_prior for k in three_gc)
+three_post = {k: three_like[k] * three_prior / three_total for k in three_gc}
+three_call = max(three_post, key=three_post.get)
+```
+
+Add a third microbe to the mix:
+
+- Microbe A has 66% GC
+- Microbe B has 48% GC
+- Microbe X has 55% GC
+
+The read is the same, 25 of 40 bases G or C.
+
+```{python}
+#| echo: false
+#| fig-align: center
+fig, ax = plt.subplots(figsize=(7, 2.6))
+for k, colour in (("A", "#eb6834"), ("B", "#2a78d6"), ("X", "#3a9a5b")):
+    ax.plot(gc_counts, binom.pmf(gc_counts, 40, three_gc[k]), "o-", ms=3, lw=2, color=colour,
+            label=f"Microbe {k}, {three_gc[k]:.0%} GC")
+ax.axvline(25, color="#52514e", ls=":", lw=1.5)
+ax.text(25.4, ax.get_ylim()[1] * 0.9, "observed read", color="#52514e")
+ax.set_xlabel("G or C bases, out of 40")
+ax.set_ylabel("probability")
+ax.set_xlim(5, 40)
+ax.legend(frameon=False)
+ax.spines[["top", "right"]].set_visible(False)
+plt.show()
+```
+
+## A three-class example (cont.)
 
 ```{python}
 #| echo: false
 #| output: asis
 print(rf"""$$
-\underbrace{{P(A \mid \text{{yes}})}}_{{\text{{posterior: }} {m1_post_a:.3f}}}
-\;=\;
-\frac{{\underbrace{{P(A)}}_{{\text{{prior: }} {m_share_a:.2f}}}
-\;\times\;
-\underbrace{{P(\text{{yes}} \mid A)}}_{{\text{{likelihood: }} {m_p[0]:.2f}}}}}
-{{\text{{total over both classes: }} {m1_total:.2f}}}
+\begin{{aligned}}
+P(A \mid \text{{read}}) &= {three_post['A']:.2f} \\
+P(B \mid \text{{read}}) &= {three_post['B']:.2f} \\
+P(X \mid \text{{read}}) &= {three_post['X']:.2f}
+\end{{aligned}}
 $$""")
 ```
 
-The bar $\mid$ is read **given**, so $P(A \mid \text{yes})$ is the probability of class A given a yes.
-
-Written without the total, the rule is $P(A \mid \text{yes}) \propto P(A) \times P(\text{yes} \mid A)$, where $\propto$, *proportional to*, means that we divide by the total afterwards.
-
-::: {.notes}
-The calculation we just did has a name, and its symbols name the numbers on the previous slide.
-Point at each label: the posterior 0.727, the prior 0.40, the likelihood 0.80, all for class A.
-The proportional sign is the divide-by-the-total step and nothing more. You met these three words
-in unit 4; this is the same calculation. Two minutes.
-:::
-
-## The class table gives each answer alone, not the probability of yes, no, yes together
-
-For class A, the likelihood of all three answers together is the probability that an A object
-answers **yes, no, yes**.
-
 . . .
-
-| measurements | 1 | 2 | 3 | 4 | 5 |
-|---|:---:|:---:|:---:|:---:|:---:|
-| possible combinations of answers | `{python} 2 ** 1` | `{python} 2 ** 2` | `{python} 2 ** 3` | `{python} 2 ** 4` | `{python} 2 ** 5` |
-
-Because the combinations double with each measurement, few **labeled** objects, whose class we
-know, have exactly these answers to count.
-
-::: {.notes}
-With three answers, the likelihood is no longer one number from the table. One way to get it is to
-count labeled class A objects that answered exactly yes, no, yes. But the combinations double with
-every measurement, so the labeled objects are spread thinly, and most combinations have few or
-none. Naive Bayes builds the combination from the single answers instead. Two minutes, one
-reveal before the combinations table.
-:::
-
-## Naive Bayes assumes that, within a class, one answer leaves another's probability unchanged
-
-| 100 objects of class A | answer 2 yes | answer 2 no | total | share of the row with answer 2 yes |
-|---|:---:|:---:|:---:|:---:|
-| **answer 1 yes** | `{python} m_cells[0][0]` | `{python} m_cells[0][1]` | `{python} m_cells[0][0] + m_cells[0][1]` | `{python} m_cells[0][0]` ÷ `{python} m_cells[0][0] + m_cells[0][1]` = `{python} f2(m_cells[0][0] / (m_cells[0][0] + m_cells[0][1]))` |
-| **answer 1 no** | `{python} m_cells[1][0]` | `{python} m_cells[1][1]` | `{python} m_cells[1][0] + m_cells[1][1]` | `{python} m_cells[1][0]` ÷ `{python} m_cells[1][0] + m_cells[1][1]` = `{python} f2(m_cells[1][0] / (m_cells[1][0] + m_cells[1][1]))` |
-
-. . .
-
-answers 1 and 2 both yes: `{python} m_cells[0][0]` of 100 = `{python} f2(m_p[0])` × `{python} f2(m_p[1])`
-
-A combination's probability is then a product, which is called **independence within the class**. Across both classes together the answers are related, because both answers depend on the class.
-
-::: {.notes}
-Here is how naive Bayes builds the combination. Read the last column: 24 of 80 and 6 of 20 are
-both 0.30, so knowing answer 1 does not change the probability that answer 2 is yes. Then the product: 24 of 100 is 0.80 times 0.30. Stress within the class: across all
-objects the answers are related, because both depend on the class, and that relation is what
-separates the classes. Two and a half minutes, one reveal.
-:::
-
-## Step 2: multiplying three factors gives likelihoods of `{python} f3(m_like_a)` for A and `{python} f3(m_like_b)` for B
-
-The answers were yes, no, yes. A **yes** contributes the probability of yes, and a **no**
-contributes 1 minus it.
-
-- class A: `{python} f2(m_p[0])` × (1 − `{python} f2(m_p[1])`) × `{python} f2(m_p[2])` = `{python} f2(m_fac_a[0])` × `{python} f2(m_fac_a[1])` × `{python} f2(m_fac_a[2])` = **`{python} f3(m_like_a)`**
-
-. . .
-
-- class B: `{python} f2(m_q[0])` × (1 − `{python} f2(m_q[1])`) × `{python} f2(m_q[2])` = `{python} f2(m_fac_b[0])` × `{python} f2(m_fac_b[1])` × `{python} f2(m_fac_b[2])` = **`{python} f3(m_like_b)`**
-
-::: {.notes}
-With the assumption, the likelihood is a product, one factor per answer. Point at the middle factor
-in each row: answer 2 was no, so we use 1 minus the probability of yes, 0.70 for A and 0.30 for B.
-This is the step people most often forget, and session 3 shows LLM-written code that forgets it.
-Two minutes, one reveal, before class B.
-:::
-
-## Step 3: what is class A's posterior after all three answers?
-
-Multiply each likelihood by its prior, then divide by the total, as in step 1.
-
-| | prior | likelihood |
-|---|:---:|:---:|
-| class A | `{python} f2(m_share_a)` | `{python} f3(m_like_a)` |
-| class B | `{python} f2(m_share_b)` | `{python} f3(m_like_b)` |
-
-. . .
-
-- class A: `{python} f2(m_share_a)` × `{python} f3(m_like_a)` = `{python} f4(m_joint_a)`, and `{python} f4(m_joint_a)` ÷ `{python} f4(m_total)` = **`{python} f3(m_post_a)`**
-- class B: `{python} f2(m_share_b)` × `{python} f3(m_like_b)` = `{python} f4(m_joint_b)`, and `{python} f4(m_joint_b)` ÷ `{python} f4(m_total)` = **`{python} f3(m_post_b)`**
-
-. . .
-
-Measurement 1 alone gave A `{python} f3(m1_post_a)`, and answers 2 and 3 both favor A (a no: `{python} f2(m_fac_a[1])` against `{python} f2(m_fac_b[1])`; a yes: `{python} f2(m_p[2])` against `{python} f2(m_q[2])`), so its posterior rose to `{python} f3(m_post_a)`.
-
-::: {.notes}
-The last step repeats step 1's two moves, so the room does it. Give a minute with calculators,
-then reveal the arithmetic. Answer the opening question: class A, with probability 0.882. Before
-the second reveal, ask why it rose from
-0.727: a no on answer 2 is more likely under A, 0.70 against 0.30, and a yes on answer 3 slightly
-more. Listen for 0.1344 given as the answer, which is the product before dividing by the total.
-Two and a half minutes including the pause, two reveals.
-:::
-
-## The whole method is the prior times one factor per answer, divided by the total
-
-$$
-\begin{aligned}
-P(x_1, \dots, x_K \mid c) &= \prod_{i=1}^{K} P(x_i \mid c) && \text{the assumption: step 2}\\
-P(c \mid x_1, \dots, x_K) &\propto P(c) \prod_{i=1}^{K} P(x_i \mid c) && \text{the method: step 3}
-\end{aligned}
-$$
-
-- $c$ is the class; $x_i$ is answer $i$; $K$ is 3 today; $\mid$ reads **given**, the commas **and**, $\propto$ **divide by the total**.
-- $\prod$, capital pi (not the π of the rRNA share), means **multiply**: one factor per answer, and 1 minus the probability of yes for a no.
-
-::: {.notes}
-Every piece of the formula is a step the room just did. The left equation is the independence
-assumption, which turned the combination into a product in step 2. The right one adds the prior and
-the divide-by-the-total of step 3. Capital pi is a for loop with one multiplication inside, and it
-is not the small pi that marked the rRNA share in session 1. Read both aloud. Two and a half minutes.
-:::
-
-## Counting measurement 1 twice raises class A from `{python} f3(m1_post_a)` to `{python} f3(m_dbl_post_a)` without new information
-
-Measurement 1 alone, with its yes recorded twice:
-
-- class A: `{python} f2(m_share_a)` × `{python} f2(m_p[0])` × `{python} f2(m_p[0])` = `{python} f3(m_dbl_a)`
-- class B: `{python} f2(m_share_b)` × `{python} f2(m_q[0])` × `{python} f2(m_q[0])` = `{python} f3(m_dbl_b)`
-- posterior for A: `{python} f3(m_dbl_a)` ÷ `{python} f3(m_dbl_a + m_dbl_b)` = **`{python} f3(m_dbl_post_a)`**
-
-A copied measurement breaks the independence assumption, and the product counts it twice anyway.
-Overlapping k-mers, which share bases of the read, repeat information in a milder way, so naive
-Bayes's posteriors are too close to 0 or 1 even when it picks the same class.
-
-::: {.notes}
-The assumption is usually false, and this is what it costs. Measuring the same thing twice is the
-extreme case of overlap, and the product counts it twice. The decision, A, does not change; the
-posterior moves from 0.727 to 0.914. Overlapping k-mers do a milder version of this, and session 3
-measures it on reads. Ninety seconds.
-:::
-
-# Where the numbers come from
-
-## Last session's read scored `{python} f2(posterior_given)` using the simulator's tables
 
 ```{python}
-print(f"P(profile | rRNA):             {like_rrna:.2e}")
-print(f"P(profile | non-rRNA):         {like_nonrrna:.2e}")
-print(f"times the priors 0.15 and 0.85, divided by the total:")
-print(f"posterior for rRNA:            {posterior_given:.2f}")
+#| echo: false
+#| output: asis
+print(rf"$$C(\text{{read}}) = \arg\max_k P(C_k \mid \text{{read}}) = \text{{Microbe {three_call}}}$$")
 ```
 
 . . .
 
-This read was the same method with twenty factors in step 2, and every number came from tables
-the simulator was given.
+Adding Microbe X lowers A's posterior from `{python} f"{u4_post_a:.2f}"` to `{python} f"{three_post['A']:.2f}"`, but A still has
+the highest posterior, so the read is still classified as Microbe A.
+
+## Bayes classifiers are *hard classifiers*
+
+- Our simple Bayes classifier assigned the read to Microbe A based on the highest posterior probability
+- A *hard classifier* assigns a single class label to an instance
+    - → assigning a single class label is called *hard assignment*
 
 . . .
-
-The collaborator has only **labeled reads**, so real tables are counted from them.
-
-::: {.notes}
-This section answers where the table's numbers come from when nobody hands them to us. Session
-1's new read was the method we just worked, with twenty factors in step 2 instead of three:
-P(profile | rRNA) is that likelihood, 3.65e-06, a few in a million, against 5.49e-08 for
-non-rRNA, and the priors 0.15 and 0.85 turn them into 0.92.
-Then, no slide: who has PS5 open, and how the first student-written check went. Two minutes, two
-reveals.
-:::
-
-## Training a table means counting, one k-mer at a time {.smaller}
-
-**Training**: counting, among one class's labeled reads, the fraction with each k-mer.
-
-Each of the twenty entries is a **cell**.
-
-The class's share of labeled reads becomes the prior.
 
 ```{python}
-#| echo: true
-def train_presence(reads, labels, class_name):
-    """Per-k-mer presence fraction among one class's reads."""
-    n_class = 0
-    present_count = []
-    for i in range(20):
-        present_count.append(0)
-    for r in range(len(reads)):
-        if labels[r] == class_name:
-            n_class += 1
-            for i in range(20):
-                if reads[r][i]:
-                    present_count[i] += 1
-    probs = []
-    for i in range(20):
-        probs.append(present_count[i] / n_class)     # the fraction with k-mer i
-    return np.array(probs), n_class
+#| echo: false
+#| output: asis
+print(rf"""$$
+\begin{{aligned}}
+P(A \mid \text{{read}}) &= {three_post['A']:.2f} \\
+P(B \mid \text{{read}}) &= {three_post['B']:.2f} \\
+P(X \mid \text{{read}}) &= {three_post['X']:.2f}
+\end{{aligned}}
+$$""")
 ```
 
-::: {.notes}
-Two minutes, the definition before the code that runs it. Read the loop aloud: for each read of
-this class, add one to the count of every k-mer it has; at the end, divide each count by the
-number of reads in the class. Read `reads[r][i]` aloud as "read r's answer for k-mer i".
-Training is unit 4's counting, done twenty times. The function also
-returns how many reads the class had.
-:::
+Although we picked Microbe A because it has the maximum posterior probability, the other microbes still have non-zero posterior probabilities.
 
-## Twenty-five labeled reads leave some cells at 0 or 1 {.smaller}
+## Next time
 
-Real labeled sets are often small.
+Our simple model had a single feature, GC content.
 
-Train on the first 25 reads.
+One feature is enough to classify this read, but for more complex data we may need more features.
 
-```{python}
-#| echo: true
-small_rrna, n_small = train_presence(reads[:25], labels[:25], "rRNA")
-cells_at_0, cells_at_1 = [], []
-for i in range(20):
-    if small_rrna[i] == 0:
-        cells_at_0.append(i)
-    if small_rrna[i] == 1:
-        cells_at_1.append(i)
-```
+Next time: how to classify data with multiple features
 
-::: {.notes}
-Two minutes. `reads[:25]` is the first twenty-five reads. The loop lists the k-mers whose rRNA
-cell is exactly 0 and exactly 1; nothing prints here, and the next slide prints the lists beside
-the new read's profile. Ask what a cell of exactly 0 would mean, and hold the answer for the next
-slide.
-:::
-
-## What does a zero cell do to the product?
-
-The new read is scored against these small tables.
-
-```{python}
-print("rRNA reads among the 25: ", n_small)
-print("new read's profile:     ", new_read.astype(int))
-print("rRNA cells at exactly 0:", cells_at_0, "   at exactly 1:", cells_at_1)
-```
-
-. . .
-
-A present k-mer contributes its cell; an absent k-mer contributes 1 minus its cell.
-
-. . .
-
-**Predict first.** What is the new read's likelihood under rRNA?
-
-::: {.notes}
-Two minutes. Collect aloud. "Small but positive", or "a bit lower than session 1's", is the answer
-to listen for. The profile counts from k-mer 0 on the left. Let the room look for a present
-k-mer whose cell is 0, or an absent one whose cell is 1; do not say the answer yet. Never cut this beat.
-:::
-
-## Any factor of zero sets the whole product to zero {.smaller}
-
-```{python}
-#| echo: true
-#| output-location: slide
-small_nonrrna, _ = train_presence(reads[:25], labels[:25], "non-rRNA")
-small_like_rrna = likelihood(new_read, small_rrna)
-small_like_nonrrna = likelihood(new_read, small_nonrrna)
-print("P(profile | rRNA), small-set table:    ", small_like_rrna)
-print(f"P(profile | non-rRNA), small-set table: {small_like_nonrrna:.2e}")
-print("P(rRNA | profile):",
-      small_like_rrna * 0.15 / (small_like_rrna * 0.15 + small_like_nonrrna * 0.85))
-print("k-mer 3: present, rRNA cell", small_rrna[3], "-> factor", small_rrna[3])
-print("k-mer 6: absent,  rRNA cell", small_rrna[6], "-> factor", 1 - small_rrna[6])
-```
-
-::: {.notes}
-Two and a half minutes. The output slide: exactly 0.0 under rRNA, 3.2e-07 under non-rRNA, and a
-posterior of 0.0. Session 1 said this read is rRNA at 0.92, and it truly is. Two factors are
-zero: k-mer 3 is present with a cell of 0, and k-mer 6 is absent with a cell of 1. No value of
-the other factors moves the product off zero.
-:::
-
-## Six reads cannot show that a k-mer never occurs
-
-A cell of exactly 0 or 1 is a probability of certainty.
-
-. . .
-
-What the count records: **among six reads**, the k-mer was not seen, or was seen every time.
-
-. . .
-
-Every cell needs a value above 0 and below 1.
-
-::: {.notes}
-Two and a half minutes, the correction. A probability estimated as zero records that the labeled
-set held no example; it says how small the set was, and nothing about which profiles an rRNA read
-can have. The wrong belief to name aloud: "a zero means the data showed it is impossible". Never
-cut this slide; it is the only place that belief is corrected.
-:::
-
-## A pseudocount adds two imaginary reads to every cell {.smaller}
-
-The **pseudocount**: one imaginary read **with** the k-mer and one **without**, in every cell.
-
-. . .
-
-A cell that was 0: (0 + 1) / (6 + 2) = 0.125.
-
-. . .
-
-A cell that was 1: (6 + 1) / (6 + 2) = 0.875.
-
-```python
-corrected_kmer_count = present_count[i] + pseudocount
-corrected_read_count = n_class + 2 * pseudocount
-```
-
-::: {.notes}
-Two minutes, the definition and the arithmetic before the run. Here the pseudocount is 1: the
-count gains 1 and the class's reads gain 2. Neither 0 nor 1 can be reached any more. The two lines are the only change to `train_presence`; the new function takes `pseudocount`
-as an argument, and a pseudocount of 0 is the plain counting. With thousands of reads behind a
-cell, the two imaginary reads stop mattering.
-:::
-
-## On 100,000 labeled reads, trained tables match the simulator's {.smaller}
-
-```{python}
-def train_presence_with_pseudocount(reads, labels, class_name, pseudocount):
-    n_class = 0
-    present_count = []
-    for i in range(20):
-        present_count.append(0)
-    for r in range(len(reads)):
-        if labels[r] == class_name:
-            n_class += 1
-            for i in range(20):
-                if reads[r][i]:
-                    present_count[i] += 1
-    probs = []
-    for i in range(20):
-        corrected_kmer_count = present_count[i] + pseudocount
-        corrected_read_count = n_class + 2 * pseudocount
-        probs.append(corrected_kmer_count / corrected_read_count)
-    return np.array(probs), n_class
-```
-
-```{python}
-#| echo: true
-#| output-location: slide
-small_rrna_fixed, _ = train_presence_with_pseudocount(reads[:25], labels[:25], "rRNA", 1)
-print("the cells that were 0, repaired:", np.round(small_rrna_fixed[cells_at_0], 3))
-print("the cells that were 1, repaired:", np.round(small_rrna_fixed[cells_at_1], 3))
-
-# now train on all 100,000 labeled reads, with the pseudocount
-trained_rrna, n_rrna = train_presence_with_pseudocount(reads, labels, "rRNA", 1)
-trained_nonrrna, n_nonrrna = train_presence_with_pseudocount(reads, labels, "non-rRNA", 1)
-pi_hat = n_rrna / len(reads)           # pi_hat: the estimated rRNA share, used as the prior
-print("trained table, first four (rRNA):", np.round(trained_rrna[:4], 2))
-print("true settings, first four (rRNA):", np.round(presence_prob["rRNA"][:4], 2))
-print("estimated share of rRNA reads:   ", pi_hat)
-```
-
-::: {.notes}
-Two and a half minutes. Read `small_rrna_fixed[cells_at_0]` aloud as "the repaired cells at those
-k-mers". The output screen: 0.125 three times and 0.875 twice, the arithmetic from the slide
-before. On all 100,000 reads the first four rRNA cells are 0.41, 0.69, 0.62 and 0.65,
-the model's settings to two decimals. The trained share, 0.14974, is the fraction of labeled reads
-that are rRNA; it is the prior from here on.
-
-Then the Toolbox, in one sentence on the last reveal rather than its own slide (cut 6 Oct 2026 to
-pay for the Method block): the library's `BernoulliNB` trains this same classifier in one call,
-its `alpha` is the pseudocount, and the chapter prints its 0.923 beside ours. The reading carries
-the full comparison; say that out loud so nobody thinks it was skipped.
-:::
-
-. . .
-
-The library's `BernoulliNB(alpha=1)` trains this in one call — `alpha` is the pseudocount. See the chapter.
-
-## What does the product print for 2,000 k-mers?
-
-Every factor is below 1, and twenty factors gave 3.65e-06.
-
-. . .
-
-The same `likelihood` function, on one read and a panel of **2,000** k-mers.
-
-. . .
-
-**Predict first.** What does it print for each class?
-
-::: {.notes}
-Two minutes; second cut is this predict pause. Collect aloud. "A very small number" is the answer
-this beat corrects: mathematically right, but the computer prints something else. Write down any
-exponent the room offers. Real panels hold thousands of k-mers.
-:::
-
-## Two thousand factors below 1 print as exactly 0.0 {.smaller}
-
-```{python}
-#| echo: true
-#| output-location: slide
-rng = np.random.default_rng(79)
-big_rrna = rng.uniform(0.15, 0.85, size=2000)
-big_nonrrna = rng.uniform(0.15, 0.85, size=2000)
-big_read = rng.random(2000) < big_rrna                   # one rRNA read
-like_r = likelihood(big_read, big_rrna)
-like_n = likelihood(big_read, big_nonrrna)
-print("products:", like_r, like_n)
-print("posterior from them:", like_r * 0.15 / (like_r * 0.15 + like_n * 0.85))
-```
-
-::: {.notes}
-Two minutes, seed 79. The output slide: 0.0 and 0.0, exactly, and the posterior `nan`, *not a
-number*, because 0.0 divided by 0.0 has no value. The read is an rRNA read and the two products, both 0.0,
-do not separate the classes. A product of enough factors below 1 reaches 0.0 on a computer.
-:::
-
-## A logarithm turns a product into a sum
-
-`nan` means *not a number*: the result of 0.0 ÷ 0.0.
-
-. . .
-
-A product too small for the computer to store prints as 0.0: **underflow**.
-
-. . .
-
-A **logarithm** turns multiplying into adding: the log of a product is the sum of the logs.
-
-. . .
-
-The log keeps order: the larger product has the larger sum.
-
-```{python}
-print(f"np.log(0.5)       = {np.log(0.5):.2f}")
-print(f"np.log(0.5 * 0.5) = {np.log(0.5 * 0.5):.2f}  = {np.log(0.5):.2f} + {np.log(0.5):.2f}")
-```
-
-. . .
-
-In Python: `np.log`.
-
-::: {.notes}
-Two and a half minutes, the naming slide and the definition before the code. The log of a number
-below 1 is negative. Read the printed
-example aloud: log of 0.5 is −0.69, and log of 0.5 × 0.5 is −0.69 added twice. Because order is kept,
-comparing two sums of logs gives the same larger class as comparing the two products would have, and a
-sum of two thousand negative numbers stays within what the computer stores.
-:::
-
-## On the log scale, rRNA scores far above non-rRNA {.smaller}
-
-```{python}
-#| echo: true
-#| output-location: slide
-def log_likelihood(present, probs):
-    total = 0.0
-    for i in range(len(probs)):
-        if present[i]:
-            total = total + np.log(probs[i])          # add the log of p_i
-        else:
-            total = total + np.log(1 - probs[i])      # add the log of 1 - p_i
-    return total
-
-print(f"log-scale score, rRNA:     {log_likelihood(big_read, big_rrna):.1f}")
-print(f"log-scale score, non-rRNA: {log_likelihood(big_read, big_nonrrna):.1f}")
-```
-
-::: {.notes}
-Two minutes. `log_likelihood` is `likelihood` with multiply replaced by add and each factor
-replaced by its log. The output slide: −1206.8 for rRNA, −1612.5 for non-rRNA. The less negative
-is the larger, so rRNA is higher by a wide gap, where the products printed a tie at zero. From here on,
-classification arithmetic is done on the log scale; the library already does this.
-:::
-
-## A read is called rRNA at posterior 0.5, and discarded only at 0.9
-
-| rule | applies when the posterior is | what it measures |
-|---|:---:|---|
-| the **call**: rRNA, the more likely class | at least 0.5 | **accuracy**, the fraction of calls that match the truth |
-| the **discard**: the read is removed | at least 0.9 | **false discards**, removed reads that were non-rRNA |
-
-A read at posterior 0.7 is called rRNA but kept, because the call is not confident enough to remove it.
-
-::: {.notes}
-The collaborator's question had two halves, which class and whether to remove the read, and each
-half gets a rule. The call answers which class; accuracy is the number most reports stop at. The
-discard answers whether to remove the read, and a false discard is the mistake that loses signal.
-Walk the 0.7 example. Two minutes; this slide merged two on 6 Oct 2026.
-:::
-
-## Summing 1 minus each posterior gives the expected false discards
-
-A read discarded at posterior 0.90 is non-rRNA with probability 0.10.
-
-. . .
-
-100 such reads: about 100 × 0.10 = 10 non-rRNA reads among them.
-
-. . .
-
-300 reads at 0.90 and 200 at 0.99: about 30 + 2 = 32.
-
-. . .
-
-So add 1 minus the posterior, once per discarded read: the **expected** number of false discards.
-
-::: {.notes}
-Three minutes, the arithmetic before the run. Build it slowly: one read, then a group, then two
-groups. Adding 0.10 three hundred times is the same as 300 × 0.10, so the grouping is never
-needed. A read with a higher posterior adds less, because it is less likely to be the mistake.
-"Expected" means the average over many runs, as in unit 2.
-:::
-
-## How many of the discarded reads are non-rRNA?
-
-10,000 **fresh** reads: newly simulated from the same model, never used in training.
-
-. . .
-
-The share of rRNA is set to 0.15, as in training.
-
-. . .
-
-Call at 0.5, discard at 0.9.
-
-. . .
-
-**Predict first.** The accuracy? And will the actual false discards be close to the expected count?
-
-::: {.notes}
-Two minutes. The sum from the slide before is on the board. Collect a guess for the accuracy and a
-yes or no on the false discards, and write both on the board. The answer to listen for: "actual will be far from expected". Posteriors come from the trained
-tables and share. Never cut this beat; session 3 re-runs it on a broken model.
-:::
-
-## On 10,000 fresh reads, accuracy is 0.939 {.smaller}
-
-```{python}
-def posterior_rrna_of(read, table_rrna, table_nonrrna, share_rrna):
-    score_r = likelihood(read, table_rrna) * share_rrna
-    score_n = likelihood(read, table_nonrrna) * (1 - share_rrna)
-    return score_r / (score_r + score_n)
-
-def grade(posteriors, truths):
-    correct, n_discarded, false_discards, expected_false = 0, 0, 0, 0.0
-    for posterior, truth in zip(posteriors, truths):
-        if posterior >= 0.5:
-            call = "rRNA"
-        else:
-            call = "non-rRNA"
-        if call == truth:
-            correct += 1
-        if posterior >= 0.9:
-            n_discarded += 1
-            expected_false += 1 - posterior
-            if truth == "non-rRNA":
-                false_discards += 1
-    print(f"accuracy on {len(truths):,} fresh reads: {correct / len(truths):.3f}")
-    print(f"discarded at posterior >= 0.9: {n_discarded}")
-    print(f"  expected false discards: {expected_false:.0f}")
-    print(f"  actual false discards:   {false_discards}")
-    return correct / len(truths)
-```
-
-```{python}
-#| echo: true
-#| output-location: slide
-rng = np.random.default_rng(73)
-fresh_posteriors, fresh_truths = [], []
-for _ in range(10000):
-    truth, read = draw_labeled_read(0.15, presence_prob, rng)
-    fresh_truths.append(truth)
-    fresh_posteriors.append(posterior_rrna_of(read, trained_rrna, trained_nonrrna, pi_hat))
-accuracy_twenty = grade(fresh_posteriors, fresh_truths)
-# inside grade, for every discarded read:  expected_false += 1 - posterior
-```
-
-::: {.notes}
-Three minutes, seed 73. `posterior_rrna_of` is session 1's posterior line wrapped in a function,
-and `grade` applies the four definitions. The loop draws a fresh read with its truth and computes
-its posterior from the trained tables. The comment is `grade`'s one line that matters,
-the sum from the slide before. The output slide: accuracy 0.939, 603 discards, 23 expected false
-discards, 24 actual. Go to the board.
-:::
-
-## The posteriors predicted 23 false discards, and 24 occurred
-
-Accuracy **0.939**; **603** reads discarded.
-
-. . .
-
-Predicted false discards **23**; counted from the true labels, **24**.
-
-. . .
-
-When the model matches the process that made the reads, the posteriors predict the false discards.
-
-. . .
-
-A posterior threshold has a knowable expected cost, as unit 2's p-value threshold did.
-
-::: {.notes}
-Two minutes, the correction. The accuracy is the number most reports stop at; the three
-under it say what the discards cost. Hold the third reveal for session 3, and say so: session 3
-breaks the model on purpose and runs this same bookkeeping again. In unit 2, a p-value threshold of
-0.05 over many null tests expected a knowable number of false positives, null tests called
-discoveries.
-:::
-
-## A posterior and a p-value answer different questions
-
-Unit 2's **p-value**: the probability of data this extreme, if the null model is true.
-
-. . .
-
-A posterior: $P(\text{class} \mid \text{data})$, the probability of the answer, given what you saw.
-
-. . .
-
-A p-value: $P(\text{data this extreme} \mid \text{null})$, the probability of what you saw, given
-one answer.
-
-. . .
-
-Both let a threshold carry a known expected count of mistakes.
-
-::: {.notes}
-Two and a half minutes, prose, no chunk. Read the bar aloud as "given". The wrong belief to name:
-"a posterior is a fancier p-value". A p-value never says how likely the null is; a posterior says
-how likely the class is, under the model. Never cut this slide; it is the only place that belief
-is corrected.
-:::
-
-## Working time — the rest of today
-
-1. **Unit 5 lab**, part 2: `and`, and the product that reaches 0.0 — [unit-05.ipynb](https://github.com/bu-cds-bf550/bf550-unit05-labs/blob/main/unit-05.ipynb)
-2. PS5
-
-::: {.notes}
-Part 2 of the unit 5 lab, questions 4 to 6: `and` and `or`, a product of many probabilities that
-reaches exactly 0.0, and the log sum, which stays finite. Part 2 is today's second beat at hand size. Thirty-five minutes is the floor and
-this block has forty-one. Then PS5, where the first student-written checks are the likely
-questions.
-:::
-
-## Before next session
-
-- We graded on fresh reads because we could **make** them. The collaborator cannot — chapter 6
-  opens on what to do then.
-- **Next session:** what the assumption costs, what we tell the collaborator, and an LLM writing
-  this classifier
-- PS5 is due **Tue Oct 13**, start of class
-
-::: {.notes}
-The first bullet is the slide that was cut to pay for the Method block: in a simulation the truth
-is an input, and on real data the labels are unknown. One sentence, no preview of chapter 6's
-methods. The notation is **not** in session 3 any more — it was today, inside the Method block;
-do not promise it again.
-Say the due date out loud: Tue Oct 13 is BU's Monday-schedule day and unit 6's first session.
-Session 3's lecture breaks the model on purpose and grades it again with today's bookkeeping.
-:::
