@@ -1,0 +1,166 @@
+---
+# Shadow deck for unit 5, session 2 (Wed Oct 7). The instructor's own version of the session,
+# written by hand. It renders with the site and is published at slides/unit-05-2-shadow.html,
+# but it has no entry in _data/slides.yml, so no unit page, schedule row or /slides/ listing
+# links to it, and the robots meta tag below keeps it out of search indexes. The linked deck
+# for this session is unit-05-2.qmd; this file shares its seeds and setup chunk so the numbers
+# agree. Scaffolded 7 Oct 2026; everything between the section slides is the instructor's.
+title: "Naive Bayes: classification as a generative story"
+subtitle: "BF550 · Unit 5 · Session 2 — Wed Oct 7"
+include-in-header:
+  text: <meta name="robots" content="noindex, nofollow">
+---
+
+```{python}
+#| echo: false
+# Session 1's model, simulated reads, new read and likelihood function, rebuilt with the
+# chapter's seeds so that this deck's numbers are the chapter's.
+import numpy as np
+
+rng = np.random.default_rng(61)
+presence_prob = {"rRNA":     rng.uniform(0.15, 0.85, size=20),
+                 "non-rRNA": rng.uniform(0.15, 0.85, size=20)}
+
+def draw_labeled_read(share_rrna, presence_prob, rng):
+    if rng.random() < share_rrna:
+        label = "rRNA"
+    else:
+        label = "non-rRNA"
+    present = rng.random(20) < presence_prob[label]
+    return label, present
+
+rng = np.random.default_rng(67)
+label_list, reads = [], []
+for _ in range(100000):
+    label, present = draw_labeled_read(0.15, presence_prob, rng)
+    label_list.append(label)
+    reads.append(present)
+labels = np.array(label_list)
+
+rng = np.random.default_rng(126)
+new_label, new_read = draw_labeled_read(0.15, presence_prob, rng)
+
+def likelihood(present, probs):
+    likelihood_p = 1.0
+    for i in range(len(probs)):
+        if present[i]:
+            likelihood_p = likelihood_p * probs[i]
+        else:
+            likelihood_p = likelihood_p * (1 - probs[i])
+    return likelihood_p
+
+like_rrna = likelihood(new_read, presence_prob["rRNA"])
+like_nonrrna = likelihood(new_read, presence_prob["non-rRNA"])
+posterior_given = like_rrna * 0.15 / (like_rrna * 0.15 + like_nonrrna * 0.85)
+
+# The method block's three-measurement example. Every number it shows is printed from here,
+# so nothing on those slides is typed by hand.
+m_p = [0.80, 0.30, 0.60]          # P(answer i is yes | class A)
+m_q = [0.20, 0.70, 0.50]          # P(answer i is yes | class B)
+m_share_a, m_share_b = 0.40, 0.60
+m_answers = [True, False, True]   # the object we observed: yes, no, yes
+
+def m_factors(probs):
+    out = []
+    for i in range(3):
+        if m_answers[i]:
+            out.append(probs[i])
+        else:
+            out.append(1 - probs[i])
+    return out
+
+m_fac_a, m_fac_b = m_factors(m_p), m_factors(m_q)
+m_like_a = m_fac_a[0] * m_fac_a[1] * m_fac_a[2]
+m_like_b = m_fac_b[0] * m_fac_b[1] * m_fac_b[2]
+m_joint_a, m_joint_b = m_like_a * m_share_a, m_like_b * m_share_b
+m_post_a = m_joint_a / (m_joint_a + m_joint_b)
+m_post_b = m_joint_b / (m_joint_a + m_joint_b)
+
+# Step 1: measurement 1 alone, for the one-measurement slide
+m1_joint_a, m1_joint_b = m_share_a * m_p[0], m_share_b * m_q[0]
+m1_total = m1_joint_a + m1_joint_b
+m1_post_a, m1_post_b = m1_joint_a / m1_total, m1_joint_b / m1_total
+m_total = m_joint_a + m_joint_b
+
+# the 100-object table for the independence slide: class A, measurements 1 and 2
+m_n = 100
+m_cells = [[round(m_n * m_p[0] * m_p[1]), round(m_n * m_p[0] * (1 - m_p[1]))],
+           [round(m_n * (1 - m_p[0]) * m_p[1]), round(m_n * (1 - m_p[0]) * (1 - m_p[1]))]]
+
+# the cost slide: measurement 1 counted twice, with no new information
+m_dbl_a = m_share_a * m_p[0] * m_p[0]
+m_dbl_b = m_share_b * m_q[0] * m_q[0]
+m_dbl_post_a = m_dbl_a / (m_dbl_a + m_dbl_b)
+
+def f2(x):
+    return f"{x:.2f}"
+
+def f3(x):
+    return f"{x:.3f}"
+
+def f4(x):
+    return f"{x:.4f}"
+```
+
+## Check-in {.smaller}
+
+**[bf550.link/checkin](https://bu-cds-bf550.github.io/checkin/?session=14)** · `?session=14`
+
+Closed book, no AI, five minutes.
+
+::: {.notes}
+The standing frame, verbatim. Code-reading kind, bank `checkins/unit05/bank.md` session 2: a
+dictionary of two short tables looked up by a class name, and a loop that multiplies one factor
+per answer. Read the lookup tally before *Training a table means counting, one k-mer at a time*;
+a weak tally says to slow that slide down. The edge case is an empty list of answers, which
+prints 1.0; no table entry in the snippet is zero, because a zero entry is today's first beat.
+:::
+
+# The method: naive Bayes
+
+## TODO-rename: first slide of the method
+
+TODO
+
+::: {.notes}
+TODO
+:::
+
+# Where the numbers come from
+
+## TODO-rename: first slide of where the numbers come from
+
+TODO
+
+::: {.notes}
+TODO
+:::
+
+## Working time — the rest of today
+
+1. **Unit 5 lab**, part 2: `and`, and the product that reaches 0.0 — [unit-05.ipynb](https://github.com/bu-cds-bf550/bf550-unit05-labs/blob/main/unit-05.ipynb)
+2. PS5
+
+::: {.notes}
+Part 2 of the unit 5 lab, questions 4 to 6: `and` and `or`, a product of many probabilities that
+reaches exactly 0.0, and the log sum, which stays finite. Part 2 is today's second beat at hand size. Thirty-five minutes is the floor and
+this block has forty-one. Then PS5, where the first student-written checks are the likely
+questions.
+:::
+
+## Before next session
+
+- We graded on fresh reads because we could **make** them. The collaborator cannot — chapter 6
+  opens on what to do then.
+- **Next session:** what the assumption costs, what we tell the collaborator, and an LLM writing
+  this classifier
+- PS5 is due **Tue Oct 13**, start of class
+
+::: {.notes}
+The first bullet is the slide that was cut to pay for the Method block: in a simulation the truth
+is an input, and on real data the labels are unknown. One sentence, no preview of chapter 6's
+methods. The notation is **not** in session 3 any more — it was today, inside the Method block;
+do not promise it again.
+Say the due date out loud: Tue Oct 13 is BU's Monday-schedule day and unit 6's first session.
+Session 3's lecture breaks the model on purpose and grades it again with today's bookkeeping.
+:::

@@ -51,6 +51,17 @@ Conventions the decks follow, the first three inherited from the textbook (see i
   computed what they denote, labeled beside themselves. Read in order, a section's headlines tell
   its argument, and the section opens on its goal or question.
 
+### Shadow decks
+
+A deck that renders but is linked nowhere: `unit-NN-M-shadow.qmd`, the instructor's own version of
+a session. Every `slides/*.qmd` not starting with `_` is rendered and exported, so a shadow deck
+is published at `slides/unit-NN-M-shadow.html` (with its PDF and PowerPoint) and presented from
+there, but it has **no entry in `_data/slides.yml`**, so no unit page, schedule row or
+[`/slides/`](https://bu-cds-bf550.github.io/slides/) listing links to it. Its front matter adds a
+`noindex, nofollow` robots tag. Unlinked is not private: anyone with the URL can open it, and the
+content gate and `strip-notes.lua` apply to it as to any deck. The first is
+[`unit-05-2-shadow.qmd`](unit-05-2-shadow.qmd), 7 Oct 2026.
+
 ### Speaker notes
 
 Write them inline, under the slide they belong to:
