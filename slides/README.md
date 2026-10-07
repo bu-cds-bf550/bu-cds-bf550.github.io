@@ -26,7 +26,7 @@ the unit pages and [`/slides/`](https://bu-cds-bf550.github.io/slides/) link to 
    reused from a cache (`.deck-export-cache/`, persisted between CI runs), so a push that
    touches one deck re-exports one deck. `make clean` empties the cache locally.
 
-Conventions the decks inherit from the textbook (see its `CONVENTIONS.md`):
+Conventions the decks follow, the first three inherited from the textbook (see its `CONVENTIONS.md`):
 
 - **The deck teaches the material a second way.** The deck and the chapter cover the same
   material by two different routes, and neither is a prerequisite for the other. A student who
@@ -42,6 +42,14 @@ Conventions the decks inherit from the textbook (see its `CONVENTIONS.md`):
   heading text, not by number, and name the deck the heading is in. Adding or reordering slides
   is free; renaming a heading, or moving one to another session's deck, means updating that
   unit's run-sheet.
+
+- **A slide carries one whole message.** The headline is that message as one complete sentence,
+  or, on a step of a worked example, the step's subgoal and result; a step the room computes asks
+  a question instead. The body is the evidence (a table, a figure, worked numbers, a labeled
+  equation, a short chunk) with at most two whole sentences around it, and every sentence keeps
+  its *because* and *so*. Reveals fall only at step boundaries. Symbols arrive after the room has
+  computed what they denote, labeled beside themselves. Read in order, a section's headlines tell
+  its argument, and the section opens on its goal or question.
 
 ### Speaker notes
 
