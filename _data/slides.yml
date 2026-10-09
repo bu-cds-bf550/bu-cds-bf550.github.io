@@ -67,6 +67,11 @@
   date: "Wed Oct 7"
   title: "Classification"
   file: unit-05-2
+- unit: unit-05
+  session: 3
+  date: "Fri Oct 9"
+  title: "Naive Bayes and Classification"
+  file: unit-05-3
 - unit: unit-02
   session: 2
   date: "Mon Sep 14"
