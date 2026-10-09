@@ -260,7 +260,7 @@ It's called a "mass" function because the binomial distribution is discrete
 
 . . .
 
-The probability mass function returns the *likelihood* of any $k$, $n$, and $p$
+The probability mass function returns the *likelihood* of $k$, given $n$ and $p$
 
 ## PMF in python {.smaller}
 
@@ -653,7 +653,7 @@ Our read's three overlapping k-mers convey mostly the same information, so its p
 
 . . .
 
-A posterior of 0.99 should mean the call is right 99 times in 100; under naive Bayes it is often right less often than that
+A posterior of 0.99 should mean the call is right 99 times in 100; naive Bayes is often less accurate than the posterior implies
 
 ## Next time
 
