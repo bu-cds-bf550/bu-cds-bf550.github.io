@@ -234,6 +234,25 @@ sim_frac = rf"\frac{{{count_a_25:,}}}{{{n_a:,}}}".replace(",", "{,}")
 print(rf"From the simulation: ${sim_frac} = {count_a_25 / n_a:.4f}$, and the formula gives ${pmf_a_25:.4f}$")
 ```
 
+## $\binom{n}{k}$ counts the arrangements of $k$ successes among $n$ trials
+
+Read "$n$ choose $k$": the number of ways $k$ of the $n$ trials can be the successes
+
+. . .
+
+$p^k (1 - p)^{n - k}$ is the probability of *one* arrangement — these 25 bases G or C, those 15 not — and every arrangement is equally likely
+
+. . .
+
+$$ \binom{n}{k} = \frac{n!}{k! \, (n - k)!} $$
+
+```{python}
+#| echo: false
+#| output: asis
+# n_choose_k is the comma-grouped 40-choose-25 printed on the previous slide.
+print(rf"$$\binom{{40}}{{25}} = \frac{{40!}}{{25! \; 15!}} = {n_choose_k}$$")
+```
+
 ## Probability Mass Functions
 
 The function $P(k \mid n, p)$ is called a **probability mass function** (PMF)
