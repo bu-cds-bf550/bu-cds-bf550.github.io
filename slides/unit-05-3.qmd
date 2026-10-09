@@ -200,6 +200,38 @@ In our read:
 - $n = 40$ - the number of bases in the read
 - $k = 25$ - the number of G or C bases in the read, the "successes"
 
+
+## $\binom{n}{k}$ notation -- "$n$ choose $k$"
+
+Read "$n$ choose $k$": the number of ways $k$ of the $n$ trials can be the successes
+
+. . .
+
+A 4-base read with 2 G or C bases has six possible arrangements:
+
+| read | `GCAT` | `GACT` | `GATC` | `AGCT` | `AGTC` | `ATGC` |
+|---|---|---|---|---|---|---|
+| Success | `YYNN` | `YNYN` | `YNNY` | `NYYN` | `NYNY` | `NNYY` |
+| G or C at | 1, 2 | 1, 3 | 1, 4 | 2, 3 | 2, 4 | 3, 4 |
+
+. . .
+
+
+```{python}
+#| echo: false
+#| output: asis
+print(rf"""$$
+\begin{{aligned}}
+\binom{{n}}{{k}} &= \frac{{n!}}{{k! \, (n - k)!}} \\
+\binom{{4}}{{2}} &= \frac{{4!}}{{2! \; (4-2)!}} \\
+&= \frac{{4 \times 3 \times 2 \times 1}}{{(2 \times 1) \times (2 \times 1)}} \\
+&= {comb(4, 2)}
+\end{{aligned}}
+$$""")
+```
+
+
+
 ## The binomial distribution has a closed form
 
 $$ P(k \mid n, p) = \binom{n}{k} \, p^k \, (1 - p)^{n - k} $$
@@ -232,25 +264,6 @@ $$""")
 #| output: asis
 sim_frac = rf"\frac{{{count_a_25:,}}}{{{n_a:,}}}".replace(",", "{,}")
 print(rf"From the simulation: ${sim_frac} = {count_a_25 / n_a:.4f}$, and the formula gives ${pmf_a_25:.4f}$")
-```
-
-## $\binom{n}{k}$ counts the arrangements of $k$ successes among $n$ trials
-
-Read "$n$ choose $k$": the number of ways $k$ of the $n$ trials can be the successes
-
-. . .
-
-$p^k (1 - p)^{n - k}$ is the probability of *one* arrangement — these 25 bases G or C, those 15 not — and every arrangement is equally likely
-
-. . .
-
-$$ \binom{n}{k} = \frac{n!}{k! \, (n - k)!} $$
-
-```{python}
-#| echo: false
-#| output: asis
-# n_choose_k is the comma-grouped 40-choose-25 printed on the previous slide.
-print(rf"$$\binom{{40}}{{25}} = \frac{{40!}}{{25! \; 15!}} = {n_choose_k}$$")
 ```
 
 ## Probability Mass Functions
@@ -377,6 +390,28 @@ So the joint probability is a product of the single-read likelihoods:
 
 $$P(\text{read1, read2} \mid A) = P(\text{read1} \mid A) \times P(\text{read2} \mid A)$$
 
+. . .
+
+Independence given a common class, here the microbe, is called **conditional independence**
+
+## Conditional independence
+
+In general, for features $x_1, x_2, \dots, x_n$ of an instance with class $y$:
+
+$$
+\begin{aligned}
+P(x_1, x_2, \dots, x_n \mid y) &= P(x_1 \mid y) \times P(x_2 \mid y) \times \dots \times P(x_n \mid y) \\
+&= \prod_{i=1}^{n} P(x_i \mid y)
+\end{aligned}
+$$
+
+Here, $x_1$ and $x_2$ are the GC counts of read1 and read2, and $y$ is the microbe
+
+. . .
+
+$$\prod_{i=1}^{n} \text{- multiply all $n$ items together}$$
+
+
 ## Compute the likelihoods {.smaller}
 
 ```{python}
@@ -399,7 +434,7 @@ print(f"A: {like1_a:.4f} x {like2_a:.4f} = {joint_a:.6f}")
 print(f"B: {like1_b:.4f} x {like2_b:.4f} = {joint_b:.6f}")
 ```
 
-## Two reads are more convincing than one
+## Are two reads more convincing than one?
 
 ```{python}
 #| echo: false
@@ -419,7 +454,9 @@ def p4(x):
 one_post_a = binom.pmf(two_k[0], 40, 0.66) / (binom.pmf(two_k[0], 40, 0.66) + binom.pmf(two_k[0], 40, 0.48))
 ```
 
-read1 has `{python} two_k[0]` and read2 has `{python} two_k[1]` of their 40 bases G or C
+read1 has `{python} two_k[0]` GC bases out of 40
+
+read2 has `{python} two_k[1]` GC bases out of 40
 
 . . .
 
@@ -444,7 +481,7 @@ $P(\text{read1, read2} \mid A)$ is the likelihood of both reads under Microbe A
 
 . . .
 
-Applying Bayes' theorem:
+Applying Bayes' theorem, the chain rule, and conditional independence:
 
 $$\begin{aligned}
 P(A \mid \text{read1, read2}) &= \frac{P(\text{read1, read2} \mid A) P(A)}{P(\text{read1, read2})} \\
@@ -459,14 +496,13 @@ P(\text{read1, read2}) = &P(\text{read1, read2} \mid A) P(A) + \\
     &P(\text{read1, read2} \mid B) P(B)
 \end{aligned}$$
 
-## Two reads are more convincing than one
+## Two reads *are* more convincing than one
 
 ```{python}
 #| echo: false
 #| output: asis
 print(rf"$$\begin{{aligned}} P(A \mid \text{{read1, read2}}) &= \frac{{{p4(like1_a)} \times {p4(like2_a)} \times 0.5}}{{{p4(two_like_a)} \times 0.5 + {p4(two_like_b)} \times 0.5}} \\ &= {two_post_a:.3f} \end{{aligned}} $$")
 ```
-
 
 With one read, $P(A \mid \text{read1})$ was `{python} f"{one_post_a:.2f}"`; the second read raises it to `{python} f"{two_post_a:.3f}"`
 
@@ -507,34 +543,7 @@ The decision boundary is a ratio of 1:
 
 The ratio is `{python} f"{two_ratio:.0f}"`, far above 1, so the survivor is **Microbe A**; with read1 alone it was `{python} f"{one_ratio:.1f}"`
 
-## Conditional independence
 
-We assumed the two reads are independent *once we know the microbe*
-
-. . .
-
-Independence given something else, here the microbe, is called **conditional independence**
-
-. . .
-
-Without it, $P(\text{read1, read2} \mid A)$ needs a probability for every pair of GC counts: $41 \times 41 = 1{,}681$ of them, for each microbe
-
-. . .
-
-With it, we only need the one-read PMF, used twice
-
-## Conditional independence (cont.)
-
-In general, for features $x_1, x_2, \dots, x_n$ of an instance with class $y$:
-
-$$
-\begin{aligned}
-P(x_1, x_2, \dots, x_n \mid y) &= P(x_1 \mid y) \times P(x_2 \mid y) \times \dots \times P(x_n \mid y) \\
-&= \prod_{i=1}^{n} P(x_i \mid y)
-\end{aligned}
-$$
-
-Here, $x_1$ and $x_2$ are the GC counts of read1 and read2, and $y$ is the microbe
 
 ## Naive Bayes
 
@@ -565,6 +574,22 @@ Neighbouring k-mers share five bases, so knowing k-mer 1 leaves only four possib
 . . .
 
 That holds for rRNA and non-rRNA reads alike: the k-mers are **not** independent, even within a class
+
+## Our rRNA read has k-mers as features
+
+The instance is the 8-base read from the previous slide: `ACGTGCAT`
+
+. . .
+
+Its features are its three 6-base k-mers:
+
+- $x_1$ = `ACGTGC`, bases 1–6
+- $x_2$ = `CGTGCA`, bases 2–7
+- $x_3$ = `GTGCAT`, bases 3–8
+
+. . .
+
+The class $y$ is rRNA or non-rRNA, and Naive Bayes multiplies $P(x_1 \mid y) \, P(x_2 \mid y) \, P(x_3 \mid y)$
 
 ## Compute the likelihood of a read given each class {.smaller}
 
