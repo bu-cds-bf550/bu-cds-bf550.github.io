@@ -268,9 +268,9 @@ $$P(\text{k-mer}_j \mid y) = \frac{\text{number of reads in class } y \text{ wit
 #| output: asis
 # Six of the 4,096 rows of the purification run's fictional count tables. Poly(A) tails and other
 # A-rich stretches are common in mRNA and rare in GC-rich rRNA, so AAAAAA leans non-rRNA.
-all_counts = {"AAAAAA": (1500, 60000), "AAAAAC": (2000, 30000),
-              "CGTAGA": (9000,  8000), "CGTAGC": (12500, 6000),
-              "TTTTTG": (1000, 16000), "TTTTTT": (1500, 24000)}
+all_counts = {"AAAAAA": (1487, 60312), "AAAAAC": (2063, 29741),
+              "CGTAGA": (9134,  7869), "CGTAGC": (12418, 6127),
+              "TTTTTG": ( 978, 15836), "TTTTTT": (1521, 24205)}
 
 def kmer_index(kmer):
     """The k-mer's position j in alphabetical order, AAAAAA = 0 to TTTTTT = 4,095."""
@@ -298,16 +298,17 @@ $$P(\text{k-mer} \mid \text{rRNA}) = \frac{\text{rRNA reads that contain the k-m
 
 . . .
 
-For `ACGTGC` in the reference reads:
+For `CGTAGC`, from the previous slide's table:
 
 ```{python}
 #| echo: false
 #| output: asis
-k0 = panel_kmers.index("ACGTGC")
+ex_kmer = "CGTAGC"
+ex_r, ex_n = all_counts[ex_kmer]
 print(rf"""$$
-P(\texttt{{ACGTGC}} \mid \text{{rRNA}}) = \frac{{{big(panel_counts['rRNA'][k0])}}}{{{big(ref_n['rRNA'])}}} = {panel_prob['rRNA'][k0]:.2f}
+P(\texttt{{{ex_kmer}}} \mid \text{{rRNA}}) = \frac{{{big(ex_r)}}}{{{big(ref_n['rRNA'])}}} \approx {ex_r / ref_n['rRNA']:.2f}
 \qquad
-P(\texttt{{ACGTGC}} \mid \text{{non-rRNA}}) = \frac{{{big(panel_counts['non-rRNA'][k0])}}}{{{big(ref_n['non-rRNA'])}}} = {panel_prob['non-rRNA'][k0]:.2f}
+P(\texttt{{{ex_kmer}}} \mid \text{{non-rRNA}}) = \frac{{{big(ex_n)}}}{{{big(ref_n['non-rRNA'])}}} \approx {ex_n / ref_n['non-rRNA']:.2f}
 $$""")
 ```
 
