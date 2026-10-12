@@ -228,8 +228,8 @@ We either:
 
 ```{python}
 #| echo: false
-# A fictional reference set: reads sequenced from purified rRNA and from poly(A)-selected mRNA,
-# each class counted for the five k-mers of the panel. Every panel likelihood in this section is
+# A fictional purification run: reads sequenced from the ribosome fraction and from the
+# ribosome-free fraction of one lysate, each class counted for the five k-mers of the panel. Every panel likelihood in this section is
 # a count here divided by its class's total.
 ref_n = {"rRNA": 50000, "non-rRNA": 200000}
 panel_kmers = ["ACGTGC", "TTAGCC", "GTGCAT", "GGATCA", "CATTGA"]
@@ -243,9 +243,11 @@ def big(x):
     return f"{x:,}".replace(",", "{,}")
 ```
 
-- An earlier study isolated rRNA directly, by purifying ribosomes, and sequenced it: `{python} f"{ref_n['rRNA']:,}"` reads that are **high-confidence rRNA**
-- It also sequenced poly(A)-selected mRNA, which rRNA lacks: `{python} f"{ref_n['non-rRNA']:,}"` reads that are **confirmed non-rRNA**
-- Both methods label a read more reliably than transcriptome sequencing can
+- Our collaborator's organism has no reliable rRNA reference sequence, so we cannot simply align reads to rRNA
+- **Ribosome purification** is the gold standard: centrifugation separates a cell lysate into a ribosome fraction and a ribosome-free fraction, and each is sequenced
+- The ribosome fraction gives **high-confidence rRNA** reads, and the ribosome-free fraction gives **high-confidence non-rRNA** reads
+    - Ribosomes also carry the mRNA they are translating, so a few "rRNA" reads are not rRNA
+- Purification is slow, difficult and costly, so we run it once and train a classifier to label every later sample
 
 ## New concept: training data
 
@@ -255,7 +257,7 @@ def big(x):
 
 ## Counting k-mers by class {.smaller}
 
-- For each of the 4,096 possible 6-mers, the study counted the reads of each class that contain it
+- For each of the 4,096 possible 6-mers, we counted the reads of each class that contain it
 
 $$P(\text{k-mer}_j \mid y) = \frac{\text{number of reads in class } y \text{ with k-mer}_j}{\text{number of reads in class } y}$$
 
@@ -264,8 +266,8 @@ $$P(\text{k-mer}_j \mid y) = \frac{\text{number of reads in class } y \text{ wit
 ```{python}
 #| echo: false
 #| output: asis
-# Six of the 4,096 rows of the study's fictional count tables. Poly(A) stretches are common in the
-# poly(A)-selected non-rRNA reads, so AAAAAA leans non-rRNA.
+# Six of the 4,096 rows of the purification run's fictional count tables. Poly(A) tails and other
+# A-rich stretches are common in mRNA and rare in GC-rich rRNA, so AAAAAA leans non-rRNA.
 all_counts = {"AAAAAA": (1500, 60000), "AAAAAC": (2000, 30000),
               "CGTAGA": (9000,  8000), "CGTAGC": (12500, 6000),
               "TTTTTG": (1000, 16000), "TTTTTT": (1500, 24000)}
@@ -311,7 +313,7 @@ $$""")
 
 ## rRNA example training data
 
-- Our training data are the reference study's confirmed rRNA and non-rRNA reads
+- Our training data are the purification run's high-confidence rRNA and non-rRNA reads
 - Training our classifier means counting k-mers in those reads to build the two tables
 - The trained classifier is then applied to new reads whose class is unknown, such as our collaborator's sample
 
@@ -564,7 +566,7 @@ $$\frac{P(\text{rRNA} \mid x_1, \dots, x_n)}{P(\text{non-rRNA} \mid x_1, \dots, 
 
 ```{python}
 #| echo: false
-# A k-mer the reference study never saw in its rRNA reads: its rRNA likelihood is counted as 0,
+# A k-mer the purification run never saw in its rRNA reads: its rRNA likelihood is counted as 0,
 # and it zeroes the rRNA likelihood of any read that contains it.
 unseen = "TACGCA"
 unseen_counts = {"rRNA": 0, "non-rRNA": 400}
@@ -575,7 +577,7 @@ zeroed = seen_prob[0] * seen_prob[1] * unseen_prob["rRNA"]
 ```
 
 - Each table entry is an **estimate** from `{python} f"{ref_n['rRNA']:,}"` rRNA and `{python} f"{ref_n['non-rRNA']:,}"` non-rRNA reads, not the true probability
-- The study did not see every read that could exist, such as rRNA from another species, tissue or protocol
+- One purification run captures one tissue, in one condition, on one day, not every read that could exist
 - A k-mer that is rare, or missing, in the reference reads may still matter in our sample
 
 ## One k-mer missing from the rRNA reads makes a read impossible as rRNA
@@ -583,7 +585,7 @@ zeroed = seen_prob[0] * seen_prob[1] * unseen_prob["rRNA"]
 ```{python}
 #| echo: false
 #| output: asis
-print(f"Suppose the panel includes `{unseen}`, and the study never saw it in an rRNA read:")
+print(f"Suppose the panel includes `{unseen}`, and the purification run never saw it in an rRNA read:")
 ```
 
 ```{python}
