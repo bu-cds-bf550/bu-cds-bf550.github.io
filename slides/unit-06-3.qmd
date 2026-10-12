@@ -1,0 +1,132 @@
+---
+# Unit 6, session 1 (Fri Oct 16): evaluation
+# multiclass Bayes classifier. Human-authored by the instructor, 7 Oct 2026; it replaced the
+# assistant-authored deck, which now lives unlinked at unit-05-2-shadow.qmd (record
+# bf550-instructor decisions/human-authored-content-first.md). The setup chunk below is the
+# previous deck's, kept so the chapter's seeds and tables stay available to later slides.
+title: ""
+subtitle: "BF550 · Unit 6 · Session 3 — Fri Oct 16"
+---
+
+```{python}
+#| echo: false
+# Session 1's model, simulated reads, new read and likelihood function, rebuilt with the
+# chapter's seeds so that this deck's numbers are the chapter's.
+import numpy as np
+
+rng = np.random.default_rng(61)
+presence_prob = {"rRNA":     rng.uniform(0.15, 0.85, size=20),
+                 "non-rRNA": rng.uniform(0.15, 0.85, size=20)}
+
+def draw_labeled_read(share_rrna, presence_prob, rng):
+    if rng.random() < share_rrna:
+        label = "rRNA"
+    else:
+        label = "non-rRNA"
+    present = rng.random(20) < presence_prob[label]
+    return label, present
+
+rng = np.random.default_rng(67)
+label_list, reads = [], []
+for _ in range(100000):
+    label, present = draw_labeled_read(0.15, presence_prob, rng)
+    label_list.append(label)
+    reads.append(present)
+labels = np.array(label_list)
+
+rng = np.random.default_rng(126)
+new_label, new_read = draw_labeled_read(0.15, presence_prob, rng)
+
+def likelihood(present, probs):
+    likelihood_p = 1.0
+    for i in range(len(probs)):
+        if present[i]:
+            likelihood_p = likelihood_p * probs[i]
+        else:
+            likelihood_p = likelihood_p * (1 - probs[i])
+    return likelihood_p
+
+like_rrna = likelihood(new_read, presence_prob["rRNA"])
+like_nonrrna = likelihood(new_read, presence_prob["non-rRNA"])
+posterior_given = like_rrna * 0.15 / (like_rrna * 0.15 + like_nonrrna * 0.85)
+
+# The method block's three-measurement example. Every number it shows is printed from here,
+# so nothing on those slides is typed by hand.
+m_p = [0.80, 0.30, 0.60]          # P(answer i is yes | class A)
+m_q = [0.20, 0.70, 0.50]          # P(answer i is yes | class B)
+m_share_a, m_share_b = 0.40, 0.60
+m_answers = [True, False, True]   # the object we observed: yes, no, yes
+
+def m_factors(probs):
+    out = []
+    for i in range(3):
+        if m_answers[i]:
+            out.append(probs[i])
+        else:
+            out.append(1 - probs[i])
+    return out
+
+m_fac_a, m_fac_b = m_factors(m_p), m_factors(m_q)
+m_like_a = m_fac_a[0] * m_fac_a[1] * m_fac_a[2]
+m_like_b = m_fac_b[0] * m_fac_b[1] * m_fac_b[2]
+m_joint_a, m_joint_b = m_like_a * m_share_a, m_like_b * m_share_b
+m_post_a = m_joint_a / (m_joint_a + m_joint_b)
+m_post_b = m_joint_b / (m_joint_a + m_joint_b)
+
+# Step 1: measurement 1 alone, for the one-measurement slide
+m1_joint_a, m1_joint_b = m_share_a * m_p[0], m_share_b * m_q[0]
+m1_total = m1_joint_a + m1_joint_b
+m1_post_a, m1_post_b = m1_joint_a / m1_total, m1_joint_b / m1_total
+m_total = m_joint_a + m_joint_b
+
+# the 100-object table for the independence slide: class A, measurements 1 and 2
+m_n = 100
+m_cells = [[round(m_n * m_p[0] * m_p[1]), round(m_n * m_p[0] * (1 - m_p[1]))],
+           [round(m_n * (1 - m_p[0]) * m_p[1]), round(m_n * (1 - m_p[0]) * (1 - m_p[1]))]]
+
+# the cost slide: measurement 1 counted twice, with no new information
+m_dbl_a = m_share_a * m_p[0] * m_p[0]
+m_dbl_b = m_share_b * m_q[0] * m_q[0]
+m_dbl_post_a = m_dbl_a / (m_dbl_a + m_dbl_b)
+
+def f2(x):
+    return f"{x:.2f}"
+
+def f3(x):
+    return f"{x:.3f}"
+
+def f4(x):
+    return f"{x:.4f}"
+
+# Unit 4's 100,000 simulated reads at seed 41, for the counted likelihood, and its smooth GC curves
+from math import comb
+from scipy.stats import binom
+from scipy.special import gammaln
+import matplotlib.pyplot as plt
+
+def draw_gc_from_two_groups(share_a, gc_a, gc_b, n_bases, rng):
+    if rng.random() < share_a:
+        return "A", rng.binomial(n_bases, gc_a)
+    return "B", rng.binomial(n_bases, gc_b)
+
+rng = np.random.default_rng(41)
+species_list, gc_list = [], []
+for _ in range(100000):
+    s, g = draw_gc_from_two_groups(0.5, 0.66, 0.48, 40, rng)
+    species_list.append(s)
+    gc_list.append(g)
+species = np.array(species_list)
+gc = np.array(gc_list)
+is_a = (species == "A")
+n_a = is_a.sum()
+count_a_25 = (gc[is_a] == 25).sum()
+
+def smooth_binomial(k, n, p):
+    log_choose = gammaln(n + 1) - gammaln(k + 1) - gammaln(n - k + 1)
+    return np.exp(log_choose + k * np.log(p) + (n - k) * np.log(1 - p))
+
+pmf_a_25 = binom.pmf(25, 40, 0.66)
+pmf_b_25 = binom.pmf(25, 40, 0.48)
+```
+
+# Model Evaluation, part 3
