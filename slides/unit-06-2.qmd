@@ -1,132 +1,355 @@
 ---
-# Unit 6, session 1 (Tue Oct 13): evaluation
-# multiclass Bayes classifier. Human-authored by the instructor, 7 Oct 2026; it replaced the
-# assistant-authored deck, which now lives unlinked at unit-05-2-shadow.qmd (record
-# bf550-instructor decisions/human-authored-content-first.md). The setup chunk below is the
-# previous deck's, kept so the chapter's seeds and tables stay available to later slides.
-title: ""
-subtitle: "BF550 · Unit 6 · Session 2 — Wed Oct 14"
+# Unit 6, session 2 (Fri Oct 16): the two kinds of mistakes and their consequences, accuracy's
+# dependence on how common resistance is, and why the any-gene rule cannot trade one mistake for
+# the other. Same isolates and panel as session 1; the setup chunk is session 1's, with the
+# never-resistant baseline and the three-hospital tables added. Drafted by the assistant on
+# 13 Oct 2026 at the instructor's request, in the form of the instructor's hand-authored decks,
+# for the instructor to revise. The trade-off is taught conceptually, with no costs attached
+# (instructor, 13 Oct 2026).
+title: "Mistakes and Their Consequences"
+subtitle: "BF550 · Unit 6 · Session 2 — Fri Oct 16"
 ---
 
 ```{python}
 #| echo: false
-# Session 1's model, simulated reads, new read and likelihood function, rebuilt with the
-# chapter's seeds so that this deck's numbers are the chapter's.
+# About 15% of E. coli are resistant to ceftriaxone, in line with US surveillance: 15.3% of
+# E. coli infections across VA hospitals in 2019 (Lancet Infect Dis 2024,
+# doi:10.1016/S1473-3099(24)00416-X) and 12.9% of febrile UTIs at Kaiser Northern California
+# (Ann Emerg Med 2021, doi:10.1016/j.annemergmed.2021.01.003).
+#
+# The panel's rule: any panel gene present -> call resistant. It misses resistance from a gene
+# the panel doesn't test, and over-calls isolates carrying a panel gene that doesn't break down
+# ceftriaxone.
 import numpy as np
 
-rng = np.random.default_rng(61)
-presence_prob = {"rRNA":     rng.uniform(0.15, 0.85, size=20),
-                 "non-rRNA": rng.uniform(0.15, 0.85, size=20)}
+genes = ["blaCTX-M", "blaCMY-2", "blaSHV"]
+share_resistant = 0.15
 
-def draw_labeled_read(share_rrna, presence_prob, rng):
-    if rng.random() < share_rrna:
-        label = "rRNA"
+# P(gene present | class). Resistant isolates mostly carry CTX-M; a few carry none of the
+# three. Susceptible isolates occasionally carry one.
+gene_prob = {"resistant":   np.array([0.75, 0.12, 0.08]),
+             "susceptible": np.array([0.02, 0.02, 0.03])}
+
+def draw_isolate(rng):
+    if rng.random() < share_resistant:
+        growth = "resistant"
     else:
-        label = "non-rRNA"
-    present = rng.random(20) < presence_prob[label]
-    return label, present
+        growth = "susceptible"
+    present = rng.random(3) < gene_prob[growth]
+    return growth, present
 
-rng = np.random.default_rng(67)
-label_list, reads = [], []
-for _ in range(100000):
-    label, present = draw_labeled_read(0.15, presence_prob, rng)
-    label_list.append(label)
-    reads.append(present)
-labels = np.array(label_list)
+def panel_call(present):
+    if present.any():
+        return "resistant"
+    return "susceptible"
 
-rng = np.random.default_rng(126)
-new_label, new_read = draw_labeled_read(0.15, presence_prob, rng)
+def draw_isolates(n, rng):
+    rows = []
+    for i in range(n):
+        growth, present = draw_isolate(rng)
+        rows.append({"isolate": f"EC-{i + 1:03d}", "present": present,
+                     "call": panel_call(present), "growth": growth})
+    return rows
 
-def likelihood(present, probs):
-    likelihood_p = 1.0
-    for i in range(len(probs)):
-        if present[i]:
-            likelihood_p = likelihood_p * probs[i]
+def confusion(rows):
+    c = {"TP": 0, "FP": 0, "FN": 0, "TN": 0}
+    for r in rows:
+        if r["call"] == "resistant" and r["growth"] == "resistant":
+            c["TP"] += 1
+        elif r["call"] == "resistant":
+            c["FP"] += 1
+        elif r["growth"] == "resistant":
+            c["FN"] += 1
         else:
-            likelihood_p = likelihood_p * (1 - probs[i])
-    return likelihood_p
+            c["TN"] += 1
+    return c
 
-like_rrna = likelihood(new_read, presence_prob["rRNA"])
-like_nonrrna = likelihood(new_read, presence_prob["non-rRNA"])
-posterior_given = like_rrna * 0.15 / (like_rrna * 0.15 + like_nonrrna * 0.85)
+def rates(c):
+    n = c["TP"] + c["FP"] + c["FN"] + c["TN"]
+    return {"n": n,
+            "agree": c["TP"] + c["TN"],
+            "accuracy":    (c["TP"] + c["TN"]) / n,
+            "sensitivity": c["TP"] / (c["TP"] + c["FN"]),
+            "specificity": c["TN"] / (c["TN"] + c["FP"]),
+            "PPV":         c["TP"] / (c["TP"] + c["FP"])}
 
-# The method block's three-measurement example. Every number it shows is printed from here,
-# so nothing on those slides is typed by hand.
-m_p = [0.80, 0.30, 0.60]          # P(answer i is yes | class A)
-m_q = [0.20, 0.70, 0.50]          # P(answer i is yes | class B)
-m_share_a, m_share_b = 0.40, 0.60
-m_answers = [True, False, True]   # the object we observed: yes, no, yes
+# The hand-countable table: 12 isolates. Seed 45 was chosen so that all four cells of the
+# confusion table are filled: 2 caught, 1 missed (EC-011), 1 over-called (EC-012), 8 cleared.
+small = draw_isolates(12, np.random.default_rng(45))
+s = confusion(small)
+sr = rates(s)
+assert s == {"TP": 2, "FP": 1, "FN": 1, "TN": 8}
+assert small[10]["call"] == "susceptible" and small[10]["growth"] == "resistant"
+assert small[11]["call"] == "resistant" and small[11]["growth"] == "susceptible"
 
-def m_factors(probs):
-    out = []
-    for i in range(3):
-        if m_answers[i]:
-            out.append(probs[i])
-        else:
-            out.append(1 - probs[i])
-    return out
-
-m_fac_a, m_fac_b = m_factors(m_p), m_factors(m_q)
-m_like_a = m_fac_a[0] * m_fac_a[1] * m_fac_a[2]
-m_like_b = m_fac_b[0] * m_fac_b[1] * m_fac_b[2]
-m_joint_a, m_joint_b = m_like_a * m_share_a, m_like_b * m_share_b
-m_post_a = m_joint_a / (m_joint_a + m_joint_b)
-m_post_b = m_joint_b / (m_joint_a + m_joint_b)
-
-# Step 1: measurement 1 alone, for the one-measurement slide
-m1_joint_a, m1_joint_b = m_share_a * m_p[0], m_share_b * m_q[0]
-m1_total = m1_joint_a + m1_joint_b
-m1_post_a, m1_post_b = m1_joint_a / m1_total, m1_joint_b / m1_total
-m_total = m_joint_a + m_joint_b
-
-# the 100-object table for the independence slide: class A, measurements 1 and 2
-m_n = 100
-m_cells = [[round(m_n * m_p[0] * m_p[1]), round(m_n * m_p[0] * (1 - m_p[1]))],
-           [round(m_n * (1 - m_p[0]) * m_p[1]), round(m_n * (1 - m_p[0]) * (1 - m_p[1]))]]
-
-# the cost slide: measurement 1 counted twice, with no new information
-m_dbl_a = m_share_a * m_p[0] * m_p[0]
-m_dbl_b = m_share_b * m_q[0] * m_q[0]
-m_dbl_post_a = m_dbl_a / (m_dbl_a + m_dbl_b)
+# A year of isolates: 500.
+year = draw_isolates(500, np.random.default_rng(606))
+y = confusion(year)
+yr = rates(y)
+y_res = y["TP"] + y["FN"]
+y_sus = y["TN"] + y["FP"]
+y_call_res = y["TP"] + y["FP"]
 
 def f2(x):
     return f"{x:.2f}"
 
-def f3(x):
-    return f"{x:.3f}"
+def pct(x):
+    return f"{x:.0%}"
 
-def f4(x):
-    return f"{x:.4f}"
+def big(n):
+    return f"{n:,}"
 
-# Unit 4's 100,000 simulated reads at seed 41, for the counted likelihood, and its smooth GC curves
-from math import comb
-from scipy.stats import binom
-from scipy.special import gammaln
-import matplotlib.pyplot as plt
+# A panel that calls every isolate susceptible, on the same year of isolates.
+never = {"TP": 0, "FP": 0, "FN": y_res, "TN": y_sus}
+never_acc = y_sus / yr["n"]
+share_year = y_res / yr["n"]
 
-def draw_gc_from_two_groups(share_a, gc_a, gc_b, n_bases, rng):
-    if rng.random() < share_a:
-        return "A", rng.binomial(n_bases, gc_a)
-    return "B", rng.binomial(n_bases, gc_b)
+# The same panel in three hospitals of 10,000 isolates each, catching and clearing isolates at
+# our year's rates. 40% is in the range reported for bloodstream E. coli in some countries
+# (cefotaxime 36.4%, Kor-GLASS 2017-2021, Ann Lab Med 2025, doi:10.3343/alm.2025.0145); 2% is a
+# hospital where resistance is rare.
+def hospital(share, n=10000):
+    n_res = round(n * share)
+    n_sus = n - n_res
+    tp = round(n_res * yr["sensitivity"])
+    fp = round(n_sus * (1 - yr["specificity"]))
+    c = {"TP": tp, "FP": fp, "FN": n_res - tp, "TN": n_sus - fp}
+    return c, rates(c)
 
-rng = np.random.default_rng(41)
-species_list, gc_list = [], []
-for _ in range(100000):
-    s, g = draw_gc_from_two_groups(0.5, 0.66, 0.48, 40, rng)
-    species_list.append(s)
-    gc_list.append(g)
-species = np.array(species_list)
-gc = np.array(gc_list)
-is_a = (species == "A")
-n_a = is_a.sum()
-count_a_25 = (gc[is_a] == 25).sum()
-
-def smooth_binomial(k, n, p):
-    log_choose = gammaln(n + 1) - gammaln(k + 1) - gammaln(n - k + 1)
-    return np.exp(log_choose + k * np.log(p) + (n - k) * np.log(1 - p))
-
-pmf_a_25 = binom.pmf(25, 40, 0.66)
-pmf_b_25 = binom.pmf(25, 40, 0.48)
+hosp = {name: hospital(share) for name, share in (("rare", 0.02), ("ours", share_year), ("common", 0.40))}
 ```
 
-# Model Evaluation, part 2
+# Where we left off
+
+## The panel over a year
+
+|  | Growth test: resistant | Growth test: susceptible | Total |
+|---|:-:|:-:|:-:|
+| **Panel: resistant** | `{python} y["TP"]` | `{python} y["FP"]` | `{python} y_call_res` |
+| **Panel: susceptible** | `{python} y["FN"]` | `{python} y["TN"]` | `{python} y["FN"] + y["TN"]` |
+| **Total** | `{python} y_res` | `{python} y_sus` | `{python} yr["n"]` |
+
+- accuracy `{python} f2(yr["accuracy"])`, sensitivity `{python} f2(yr["sensitivity"])`, specificity `{python} f2(yr["specificity"])`, PPV `{python} f2(yr["PPV"])`
+
+## The panel's two kinds of mistakes
+
+- **False negatives**: `{python} y["FN"]` resistant isolates the panel called susceptible
+    - → resistance **missed**
+- **False positives**: `{python} y["FP"]` susceptible isolates the panel called resistant
+    - → resistance **over-called**
+
+. . .
+
+Both count as "wrong" in the accuracy. Do they matter equally?
+
+# Consequences
+
+## What happens after the panel's call
+
+The panel's call decides the patient's first drug:
+
+- Panel says **susceptible** → the patient gets **ceftriaxone**
+- Panel says **resistant** → the patient gets a broader drug, such as a **carbapenem**
+
+. . .
+
+- The growth test still runs, and 1–2 days later it confirms or corrects the call
+- So each mistake costs something during those 1–2 days
+
+## A missed resistant isolate
+
+- The panel says susceptible, so the patient gets ceftriaxone
+- The bacteria are resistant, so ceftriaxone doesn't stop them
+- The infection keeps growing until the growth test comes back
+- In a bloodstream infection, each hour without a drug that works raises the risk of death
+
+## An over-called susceptible isolate
+
+- The panel says resistant, so the patient gets a carbapenem
+- Ceftriaxone would have worked
+- The patient gets a broader drug than needed:
+    - side effects and cost
+    - every use of a carbapenem gives bacteria a chance to become resistant to it
+- Carbapenems are among the last drugs that work on resistant *E. coli*, so hospitals try to save them
+
+## Where the consequences come from
+
+![](img/illustrations/ch06-error-consequences.drawio.svg){fig-align="center" width="100%"}
+
+- A false negative harms **this patient**, now
+- A false positive mostly harms **later patients**, by spending a drug we want to keep working
+
+## Which mistake is easier to live with?
+
+Discuss with a neighbour:
+
+- Who is harmed by each mistake, and when?
+- Can the harm be undone when the growth test comes back?
+- What is the worst thing that can happen after each one?
+
+## Which mistake is easier to live with? (cont.)
+
+- There is no single right answer: it depends on how the panel's call is used
+- For a patient with a bloodstream infection, a missed resistant isolate is usually judged worse
+    - → we want few false negatives
+- But false positives are not free
+    - → a panel that calls everything resistant would spend carbapenems on every patient
+- Deciding which mistake matters more is a judgement about consequences, not a calculation
+
+## Each measure tracks a different mistake
+
+| Mistake | Measure that tracks it | Fewer of these mistakes means |
+|---|---|---|
+| false negative (missed) | sensitivity | higher sensitivity |
+| false positive (over-called) | specificity, PPV | higher specificity and PPV |
+| both, mixed together | accuracy | higher accuracy |
+
+. . .
+
+If missed isolates are what we fear most, sensitivity is the number to watch, not accuracy.
+
+# Accuracy and how common resistance is
+
+## A panel that never says resistant
+
+Imagine a "panel" that skips the genes and calls every isolate susceptible:
+
+|  | Growth test: resistant | Growth test: susceptible | Total |
+|---|:-:|:-:|:-:|
+| **Panel: resistant** | `{python} never["TP"]` | `{python} never["FP"]` | `{python} never["TP"] + never["FP"]` |
+| **Panel: susceptible** | `{python} never["FN"]` | `{python} never["TN"]` | `{python} never["FN"] + never["TN"]` |
+| **Total** | `{python} y_res` | `{python} y_sus` | `{python} yr["n"]` |
+
+## A panel that never says resistant (cont.)
+
+```{python}
+#| echo: false
+#| output: asis
+print(rf"$$\text{{accuracy}} = \frac{{\text{{TP}} + \text{{TN}}}}{{\text{{total}}}} = \frac{{0 + {y_sus}}}{{{yr['n']}}} = {f2(never_acc)}$$")
+```
+
+. . .
+
+- sensitivity = 0: it misses every resistant isolate
+- specificity = 1: it never over-calls
+- PPV can't be computed: it never says resistant
+
+. . .
+
+It misses all `{python} y_res` resistant isolates, and its accuracy is still `{python} pct(never_acc)`.
+
+## Comparing the two panels
+
+| Measure | Gene panel | Never says resistant |
+|---|:-:|:-:|
+| accuracy | `{python} f2(yr["accuracy"])` | `{python} f2(never_acc)` |
+| sensitivity | `{python} f2(yr["sensitivity"])` | 0.00 |
+| specificity | `{python} f2(yr["specificity"])` | 1.00 |
+
+- The accuracies differ by only `{python} round(100 * (yr["accuracy"] - never_acc))` points
+- The sensitivities show the real difference: one panel catches resistance and the other doesn't
+
+## Accuracy is weighted by how common each class is
+
+- `{python} y_sus` of the `{python} yr["n"]` isolates are susceptible, and only `{python} y_res` are resistant
+- Accuracy mixes sensitivity and specificity, weighted by the share of each class:
+
+```{python}
+#| echo: false
+#| output: asis
+print(rf"""$$
+\begin{{aligned}}
+\text{{accuracy}} &= \text{{share resistant}} \times \text{{sensitivity}} + \text{{share susceptible}} \times \text{{specificity}} \\
+&= {share_year:.2f} \times {yr['sensitivity']:.3f} + {1 - share_year:.2f} \times {yr['specificity']:.3f} = {f2(yr['accuracy'])}
+\end{{aligned}}
+$$""")
+```
+
+. . .
+
+- When resistance is rare, accuracy mostly reports specificity
+- A classifier can ignore the rare class and still score well
+
+# The same panel in different hospitals
+
+## Three hospitals
+
+How common resistance is varies from place to place:
+
+- a hospital where resistance is rare: **2%** of isolates resistant
+- our hospital: **`{python} pct(share_year)`**
+- a hospital where resistance is common: **40%**, as in some countries
+
+. . .
+
+Suppose the same panel catches and clears isolates at the same rates everywhere: sensitivity `{python} f2(yr["sensitivity"])` and specificity `{python} f2(yr["specificity"])`.
+
+Each hospital runs both tests on 10,000 isolates.
+
+## Three hospitals (cont.)
+
+| Hospital | Resistant | TP | FN | Susceptible | FP | TN |
+|---|:-:|:-:|:-:|:-:|:-:|:-:|
+| resistance rare (2%) | `{python} big(hosp["rare"][0]["TP"] + hosp["rare"][0]["FN"])` | `{python} big(hosp["rare"][0]["TP"])` | `{python} big(hosp["rare"][0]["FN"])` | `{python} big(hosp["rare"][0]["FP"] + hosp["rare"][0]["TN"])` | `{python} big(hosp["rare"][0]["FP"])` | `{python} big(hosp["rare"][0]["TN"])` |
+| ours (`{python} pct(share_year)`) | `{python} big(hosp["ours"][0]["TP"] + hosp["ours"][0]["FN"])` | `{python} big(hosp["ours"][0]["TP"])` | `{python} big(hosp["ours"][0]["FN"])` | `{python} big(hosp["ours"][0]["FP"] + hosp["ours"][0]["TN"])` | `{python} big(hosp["ours"][0]["FP"])` | `{python} big(hosp["ours"][0]["TN"])` |
+| resistance common (40%) | `{python} big(hosp["common"][0]["TP"] + hosp["common"][0]["FN"])` | `{python} big(hosp["common"][0]["TP"])` | `{python} big(hosp["common"][0]["FN"])` | `{python} big(hosp["common"][0]["FP"] + hosp["common"][0]["TN"])` | `{python} big(hosp["common"][0]["FP"])` | `{python} big(hosp["common"][0]["TN"])` |
+
+## Three hospitals (cont.)
+
+| Hospital | Sensitivity | Specificity | PPV | Accuracy |
+|---|:-:|:-:|:-:|:-:|
+| resistance rare (2%) | `{python} f2(hosp["rare"][1]["sensitivity"])` | `{python} f2(hosp["rare"][1]["specificity"])` | **`{python} f2(hosp["rare"][1]["PPV"])`** | `{python} f2(hosp["rare"][1]["accuracy"])` |
+| ours (`{python} pct(share_year)`) | `{python} f2(hosp["ours"][1]["sensitivity"])` | `{python} f2(hosp["ours"][1]["specificity"])` | **`{python} f2(hosp["ours"][1]["PPV"])`** | `{python} f2(hosp["ours"][1]["accuracy"])` |
+| resistance common (40%) | `{python} f2(hosp["common"][1]["sensitivity"])` | `{python} f2(hosp["common"][1]["specificity"])` | **`{python} f2(hosp["common"][1]["PPV"])`** | `{python} f2(hosp["common"][1]["accuracy"])` |
+
+. . .
+
+- Sensitivity and specificity are the same in every hospital
+- PPV ranges from `{python} f2(hosp["rare"][1]["PPV"])` to `{python} f2(hosp["common"][1]["PPV"])`, and accuracy changes too
+
+## Why PPV changes
+
+In the hospital where resistance is rare:
+
+- There are only `{python} big(hosp["rare"][0]["TP"] + hosp["rare"][0]["FN"])` resistant isolates to catch, and the panel catches `{python} big(hosp["rare"][0]["TP"])`
+- There are `{python} big(hosp["rare"][0]["FP"] + hosp["rare"][0]["TN"])` susceptible isolates, and the panel over-calls `{python} big(hosp["rare"][0]["FP"])` of them
+
+. . .
+
+- So most of its *resistant* calls are wrong: PPV = `{python} big(hosp["rare"][0]["TP"])` / (`{python} big(hosp["rare"][0]["TP"])` + `{python} big(hosp["rare"][0]["FP"])`) = `{python} f2(hosp["rare"][1]["PPV"])`
+- The number of false positives grows with the number of susceptible isolates, however good the panel is
+
+## What travels with the panel
+
+- **Sensitivity** and **specificity** describe the panel
+    - each is measured within one class, so it doesn't depend on how common that class is
+- **PPV** and **accuracy** describe the panel *and* the place it is used
+    - both change when resistance becomes more or less common
+
+. . .
+
+A PPV or accuracy reported by another hospital tells you about their isolates as well as their panel.
+
+# The rule has one setting
+
+## Trading one mistake for the other
+
+- To miss fewer resistant isolates, the panel would have to call more isolates resistant
+    - → more over-calls
+- To over-call fewer isolates, it would have to call fewer resistant
+    - → more misses
+- Fewer of one kind of mistake usually means more of the other
+
+## Trading one mistake for the other (cont.)
+
+- The rule *any gene present → resistant* has no setting to move
+    - It gives one confusion table, and one sensitivity and specificity
+- To choose how many misses to accept, we need a classifier that gives a **score**: how strongly the genes point to resistance
+- Then we choose the cutoff ourselves
+
+## Next time
+
+- False negatives and false positives have different consequences, and which matters more is a judgement
+- Accuracy depends on how common each class is; sensitivity and specificity do not
+
+Next time: a score for each isolate, choosing a cutoff, and whether the score can be trusted.
