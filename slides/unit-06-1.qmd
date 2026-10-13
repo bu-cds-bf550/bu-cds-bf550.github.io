@@ -198,9 +198,13 @@ The prior: `{python} f"{toy_share['rRNA']:.0%}"` of reads are rRNA.
 - The assumption of conditional independence of all features usually does not hold
 - But Naive Bayes classifiers often perform well
 
+# Training
+
 ## Where does our panel come from?
 
-The probability that a read of each class contains each k-mer:
+Our panel is a subset of k-mers that have different frequencies in rRNA vs non-rRNA
+
+. . .
 
 ```{python}
 #| echo: false
@@ -221,7 +225,7 @@ But how do we know what these fractions are for each class?
 
 We either:
 
-- make (hopefully educated) guesses or
+- make guesses or
 - **learn them from previously labeled data**
 
 ## Where do our labeled reads come from?
@@ -255,6 +259,43 @@ def big(x):
 - **Training** is the process of using a machine learning algorithm to **learn patterns** from training data
 - The patterns learned from the training data are used to interpret new data we haven't seen before
 
+## rRNA example training data
+
+- Our training data are the purification run's high-confidence rRNA and non-rRNA reads
+- Training our classifier means counting k-mers in those reads to build the two tables
+- The trained classifier is then applied to new reads whose class is unknown, such as our collaborator's sample
+
+## Building our k-mer probability tables {.smaller}
+
+- For each possible k-mer, count the reads of each class that contain it
+- Divide each count by that class's number of reads
+- The result is the k-mer's likelihood in each class, one entry of each table
+
+$$P(\text{k-mer} \mid \text{rRNA}) = \frac{\text{rRNA reads that contain the k-mer}}{\text{all rRNA reads}}$$
+
+. . .
+
+For example, `CGTAGC` might have these read frequencies:
+
+```{python}
+#| echo: false
+#| output: asis
+
+# Six of the 4,096 rows of the purification run's fictional count tables. Poly(A) tails and other
+# A-rich stretches are common in mRNA and rare in GC-rich rRNA, so AAAAAA leans non-rRNA.
+all_counts = {"AAAAAA": (1487, 60312), "AAAAAC": (2063, 29741),
+              "CGTAGA": (9134,  7869), "CGTAGC": (12418, 6127),
+              "TTTTTG": ( 978, 15836), "TTTTTT": (1521, 24205)}
+
+ex_kmer = "CGTAGC"
+ex_r, ex_n = all_counts[ex_kmer]
+print(rf"""$$
+P(\texttt{{{ex_kmer}}} \mid \text{{rRNA}}) = \frac{{{big(ex_r)}}}{{{big(ref_n['rRNA'])}}} \approx {ex_r / ref_n['rRNA']:.2f}
+\qquad
+P(\texttt{{{ex_kmer}}} \mid \text{{non-rRNA}}) = \frac{{{big(ex_n)}}}{{{big(ref_n['non-rRNA'])}}} \approx {ex_n / ref_n['non-rRNA']:.2f}
+$$""")
+```
+
 ## Counting k-mers by class {.smaller}
 
 - For each of the 4,096 possible 6-mers, we counted the reads of each class that contain it
@@ -266,12 +307,6 @@ $$P(\text{k-mer}_j \mid y) = \frac{\text{number of reads in class } y \text{ wit
 ```{python}
 #| echo: false
 #| output: asis
-# Six of the 4,096 rows of the purification run's fictional count tables. Poly(A) tails and other
-# A-rich stretches are common in mRNA and rare in GC-rich rRNA, so AAAAAA leans non-rRNA.
-all_counts = {"AAAAAA": (1487, 60312), "AAAAAC": (2063, 29741),
-              "CGTAGA": (9134,  7869), "CGTAGC": (12418, 6127),
-              "TTTTTG": ( 978, 15836), "TTTTTT": (1521, 24205)}
-
 def kmer_index(kmer):
     """The k-mer's position j in alphabetical order, AAAAAA = 0 to TTTTTT = 4,095."""
     j = 0
@@ -288,35 +323,65 @@ for i, (kmer, (n_r, n_n)) in enumerate(all_counts.items()):
 print(f"\nThe class totals are {ref_n['rRNA']:,} rRNA reads and {ref_n['non-rRNA']:,} non-rRNA reads.")
 ```
 
-## Building our likelihood tables {.smaller}
 
-- For each possible k-mer, count the reads of each class that contain it
-- Divide each count by that class's number of reads
-- The result is the k-mer's likelihood in each class, one entry of each table
+## Choosing the panel from the full table {.smaller}
 
-$$P(\text{k-mer} \mid \text{rRNA}) = \frac{\text{rRNA reads that contain the k-mer}}{\text{all rRNA reads}}$$
+- The full table holds both class probabilities for all 4,096 k-mers
+- A k-mer found at similar rates in both classes says little about which class a read belongs to
+- A k-mer found far more often in one class is strong evidence, so we score each k-mer by the ratio of its two probabilities
+
+$$\text{ratio}_j = \frac{P(\text{k-mer}_j \mid \text{rRNA})}{P(\text{k-mer}_j \mid \text{non-rRNA})}$$
 
 . . .
-
-For `CGTAGC`, from the previous slide's table:
 
 ```{python}
 #| echo: false
 #| output: asis
-ex_kmer = "CGTAGC"
-ex_r, ex_n = all_counts[ex_kmer]
-print(rf"""$$
-P(\texttt{{{ex_kmer}}} \mid \text{{rRNA}}) = \frac{{{big(ex_r)}}}{{{big(ref_n['rRNA'])}}} \approx {ex_r / ref_n['rRNA']:.2f}
-\qquad
-P(\texttt{{{ex_kmer}}} \mid \text{{non-rRNA}}) = \frac{{{big(ex_n)}}}{{{big(ref_n['non-rRNA'])}}} \approx {ex_n / ref_n['non-rRNA']:.2f}
-$$""")
+# The same six rows as the count table, scored by the ratio of their class probabilities.
+print(r"| $j$ | k-mer | $P(\text{k-mer}_j \mid \text{rRNA})$ | $P(\text{k-mer}_j \mid \text{non-rRNA})$ | ratio | biased toward |")
+print("|:---:|:---:|:---:|:---:|:---:|:---:|")
+for i, (kmer, (n_r, n_n)) in enumerate(all_counts.items()):
+    if i in (2, 4):
+        print(r"| $\vdots$ | $\vdots$ | $\vdots$ | $\vdots$ | $\vdots$ | $\vdots$ |")
+    p_r, p_n = n_r / ref_n["rRNA"], n_n / ref_n["non-rRNA"]
+    ratio = p_r / p_n
+    biased = "rRNA" if ratio > 1 else "non-rRNA"
+    print(f"| {kmer_index(kmer):,} | `{kmer}` | {p_r:.2f} | {p_n:.2f} | {ratio:.2g} | {biased} |")
 ```
 
-## rRNA example training data
+## Most k-mers don't differ between classes
 
-- Our training data are the purification run's high-confidence rRNA and non-rRNA reads
-- Training our classifier means counting k-mers in those reads to build the two tables
-- The trained classifier is then applied to new reads whose class is unknown, such as our collaborator's sample
+```{python}
+#| echo: false
+#| fig-align: center
+# log10 ratio for all 4,096 k-mers: the eleven the deck names (the six table rows and the five
+# panel k-mers) at their own values, and the rest drawn at seed 613 around 0, since most k-mers
+# favor neither class. The dashed tails at ratio 4 and 1/4 hold every panel k-mer.
+named_ratio = {k: (n_r / ref_n["rRNA"]) / (n_n / ref_n["non-rRNA"]) for k, (n_r, n_n) in all_counts.items()}
+for i, kmer in enumerate(panel_kmers):
+    named_ratio[kmer] = panel_prob["rRNA"][i] / panel_prob["non-rRNA"][i]
+rng = np.random.default_rng(613)
+log_ratio = np.concatenate([rng.normal(0, 0.25, size=4096 - len(named_ratio)),
+                            np.log10(list(named_ratio.values()))])
+tail = np.log10(4)
+
+fig, ax = plt.subplots(figsize=(7, 2.8))
+ax.hist(log_ratio, bins=60, color="#2a78d6", alpha=0.8)
+ax.set_xlim(-1.5, 1.5)
+for x in (-tail, tail):
+    ax.axvline(x, color="#52514e", ls="--", lw=1.5)
+ax.text(-tail - 0.05, ax.get_ylim()[1] * 0.85, "biased non-rRNA", color="#52514e", ha="right")
+ax.text(tail + 0.05, ax.get_ylim()[1] * 0.85, "biased rRNA", color="#52514e", ha="left")
+ax.set_xlabel(r"$\log_{10}$ ratio")
+ax.set_ylabel("number of k-mers")
+ax.spines[["top", "right"]].set_visible(False)
+plt.show()
+```
+
+- Only a subset of k-mers are strongly biased toward either class
+- Select a subset of those k-mers as the panel
+
+# Computing probability of a new read
 
 ## A read contains only some of the panel's k-mers {.smaller}
 
@@ -361,8 +426,8 @@ $$
 
 . . .
 
-- For `ACGTGCAT`, all three k-mers are present, so $x_1 = x_2 = x_3 = 1$
-- How many times a k-mer appears is ignored; only present or absent is kept
+- For `ACGTGCAT`, k-mers $x_1$ and $x_3$ are present, so $x_1 = x_3 = 1$
+- k-mer $x_2$ is not present, so $x_2 = 0$
 
 . . .
 
@@ -383,22 +448,7 @@ $$
 - Its $p$ depends on the class: $p = P(x_i = 1 \mid y)$, the number in the table
 - For `ACGTGC` in an rRNA read: present with $p$ = `{python} f"{toy_prob['rRNA'][0]:.2f}"`, absent with $1 - p$ = `{python} f"{1 - toy_prob['rRNA'][0]:.2f}"`
 
-## A binomial count adds up Bernoulli trials
-
-In the GC-content example, each base of a read was a Bernoulli trial: G or C is a success, and any other base is a failure.
-
-. . .
-
-- A read from Microbe A has $n = 40$ bases, each G or C with the same $p = 0.66$
-- The number of G or C bases, $k$, is the number of successes in those 40 trials
-
-$$ k \sim \text{Binomial}(n = 40, \; p = 0.66) $$
-
-. . .
-
-Our k-mer features are single Bernoulli trials that we keep separate rather than add up: we need to know *which* k-mers are present, not just how many, and each has its own $p$.
-
-## A Bernoulli trial is a binomial with $n = 1$
+## A Bernoulli trial is a binomial with $n = 1$ {.smaller}
 
 The binomial PMF from last time, with a single trial, $n = 1$:
 
@@ -410,7 +460,7 @@ $$
 . . .
 
 - $x_i$ is the feature, 0 or 1, read off the sequence; $p = P(x_i = 1 \mid y)$ comes from class $y$'s table
-- One formula gives $p$ when the k-mer is present and $1 - p$ when it is absent:
+- This one formula gives $p$ when the k-mer is present and $1 - p$ when it is absent:
 
 ```{python}
 #| echo: false
@@ -423,52 +473,48 @@ print(rf"""$$
 \end{{aligned}}
 $$""")
 ```
+## Absent k-mers count too
 
-## The joint likelihood is a product in naive Bayes {.smaller}
+k-mers with high frequency in one class can favor that class if present
 
-The chain rule plus **conditional independence** allows a joint likelihood to be factored into its individual likelihoods
-
-$$P(x_1, x_2, x_3 \mid y) = P(x_1 \mid y) \; P(x_2 \mid y) \; P(x_3 \mid y)$$
-
-. . .
-
-Each $x_i$ records whether panel k-mer $i$ is in the read, and $y$ is one of the classes. All three are in `ACGTGCAT`, so $x_1 = x_2 = x_3 = 1$:
-
-$$
-\begin{aligned}
-P(\text{read} \mid \text{rRNA}) &= P(x_1 = 1, x_2 = 1, x_3 = 1 \mid \text{rRNA}) \\
-&= P(x_1 = 1 \mid \text{rRNA}) \times P(x_2 = 1 \mid \text{rRNA}) \times P(x_3 = 1 \mid \text{rRNA})
-\end{aligned}
-$$
-
-$$
-\begin{aligned}
-P(\text{read} \mid \text{non-rRNA}) &= P(x_1 = 1, x_2 = 1, x_3 = 1 \mid \text{non-rRNA}) \\
-&= P(x_1 = 1 \mid \text{non-rRNA}) \times P(x_2 = 1 \mid \text{non-rRNA}) \times P(x_3 = 1 \mid \text{non-rRNA})
-\end{aligned}
-$$
+k-mers with low frequencing in one class can favor that class if *absent*
 
 . . .
-
-And the posterior probability is written as:
-
-$$P(y \mid x_1,x_2,x_3) = \frac{P(x_1,x_2,x_3 \mid y) \; P(y)}{P(x_1,x_2,x_3)}$$
-
-$$
-P( \text{rRNA} \mid \text{read}) = \frac{P(x_1 = 1, x_2 = 1, x_3 = 1 \mid \text{rRNA}) \; P(\text{rRNA})}{P(x_1 = 1, x_2 = 1, x_3 = 1)}
-$$
-
-## Absent k-mers count too {.smaller}
 
 ```{python}
 #| echo: false
 # The five-k-mer panel's likelihood of ACGTGCAT: p for each panel k-mer in the read, 1 - p for
-# each one that is not.
+# each one that is not. GGATCA, absent from the read, is this slide's example.
 panel_present = [kmer in read_8_kmers for kmer in panel_kmers]
 panel_factors = {c: [p if here else 1 - p for p, here in zip(panel_prob[c], panel_present)]
                  for c in ref_n}
 panel_like = {c: float(np.prod(panel_factors[c])) for c in ref_n}
+
+g = panel_kmers.index("GGATCA")
+g_r, g_n = panel_prob["rRNA"][g], panel_prob["non-rRNA"][g]
+g_present_fold = g_n / g_r                 # how strongly presence favors non-rRNA
+g_absent_fold = (1 - g_r) / (1 - g_n)      # how strongly absence favors rRNA
 ```
+
+`GGATCA` is seldom found in rRNA reads and common in non-rRNA reads:
+
+```{python}
+#| echo: false
+#| output: asis
+print(r"| `GGATCA` in the read | rRNA | non-rRNA | favors |")
+print("|:---|:---:|:---:|:---:|")
+print(f"| present, $p$ | {g_r:.2f} | {g_n:.2f} | non-rRNA, {g_present_fold:.1f}× |")
+print(f"| absent, $1 - p$ | {1 - g_r:.2f} | {1 - g_n:.2f} | rRNA, {g_absent_fold:.1f}× |")
+```
+. . .
+
+- A read without `GGATCA` is more likely under rRNA (`{python} f"{1 - g_r:.2f}"`) than under non-rRNA (`{python} f"{1 - g_n:.2f}"`), so its absence is evidence for rRNA
+
+. . .
+
+- In other words, an absence of a k-mer in the class where that k-mer is *rarer* is stronger evidence for that class
+
+## The joint likelihood of a read's panel k-mers {.smaller}
 
 Each panel k-mer contributes one Bernoulli factor, $p$ if it is in the read and $1 - p$ if it is not:
 
@@ -477,7 +523,19 @@ $$P(\text{read} \mid y) = \prod_{i=1}^{5} p_i^{\,x_i} \, (1 - p_i)^{\,1 - x_i}, 
 ```{python}
 #| echo: false
 #| output: asis
-print(", ".join(rf"$x_{i + 1} = {int(here)}$" for i, here in enumerate(panel_present)))
+print("$$"+", ".join(rf"x_{i + 1} = {int(here)}" for i, here in enumerate(panel_present))+"$$")
+```
+
+. . .
+
+```{python}
+#| echo: false
+#| output: asis
+print(r"| feature | k-mer | in `ACGTGCAT`? | $P(x_i = 1 \mid \text{rRNA})$ | $P(x_i = 1 \mid \text{non-rRNA})$ |")
+print("|:---:|:---:|:---:|:---:|:---:|")
+for i, kmer in enumerate(panel_kmers):
+    present = "yes" if kmer in read_8_kmers else "no"
+    print(f"| $x_{i + 1}$ | `{kmer}` | {present} | {panel_prob['rRNA'][i]:.2f} | {panel_prob['non-rRNA'][i]:.2f} |")
 ```
 
 . . .
@@ -490,10 +548,6 @@ def panel_line(c):
     return rf"P(\text{{read}} \mid \text{{{c}}}) &= {nums} = {sig(panel_like[c])}"
 print(f"$$\n\\begin{{aligned}}\n{panel_line('rRNA')} \\\\\n{panel_line('non-rRNA')}\n\\end{{aligned}}\n$$")
 ```
-
-. . .
-
-- An absent k-mer is evidence too: `GGATCA` is common in non-rRNA reads, so its absence favours rRNA
 
 ## Simplifying Bayes theorem for classification
 
