@@ -1,0 +1,442 @@
+---
+# Backup slides for unit-05-3b.qmd, moved out of the deck on 12 Oct 2026: the rRNA k-mer slides,
+# as they were, and the evidence-cancels and proportional-to slides, so the session teaches one
+# path to a posterior on the microbe example: multiply, times the prior, divide by the total.
+# The leading underscore keeps Quarto from rendering this file, so it is never published
+# (slides/README.md, hidden decks). Rename it without the underscore, or paste a slide back, to
+# use one. The setup chunk is the deck's, so every slide here still runs.
+title: ""
+subtitle: "BF550 · Unit 5 · Session 3b — backup slides"
+---
+
+```{python}
+#| echo: false
+# Session 1's model, simulated reads, new read and likelihood function, rebuilt with the
+# chapter's seeds so that this deck's numbers are the chapter's.
+import numpy as np
+
+rng = np.random.default_rng(61)
+presence_prob = {"rRNA":     rng.uniform(0.15, 0.85, size=20),
+                 "non-rRNA": rng.uniform(0.15, 0.85, size=20)}
+
+def draw_labeled_read(share_rrna, presence_prob, rng):
+    if rng.random() < share_rrna:
+        label = "rRNA"
+    else:
+        label = "non-rRNA"
+    present = rng.random(20) < presence_prob[label]
+    return label, present
+
+rng = np.random.default_rng(67)
+label_list, reads = [], []
+for _ in range(100000):
+    label, present = draw_labeled_read(0.15, presence_prob, rng)
+    label_list.append(label)
+    reads.append(present)
+labels = np.array(label_list)
+
+rng = np.random.default_rng(126)
+new_label, new_read = draw_labeled_read(0.15, presence_prob, rng)
+
+def likelihood(present, probs):
+    likelihood_p = 1.0
+    for i in range(len(probs)):
+        if present[i]:
+            likelihood_p = likelihood_p * probs[i]
+        else:
+            likelihood_p = likelihood_p * (1 - probs[i])
+    return likelihood_p
+
+like_rrna = likelihood(new_read, presence_prob["rRNA"])
+like_nonrrna = likelihood(new_read, presence_prob["non-rRNA"])
+posterior_given = like_rrna * 0.15 / (like_rrna * 0.15 + like_nonrrna * 0.85)
+
+# The method block's three-measurement example. Every number it shows is printed from here,
+# so nothing on those slides is typed by hand.
+m_p = [0.80, 0.30, 0.60]          # P(answer i is yes | class A)
+m_q = [0.20, 0.70, 0.50]          # P(answer i is yes | class B)
+m_share_a, m_share_b = 0.40, 0.60
+m_answers = [True, False, True]   # the object we observed: yes, no, yes
+
+def m_factors(probs):
+    out = []
+    for i in range(3):
+        if m_answers[i]:
+            out.append(probs[i])
+        else:
+            out.append(1 - probs[i])
+    return out
+
+m_fac_a, m_fac_b = m_factors(m_p), m_factors(m_q)
+m_like_a = m_fac_a[0] * m_fac_a[1] * m_fac_a[2]
+m_like_b = m_fac_b[0] * m_fac_b[1] * m_fac_b[2]
+m_joint_a, m_joint_b = m_like_a * m_share_a, m_like_b * m_share_b
+m_post_a = m_joint_a / (m_joint_a + m_joint_b)
+m_post_b = m_joint_b / (m_joint_a + m_joint_b)
+
+# Step 1: measurement 1 alone, for the one-measurement slide
+m1_joint_a, m1_joint_b = m_share_a * m_p[0], m_share_b * m_q[0]
+m1_total = m1_joint_a + m1_joint_b
+m1_post_a, m1_post_b = m1_joint_a / m1_total, m1_joint_b / m1_total
+m_total = m_joint_a + m_joint_b
+
+# the 100-object table for the independence slide: class A, measurements 1 and 2
+m_n = 100
+m_cells = [[round(m_n * m_p[0] * m_p[1]), round(m_n * m_p[0] * (1 - m_p[1]))],
+           [round(m_n * (1 - m_p[0]) * m_p[1]), round(m_n * (1 - m_p[0]) * (1 - m_p[1]))]]
+
+# the cost slide: measurement 1 counted twice, with no new information
+m_dbl_a = m_share_a * m_p[0] * m_p[0]
+m_dbl_b = m_share_b * m_q[0] * m_q[0]
+m_dbl_post_a = m_dbl_a / (m_dbl_a + m_dbl_b)
+
+def f2(x):
+    return f"{x:.2f}"
+
+def f3(x):
+    return f"{x:.3f}"
+
+def f4(x):
+    return f"{x:.4f}"
+
+# Unit 4's 100,000 simulated reads at seed 41, for the counted likelihood, and its smooth GC curves
+from math import comb
+from scipy.stats import binom
+from scipy.special import gammaln
+import matplotlib.pyplot as plt
+
+def draw_gc_from_two_groups(share_a, gc_a, gc_b, n_bases, rng):
+    if rng.random() < share_a:
+        return "A", rng.binomial(n_bases, gc_a)
+    return "B", rng.binomial(n_bases, gc_b)
+
+rng = np.random.default_rng(41)
+species_list, gc_list = [], []
+for _ in range(100000):
+    s, g = draw_gc_from_two_groups(0.5, 0.66, 0.48, 40, rng)
+    species_list.append(s)
+    gc_list.append(g)
+species = np.array(species_list)
+gc = np.array(gc_list)
+is_a = (species == "A")
+n_a = is_a.sum()
+count_a_25 = (gc[is_a] == 25).sum()
+
+def smooth_binomial(k, n, p):
+    log_choose = gammaln(n + 1) - gammaln(k + 1) - gammaln(n - k + 1)
+    return np.exp(log_choose + k * np.log(p) + (n - k) * np.log(1 - p))
+
+pmf_a_25 = binom.pmf(25, 40, 0.66)
+pmf_b_25 = binom.pmf(25, 40, 0.48)
+```
+
+# Naive Bayes review
+
+## Classifying rRNA vs non-rRNA reads
+
+- Depletion kits leave some **rRNA** reads in an RNA-seq sample, and we want to find and remove them
+- Each read is an **instance**, and its class is either rRNA or non-rRNA
+- A read's **features** are which k-mers from a fixed **panel** it contains, present or absent
+- A read's **joint likelihood** is the product of k-mer frequencies from a table that was built from previously labeled reads
+- The **posterior** of each class is its **likelihood** times its **prior** divided by the **probability of the read**
+
+## rRNA k-mer example from last time {.smaller}
+
+```{python}
+#| echo: false
+# Unit 5 session 3's example: made-up probabilities that each of the read's three k-mers appears
+# in a read of each class, and the chapter's prior, 15% of reads are rRNA.
+toy_kmers = ["ACGTGC", "CGTGCA", "GTGCAT"]
+toy_prob = {"rRNA":     [0.60, 0.56, 0.52],
+            "non-rRNA": [0.03, 0.04, 0.03]}
+toy_share = {"rRNA": 0.15, "non-rRNA": 0.85}
+toy_like = {c: toy_prob[c][0] * toy_prob[c][1] * toy_prob[c][2] for c in toy_prob}
+toy_joint = {c: toy_like[c] * toy_share[c] for c in toy_prob}
+toy_evidence = toy_joint["rRNA"] + toy_joint["non-rRNA"]
+toy_post = {c: toy_joint[c] / toy_evidence for c in toy_prob}
+
+def sig(x):
+    """Four significant figures, in scientific notation once x is below 0.001."""
+    if x >= 0.001:
+        return f"{x:.4g}"
+    mantissa, exponent = f"{x:.3e}".split("e")
+    mantissa = mantissa.rstrip("0").rstrip(".")
+    return rf"{mantissa} \times 10^{{{int(exponent)}}}"
+```
+
+The read `ACGTGCAT` is the instance, and its features are its three 6-base k-mers:
+
+```{python}
+#| echo: false
+#| output: asis
+print("```")
+print("read          ACGTGCAT")
+for i, kmer in enumerate(toy_kmers):
+    print(f"x{i + 1} = k-mer {i + 1}  {' ' * i}{kmer}")
+print("```")
+```
+
+. . .
+
+The probability that a read of each class contains each k-mer:
+
+```{python}
+#| echo: false
+#| output: asis
+print(r"| feature | k-mer | $P(x_i \mid \text{rRNA})$ | $P(x_i \mid \text{non-rRNA})$ |")
+print("|:---:|:---:|:---:|:---:|")
+for i, kmer in enumerate(toy_kmers):
+    print(f"| $x_{i + 1}$ | `{kmer}` | {toy_prob['rRNA'][i]:.2f} | {toy_prob['non-rRNA'][i]:.2f} |")
+```
+
+The prior: `{python} f"{toy_share['rRNA']:.0%}"` of reads are rRNA.
+
+# Computing probability of a new read
+
+```{python}
+#| echo: false
+# The fixed five-k-mer panel this deck scores reads against. Unit 6 session 1 shows where
+# these numbers come from: counts from a purification run over each class's read total.
+ref_n = {"rRNA": 50000, "non-rRNA": 200000}
+panel_kmers = ["ACGTGC", "TTAGCC", "GTGCAT", "GGATCA", "CATTGA"]
+panel_counts = {"rRNA":     [30000, 22500, 26000,  4000, 15000],
+                "non-rRNA": [ 6000, 20000,  6000, 70000, 10000]}
+panel_prob = {c: [k / ref_n[c] for k in panel_counts[c]] for c in ref_n}
+read_8 = "ACGTGCAT"
+read_8_kmers = [read_8[i:i + 6] for i in range(len(read_8) - 5)]
+```
+
+
+## A read contains only some of the panel's k-mers {.smaller}
+
+The read `ACGTGCAT` has three overlapping 6-base k-mers
+
+```{python}
+#| echo: false
+#| output: asis
+print("```")
+print(f"read      {read_8}")
+for i, kmer in enumerate(read_8_kmers):
+    print(f"k-mer {i + 1}   {' ' * i}{kmer}")
+print("```")
+```
+
+. . .
+
+Take a larger panel, a fixed set of five k-mers, where each class has its own probability that a read contains each one:
+
+```{python}
+#| echo: false
+#| output: asis
+print(r"| feature | k-mer | in `ACGTGCAT`? | $P(x_i = 1 \mid \text{rRNA})$ | $P(x_i = 1 \mid \text{non-rRNA})$ |")
+print("|:---:|:---:|:---:|:---:|:---:|")
+for i, kmer in enumerate(panel_kmers):
+    present = "yes" if kmer in read_8_kmers else "no"
+    print(f"| $x_{i + 1}$ | `{kmer}` | {present} | {panel_prob['rRNA'][i]:.2f} | {panel_prob['non-rRNA'][i]:.2f} |")
+```
+
+`CGTGCA` is in the read but not in the panel, so the classifier ignores it.
+
+## Our features are binary variables
+
+Each feature $x_i$ records only whether k-mer $i$ appears in the read:
+
+$$
+x_i = \begin{cases}
+1 & \text{if k-mer } i \text{ is in the read (present)} \\
+0 & \text{if it is not (absent)}
+\end{cases}
+$$
+
+. . .
+
+- For `ACGTGCAT`, k-mers $x_1$ and $x_3$ are present, so $x_1 = x_3 = 1$
+- k-mer $x_2$ is not present, so $x_2 = 0$
+
+. . .
+
+- $P(x_i = 1 \mid y)$ is the probability that a read of class $y$ contains k-mer $i$, the number in the table
+- $P(x_i = 0 \mid y) = 1 - P(x_i = 1 \mid y)$ is the probability that it does not
+
+## New terminology: Our features are *Bernoulli trials*
+
+A **Bernoulli trial** is one random event with exactly two outcomes:
+
+$$
+\text{success } (1) \text{ with probability } p \qquad \text{failure } (0) \text{ with probability } 1 - p
+$$
+
+. . .
+
+- Each feature $x_i$ is a Bernoulli trial: k-mer $i$ is present (1) or absent (0)
+- Its $p$ depends on the class: $p = P(x_i = 1 \mid y)$, the number in the table
+- For `ACGTGC` in an rRNA read: present with $p$ = `{python} f"{toy_prob['rRNA'][0]:.2f}"`, absent with $1 - p$ = `{python} f"{1 - toy_prob['rRNA'][0]:.2f}"`
+
+## A Bernoulli trial is a binomial with $n = 1$ {.smaller}
+
+The binomial PMF from last time, with a single trial, $n = 1$:
+
+$$
+P(x_i \mid y) = \binom{1}{x_i} \, p^{x_i} \, (1 - p)^{1 - x_i} = p^{x_i} \, (1 - p)^{1 - x_i}
+\qquad \text{since } \binom{1}{0} = \binom{1}{1} = 1
+$$
+
+. . .
+
+- $x_i$ is the feature, 0 or 1, read off the sequence; $p = P(x_i = 1 \mid y)$ comes from class $y$'s table
+- This one formula gives $p$ when the k-mer is present and $1 - p$ when it is absent:
+
+```{python}
+#| echo: false
+#| output: asis
+p0 = toy_prob["rRNA"][0]
+print(rf"""$$
+\begin{{aligned}}
+\texttt{{ACGTGC}} \text{{ present, }} x_1 = 1: &\quad {p0:.2f}^{{1}} \times {1 - p0:.2f}^{{0}} = {p0:.2f} \\
+\texttt{{ACGTGC}} \text{{ absent, }} x_1 = 0: &\quad {p0:.2f}^{{0}} \times {1 - p0:.2f}^{{1}} = {1 - p0:.2f}
+\end{{aligned}}
+$$""")
+```
+## Absent k-mers count too
+
+k-mers with high frequency in one class can favor that class if present
+
+k-mers with low frequencing in one class can favor that class if *absent*
+
+. . .
+
+```{python}
+#| echo: false
+# The five-k-mer panel's likelihood of ACGTGCAT: p for each panel k-mer in the read, 1 - p for
+# each one that is not. GGATCA, absent from the read, is this slide's example.
+panel_present = [kmer in read_8_kmers for kmer in panel_kmers]
+panel_factors = {c: [p if here else 1 - p for p, here in zip(panel_prob[c], panel_present)]
+                 for c in ref_n}
+panel_like = {c: float(np.prod(panel_factors[c])) for c in ref_n}
+
+g = panel_kmers.index("GGATCA")
+g_r, g_n = panel_prob["rRNA"][g], panel_prob["non-rRNA"][g]
+g_present_fold = g_n / g_r                 # how strongly presence favors non-rRNA
+g_absent_fold = (1 - g_r) / (1 - g_n)      # how strongly absence favors rRNA
+```
+
+`GGATCA` is seldom found in rRNA reads and common in non-rRNA reads:
+
+```{python}
+#| echo: false
+#| output: asis
+print(r"| `GGATCA` in the read | rRNA | non-rRNA | favors |")
+print("|:---|:---:|:---:|:---:|")
+print(f"| present, $p$ | {g_r:.2f} | {g_n:.2f} | non-rRNA, {g_present_fold:.1f}× |")
+print(f"| absent, $1 - p$ | {1 - g_r:.2f} | {1 - g_n:.2f} | rRNA, {g_absent_fold:.1f}× |")
+```
+. . .
+
+- A read without `GGATCA` is more likely under rRNA (`{python} f"{1 - g_r:.2f}"`) than under non-rRNA (`{python} f"{1 - g_n:.2f}"`), so its absence is evidence for rRNA
+
+. . .
+
+- In other words, an absence of a k-mer in the class where that k-mer is *rarer* is stronger evidence for that class
+
+## The joint likelihood of a read's panel k-mers {.smaller}
+
+Each panel k-mer contributes one Bernoulli factor, $p$ if it is in the read and $1 - p$ if it is not:
+
+$$P(\text{read} \mid y) = \prod_{i=1}^{5} p_i^{\,x_i} \, (1 - p_i)^{\,1 - x_i}, \qquad p_i = P(x_i = 1 \mid y)$$
+
+```{python}
+#| echo: false
+#| output: asis
+print("$$"+", ".join(rf"x_{i + 1} = {int(here)}" for i, here in enumerate(panel_present))+"$$")
+```
+
+. . .
+
+```{python}
+#| echo: false
+#| output: asis
+print(r"| feature | k-mer | in `ACGTGCAT`? | $P(x_i = 1 \mid \text{rRNA})$ | $P(x_i = 1 \mid \text{non-rRNA})$ |")
+print("|:---:|:---:|:---:|:---:|:---:|")
+for i, kmer in enumerate(panel_kmers):
+    present = "yes" if kmer in read_8_kmers else "no"
+    print(f"| $x_{i + 1}$ | `{kmer}` | {present} | {panel_prob['rRNA'][i]:.2f} | {panel_prob['non-rRNA'][i]:.2f} |")
+```
+
+. . .
+
+```{python}
+#| echo: false
+#| output: asis
+def panel_line(c):
+    nums = r" \times ".join(f"{x:.2f}" for x in panel_factors[c])
+    return rf"P(\text{{read}} \mid \text{{{c}}}) &= {nums} = {sig(panel_like[c])}"
+print(f"$$\n\\begin{{aligned}}\n{panel_line('rRNA')} \\\\\n{panel_line('non-rRNA')}\n\\end{{aligned}}\n$$")
+```
+
+## Simplifying Bayes theorem for classification
+
+The exact posterior probability is given as:
+
+$$ \text{posterior} = \frac{\text{likelihood} \times \text{prior}}{\text{evidence}}$$
+
+. . .
+
+For our read with three k-mers:
+
+$$P(\text{rRNA} \mid x_1, x_2, x_3) = \frac{P(x_1, x_2, x_3 \mid \text{rRNA}) \; P(\text{rRNA})}{P(x_1, x_2, x_3)}$$
+$$P(\text{non-rRNA} \mid x_1, x_2, x_3) = \frac{P(x_1, x_2, x_3 \mid \text{non-rRNA}) \; P(\text{non-rRNA})}{P(x_1, x_2, x_3)}$$
+
+## Naive Bayes in Notation {.smaller}
+
+- Notation review for Naive Bayes:
+
+$$\begin{aligned}
+P(\text{rRNA} \mid x_1, x_2, x_3) & \propto P(x_1, x_2, x_3 \mid \text{rRNA}) \; P(\text{rRNA}) \\
+& \propto P(x_1 \mid \text{rRNA}) \; P(x_2 \mid \text{rRNA}) \; P(x_3 \mid \text{rRNA}) \; P(\text{rRNA}) \\
+& \propto P(\text{rRNA}) \prod_{i=1}^{3} P(x_i \mid \text{rRNA})
+\end{aligned}
+$$
+
+- Bayes classifier rule: with $n$ features, classify the read as rRNA when
+
+$$\frac{P(\text{rRNA} \mid x_1, \dots, x_n)}{P(\text{non-rRNA} \mid x_1, \dots, x_n)}
+= \frac{P(\text{rRNA}) \prod_{i=1}^{n} P(x_i \mid \text{rRNA})}{P(\text{non-rRNA}) \prod_{i=1}^{n} P(x_i \mid \text{non-rRNA})} > 1$$
+
+## Evidence cancels out in Bayes classifiers {.smaller}
+
+To classify, we compare the two posteriors with their ratio:
+
+$$
+\require{cancel}
+\begin{aligned}
+\frac{P(\text{rRNA} \mid x_1, x_2, x_3)}{P(\text{non-rRNA} \mid x_1, x_2, x_3)}
+&= \frac{P(x_1, x_2, x_3 \mid \text{rRNA}) \; P(\text{rRNA}) \,/\, \cancel{P(x_1, x_2, x_3)}}
+        {P(x_1, x_2, x_3 \mid \text{non-rRNA}) \; P(\text{non-rRNA}) \,/\, \cancel{P(x_1, x_2, x_3)}} \\[8pt]
+&= \frac{P(x_1, x_2, x_3 \mid \text{rRNA}) \; P(\text{rRNA})}{P(x_1, x_2, x_3 \mid \text{non-rRNA}) \; P(\text{non-rRNA})}
+\end{aligned}
+$$
+
+. . .
+
+- Both posteriors divide by the same evidence, so it cancels
+- → We don't need to compute $P(x_1, x_2, x_3)$
+
+## New notation: $\propto$ proportional to {.smaller}
+
+$a \propto b$ means that $a = c \times b$ for some constant $c$ that does not depend on the class
+
+. . .
+
+$$
+P(\text{rRNA} \mid x_1, x_2, x_3) = \underbrace{\frac{1}{P(x_1, x_2, x_3)}}_{c} \times P(x_1, x_2, x_3 \mid \text{rRNA}) \; P(\text{rRNA})
+$$
+
+. . .
+
+$$
+P(\text{rRNA} \mid x_1, x_2, x_3) \propto P(x_1, x_2, x_3 \mid \text{rRNA}) P(\text{rRNA})
+$$
+
+. . .
+
+- The constant $c$ is the same for rRNA and non-rRNA, so the class with the larger likelihood × prior also has the larger posterior

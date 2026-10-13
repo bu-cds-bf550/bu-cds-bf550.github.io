@@ -72,6 +72,11 @@
   date: "Fri Oct 9"
   title: "Naive Bayes and Classification"
   file: unit-05-3
+- unit: unit-05
+  session: 4
+  date: "Tue Oct 13"
+  title: "Naive Bayes: each microbe's posterior"
+  file: unit-05-3b
 - unit: unit-06
   session: 1
   date: "Tue Oct 13"
