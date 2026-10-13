@@ -1,0 +1,389 @@
+---
+# Unit 6, session 1: evaluation, starting from training data. The naive Bayes recap and scoring a
+# read moved to unit-05-3b.qmd on 12 Oct 2026.
+# Human-authored by the instructor (record bf550-instructor
+# decisions/human-authored-content-first.md). The setup chunk below is unit 5's, kept so the
+# chapter's seeds and tables stay available to later slides.
+title: ""
+subtitle: "BF550 · Unit 6 · Session 1 — Tue Oct 13"
+---
+
+```{python}
+#| echo: false
+# Session 1's model, simulated reads, new read and likelihood function, rebuilt with the
+# chapter's seeds so that this deck's numbers are the chapter's.
+import numpy as np
+
+rng = np.random.default_rng(61)
+presence_prob = {"rRNA":     rng.uniform(0.15, 0.85, size=20),
+                 "non-rRNA": rng.uniform(0.15, 0.85, size=20)}
+
+def draw_labeled_read(share_rrna, presence_prob, rng):
+    if rng.random() < share_rrna:
+        label = "rRNA"
+    else:
+        label = "non-rRNA"
+    present = rng.random(20) < presence_prob[label]
+    return label, present
+
+rng = np.random.default_rng(67)
+label_list, reads = [], []
+for _ in range(100000):
+    label, present = draw_labeled_read(0.15, presence_prob, rng)
+    label_list.append(label)
+    reads.append(present)
+labels = np.array(label_list)
+
+rng = np.random.default_rng(126)
+new_label, new_read = draw_labeled_read(0.15, presence_prob, rng)
+
+def likelihood(present, probs):
+    likelihood_p = 1.0
+    for i in range(len(probs)):
+        if present[i]:
+            likelihood_p = likelihood_p * probs[i]
+        else:
+            likelihood_p = likelihood_p * (1 - probs[i])
+    return likelihood_p
+
+like_rrna = likelihood(new_read, presence_prob["rRNA"])
+like_nonrrna = likelihood(new_read, presence_prob["non-rRNA"])
+posterior_given = like_rrna * 0.15 / (like_rrna * 0.15 + like_nonrrna * 0.85)
+
+# The method block's three-measurement example. Every number it shows is printed from here,
+# so nothing on those slides is typed by hand.
+m_p = [0.80, 0.30, 0.60]          # P(answer i is yes | class A)
+m_q = [0.20, 0.70, 0.50]          # P(answer i is yes | class B)
+m_share_a, m_share_b = 0.40, 0.60
+m_answers = [True, False, True]   # the object we observed: yes, no, yes
+
+def m_factors(probs):
+    out = []
+    for i in range(3):
+        if m_answers[i]:
+            out.append(probs[i])
+        else:
+            out.append(1 - probs[i])
+    return out
+
+m_fac_a, m_fac_b = m_factors(m_p), m_factors(m_q)
+m_like_a = m_fac_a[0] * m_fac_a[1] * m_fac_a[2]
+m_like_b = m_fac_b[0] * m_fac_b[1] * m_fac_b[2]
+m_joint_a, m_joint_b = m_like_a * m_share_a, m_like_b * m_share_b
+m_post_a = m_joint_a / (m_joint_a + m_joint_b)
+m_post_b = m_joint_b / (m_joint_a + m_joint_b)
+
+# Step 1: measurement 1 alone, for the one-measurement slide
+m1_joint_a, m1_joint_b = m_share_a * m_p[0], m_share_b * m_q[0]
+m1_total = m1_joint_a + m1_joint_b
+m1_post_a, m1_post_b = m1_joint_a / m1_total, m1_joint_b / m1_total
+m_total = m_joint_a + m_joint_b
+
+# the 100-object table for the independence slide: class A, measurements 1 and 2
+m_n = 100
+m_cells = [[round(m_n * m_p[0] * m_p[1]), round(m_n * m_p[0] * (1 - m_p[1]))],
+           [round(m_n * (1 - m_p[0]) * m_p[1]), round(m_n * (1 - m_p[0]) * (1 - m_p[1]))]]
+
+# the cost slide: measurement 1 counted twice, with no new information
+m_dbl_a = m_share_a * m_p[0] * m_p[0]
+m_dbl_b = m_share_b * m_q[0] * m_q[0]
+m_dbl_post_a = m_dbl_a / (m_dbl_a + m_dbl_b)
+
+def f2(x):
+    return f"{x:.2f}"
+
+def f3(x):
+    return f"{x:.3f}"
+
+def f4(x):
+    return f"{x:.4f}"
+
+# Unit 4's 100,000 simulated reads at seed 41, for the counted likelihood, and its smooth GC curves
+from math import comb
+from scipy.stats import binom
+from scipy.special import gammaln
+import matplotlib.pyplot as plt
+
+def draw_gc_from_two_groups(share_a, gc_a, gc_b, n_bases, rng):
+    if rng.random() < share_a:
+        return "A", rng.binomial(n_bases, gc_a)
+    return "B", rng.binomial(n_bases, gc_b)
+
+rng = np.random.default_rng(41)
+species_list, gc_list = [], []
+for _ in range(100000):
+    s, g = draw_gc_from_two_groups(0.5, 0.66, 0.48, 40, rng)
+    species_list.append(s)
+    gc_list.append(g)
+species = np.array(species_list)
+gc = np.array(gc_list)
+is_a = (species == "A")
+n_a = is_a.sum()
+count_a_25 = (gc[is_a] == 25).sum()
+
+def smooth_binomial(k, n, p):
+    log_choose = gammaln(n + 1) - gammaln(k + 1) - gammaln(n - k + 1)
+    return np.exp(log_choose + k * np.log(p) + (n - k) * np.log(1 - p))
+
+pmf_a_25 = binom.pmf(25, 40, 0.66)
+pmf_b_25 = binom.pmf(25, 40, 0.48)
+```
+
+# Model Evaluation, part 1
+
+```{python}
+#| echo: false
+# Unit 5 session 3's example: made-up probabilities that each of the read's three k-mers appears
+# in a read of each class, and the chapter's prior, 15% of reads are rRNA.
+toy_kmers = ["ACGTGC", "CGTGCA", "GTGCAT"]
+toy_prob = {"rRNA":     [0.60, 0.56, 0.52],
+            "non-rRNA": [0.03, 0.04, 0.03]}
+toy_share = {"rRNA": 0.15, "non-rRNA": 0.85}
+toy_like = {c: toy_prob[c][0] * toy_prob[c][1] * toy_prob[c][2] for c in toy_prob}
+toy_joint = {c: toy_like[c] * toy_share[c] for c in toy_prob}
+toy_evidence = toy_joint["rRNA"] + toy_joint["non-rRNA"]
+toy_post = {c: toy_joint[c] / toy_evidence for c in toy_prob}
+
+def sig(x):
+    """Four significant figures, in scientific notation once x is below 0.001."""
+    if x >= 0.001:
+        return f"{x:.4g}"
+    mantissa, exponent = f"{x:.3e}".split("e")
+    mantissa = mantissa.rstrip("0").rstrip(".")
+    return rf"{mantissa} \times 10^{{{int(exponent)}}}"
+```
+
+# Training
+
+## Where does our panel come from?
+
+Our panel is a subset of k-mers that have different frequencies in rRNA vs non-rRNA
+
+. . .
+
+```{python}
+#| echo: false
+#| output: asis
+print(r"| feature | k-mer | $P(x_i \mid \text{rRNA})$ | $P(x_i \mid \text{non-rRNA})$ |")
+print("|:---:|:---:|:---:|:---:|")
+for i, kmer in enumerate(toy_kmers):
+    print(f"| $x_{i + 1}$ | `{kmer}` | {toy_prob['rRNA'][i]:.2f} | {toy_prob['non-rRNA'][i]:.2f} |")
+```
+
+Each probability is a fraction of reads containing the k-mer for each class
+
+. . .
+
+But how do we know what these fractions are for each class?
+
+. . .
+
+We either:
+
+- make guesses or
+- **learn them from previously labeled data**
+
+## Where do our labeled reads come from?
+
+```{python}
+#| echo: false
+# A fictional purification run: reads sequenced from the ribosome fraction and from the
+# ribosome-free fraction of one lysate, each class counted for the five k-mers of the panel. Every panel likelihood in this section is
+# a count here divided by its class's total.
+ref_n = {"rRNA": 50000, "non-rRNA": 200000}
+panel_kmers = ["ACGTGC", "TTAGCC", "GTGCAT", "GGATCA", "CATTGA"]
+panel_counts = {"rRNA":     [30000, 22500, 26000,  4000, 15000],
+                "non-rRNA": [ 6000, 20000,  6000, 70000, 10000]}
+panel_prob = {c: [k / ref_n[c] for k in panel_counts[c]] for c in ref_n}
+read_8 = "ACGTGCAT"
+read_8_kmers = [read_8[i:i + 6] for i in range(len(read_8) - 5)]
+
+def big(x):
+    return f"{x:,}".replace(",", "{,}")
+```
+
+- Our collaborator's organism has no reliable rRNA reference sequence, so we cannot simply align reads to rRNA
+- **Ribosome purification** is the gold standard: centrifugation separates a cell lysate into a ribosome fraction and a ribosome-free fraction, and each is sequenced
+- The ribosome fraction gives **high-confidence rRNA** reads, and the ribosome-free fraction gives **high-confidence non-rRNA** reads
+    - Ribosomes also carry the mRNA they are translating, so a few "rRNA" reads are not rRNA
+- Purification is slow, difficult and costly, so we run it once and train a classifier to label every later sample
+
+## New concept: training data
+
+- In classification, **training data** are instances whose class is already known
+- **Training** is the process of using a machine learning algorithm to **learn patterns** from training data
+- The patterns learned from the training data are used to interpret new data we haven't seen before
+
+## rRNA example training data
+
+- Our training data are the purification run's high-confidence rRNA and non-rRNA reads
+- Training our classifier means counting k-mers in those reads to build the two tables
+- The trained classifier is then applied to new reads whose class is unknown, such as our collaborator's sample
+
+## Building our k-mer probability tables {.smaller}
+
+- For each possible k-mer, count the reads of each class that contain it
+- Divide each count by that class's number of reads
+- The result is the k-mer's likelihood in each class, one entry of each table
+
+$$P(\text{k-mer} \mid \text{rRNA}) = \frac{\text{rRNA reads that contain the k-mer}}{\text{all rRNA reads}}$$
+
+. . .
+
+For example, `CGTAGC` might have these read frequencies:
+
+```{python}
+#| echo: false
+#| output: asis
+
+# Six of the 4,096 rows of the purification run's fictional count tables. Poly(A) tails and other
+# A-rich stretches are common in mRNA and rare in GC-rich rRNA, so AAAAAA leans non-rRNA.
+all_counts = {"AAAAAA": (1487, 60312), "AAAAAC": (2063, 29741),
+              "CGTAGA": (9134,  7869), "CGTAGC": (12418, 6127),
+              "TTTTTG": ( 978, 15836), "TTTTTT": (1521, 24205)}
+
+ex_kmer = "CGTAGC"
+ex_r, ex_n = all_counts[ex_kmer]
+print(rf"""$$
+P(\texttt{{{ex_kmer}}} \mid \text{{rRNA}}) = \frac{{{big(ex_r)}}}{{{big(ref_n['rRNA'])}}} \approx {ex_r / ref_n['rRNA']:.2f}
+\qquad
+P(\texttt{{{ex_kmer}}} \mid \text{{non-rRNA}}) = \frac{{{big(ex_n)}}}{{{big(ref_n['non-rRNA'])}}} \approx {ex_n / ref_n['non-rRNA']:.2f}
+$$""")
+```
+
+## Counting k-mers by class {.smaller}
+
+- For each of the 4,096 possible 6-mers, we counted the reads of each class that contain it
+
+$$P(\text{k-mer}_j \mid y) = \frac{\text{number of reads in class } y \text{ with k-mer}_j}{\text{number of reads in class } y}$$
+
+. . .
+
+```{python}
+#| echo: false
+#| output: asis
+def kmer_index(kmer):
+    """The k-mer's position j in alphabetical order, AAAAAA = 0 to TTTTTT = 4,095."""
+    j = 0
+    for base in kmer:
+        j = 4 * j + "ACGT".index(base)
+    return j
+
+print(r"| $j$ | k-mer | rRNA reads with it | $P(\text{k-mer}_j \mid \text{rRNA})$ | non-rRNA reads with it | $P(\text{k-mer}_j \mid \text{non-rRNA})$ |")
+print("|:---:|:---:|:---:|:---:|:---:|:---:|")
+for i, (kmer, (n_r, n_n)) in enumerate(all_counts.items()):
+    if i in (2, 4):
+        print(r"| $\vdots$ | $\vdots$ | $\vdots$ | $\vdots$ | $\vdots$ | $\vdots$ |")
+    print(f"| {kmer_index(kmer):,} | `{kmer}` | {n_r:,} | {n_r / ref_n['rRNA']:.2f} | {n_n:,} | {n_n / ref_n['non-rRNA']:.2f} |")
+print(f"\nThe class totals are {ref_n['rRNA']:,} rRNA reads and {ref_n['non-rRNA']:,} non-rRNA reads.")
+```
+
+
+## Choosing the panel from the full table {.smaller}
+
+- The full table holds both class probabilities for all 4,096 k-mers
+- A k-mer found at similar rates in both classes says little about which class a read belongs to
+- A k-mer found far more often in one class is strong evidence, so we score each k-mer by the ratio of its two probabilities
+
+$$\text{ratio}_j = \frac{P(\text{k-mer}_j \mid \text{rRNA})}{P(\text{k-mer}_j \mid \text{non-rRNA})}$$
+
+. . .
+
+```{python}
+#| echo: false
+#| output: asis
+# The same six rows as the count table, scored by the ratio of their class probabilities.
+print(r"| $j$ | k-mer | $P(\text{k-mer}_j \mid \text{rRNA})$ | $P(\text{k-mer}_j \mid \text{non-rRNA})$ | ratio | biased toward |")
+print("|:---:|:---:|:---:|:---:|:---:|:---:|")
+for i, (kmer, (n_r, n_n)) in enumerate(all_counts.items()):
+    if i in (2, 4):
+        print(r"| $\vdots$ | $\vdots$ | $\vdots$ | $\vdots$ | $\vdots$ | $\vdots$ |")
+    p_r, p_n = n_r / ref_n["rRNA"], n_n / ref_n["non-rRNA"]
+    ratio = p_r / p_n
+    biased = "rRNA" if ratio > 1 else "non-rRNA"
+    print(f"| {kmer_index(kmer):,} | `{kmer}` | {p_r:.2f} | {p_n:.2f} | {ratio:.2g} | {biased} |")
+```
+
+## Most k-mers don't differ between classes
+
+```{python}
+#| echo: false
+#| fig-align: center
+# log10 ratio for all 4,096 k-mers: the eleven the deck names (the six table rows and the five
+# panel k-mers) at their own values, and the rest drawn at seed 613 around 0, since most k-mers
+# favor neither class. The dashed tails at ratio 4 and 1/4 hold every panel k-mer.
+named_ratio = {k: (n_r / ref_n["rRNA"]) / (n_n / ref_n["non-rRNA"]) for k, (n_r, n_n) in all_counts.items()}
+for i, kmer in enumerate(panel_kmers):
+    named_ratio[kmer] = panel_prob["rRNA"][i] / panel_prob["non-rRNA"][i]
+rng = np.random.default_rng(613)
+log_ratio = np.concatenate([rng.normal(0, 0.25, size=4096 - len(named_ratio)),
+                            np.log10(list(named_ratio.values()))])
+tail = np.log10(4)
+
+fig, ax = plt.subplots(figsize=(7, 2.8))
+ax.hist(log_ratio, bins=60, color="#2a78d6", alpha=0.8)
+ax.set_xlim(-1.5, 1.5)
+for x in (-tail, tail):
+    ax.axvline(x, color="#52514e", ls="--", lw=1.5)
+ax.text(-tail - 0.05, ax.get_ylim()[1] * 0.85, "biased non-rRNA", color="#52514e", ha="right")
+ax.text(tail + 0.05, ax.get_ylim()[1] * 0.85, "biased rRNA", color="#52514e", ha="left")
+ax.set_xlabel(r"$\log_{10}$ ratio")
+ax.set_ylabel("number of k-mers")
+ax.spines[["top", "right"]].set_visible(False)
+plt.show()
+```
+
+- Only a subset of k-mers are strongly biased toward either class
+- Select a subset of those k-mers as the panel
+
+## Our tables were created with finite data
+
+```{python}
+#| echo: false
+# A k-mer the purification run never saw in its rRNA reads: its rRNA likelihood is counted as 0,
+# and it zeroes the rRNA likelihood of any read that contains it.
+unseen = "TACGCA"
+unseen_counts = {"rRNA": 0, "non-rRNA": 400}
+unseen_prob = {c: unseen_counts[c] / ref_n[c] for c in ref_n}
+seen = ["ACGTGC", "GTGCAT"]
+seen_prob = [panel_prob["rRNA"][panel_kmers.index(k)] for k in seen]
+zeroed = seen_prob[0] * seen_prob[1] * unseen_prob["rRNA"]
+```
+
+- Each table entry is an **estimate** from `{python} f"{ref_n['rRNA']:,}"` rRNA and `{python} f"{ref_n['non-rRNA']:,}"` non-rRNA reads, not the true probability
+- One purification run captures one tissue, in one condition, on one day, not every read that could exist
+- A k-mer that is rare, or missing, in the reference reads may still matter in our sample
+
+## One k-mer missing from the rRNA reads makes a read impossible as rRNA
+
+```{python}
+#| echo: false
+#| output: asis
+print(f"Suppose the panel includes `{unseen}`, and the purification run never saw it in an rRNA read:")
+```
+
+```{python}
+#| echo: false
+#| output: asis
+print(rf"""$$
+P(\texttt{{{unseen}}} \mid \text{{rRNA}}) = \frac{{{unseen_counts['rRNA']}}}{{{big(ref_n['rRNA'])}}} = {unseen_prob['rRNA']:.0f}
+$$""")
+```
+
+. . .
+
+```{python}
+#| echo: false
+#| output: asis
+print(f"A read with `{seen[0]}`, `{seen[1]}` and `{unseen}` then has")
+```
+
+```{python}
+#| echo: false
+#| output: asis
+print(rf"""$$
+P(\text{{read}} \mid \text{{rRNA}}) = {seen_prob[0]:.2f} \times {seen_prob[1]:.2f} \times {unseen_prob['rRNA']:.0f} \times \cdots = {zeroed:.0f}
+$$""")
+```
+
+The zero wipes out the evidence of every other panel k-mer, however strongly they point to rRNA.

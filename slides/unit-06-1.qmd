@@ -1,389 +1,459 @@
 ---
-# Unit 6, session 1: evaluation, starting from training data. The naive Bayes recap and scoring a
-# read moved to unit-05-3b.qmd on 12 Oct 2026.
-# Human-authored by the instructor (record bf550-instructor
-# decisions/human-authored-content-first.md). The setup chunk below is unit 5's, kept so the
-# chapter's seeds and tables stay available to later slides.
-title: ""
-subtitle: "BF550 · Unit 6 · Session 1 — Tue Oct 13"
+# Unit 6, session 1 (Wed Oct 14): evaluating a classifier. A new setting, a hospital lab's E. coli
+# isolates screened by a three-gene panel and grown on ceftriaxone, replaces unit 5's rRNA reads.
+# The session names accuracy, the confusion table, sensitivity, specificity and PPV; which
+# mistake is worse is session 2's question. Drafted by the assistant on 13 Oct 2026 at the
+# instructor's request, in the form of the instructor's hand-authored decks, for the instructor
+# to revise. The rRNA training-data deck it replaces is kept unlinked at _unit-06-1-rrna.qmd.
+#
+# Every number on the slides is printed from the setup chunk. The 12-isolate table is written
+# out by hand, and the chunk asserts that the simulation still produces it.
+title: "Evaluating a Classifier"
+subtitle: "BF550 · Unit 6 · Session 1 — Wed Oct 14"
 ---
 
 ```{python}
 #| echo: false
-# Session 1's model, simulated reads, new read and likelihood function, rebuilt with the
-# chapter's seeds so that this deck's numbers are the chapter's.
+# About 15% of E. coli are resistant to ceftriaxone, in line with US surveillance: 15.3% of
+# E. coli infections across VA hospitals in 2019 (Lancet Infect Dis 2024,
+# doi:10.1016/S1473-3099(24)00416-X) and 12.9% of febrile UTIs at Kaiser Northern California
+# (Ann Emerg Med 2021, doi:10.1016/j.annemergmed.2021.01.003).
+#
+# The panel's rule: any panel gene present -> call resistant. It misses resistance from a gene
+# the panel doesn't test, and over-calls isolates carrying a panel gene that doesn't break down
+# ceftriaxone.
 import numpy as np
 
-rng = np.random.default_rng(61)
-presence_prob = {"rRNA":     rng.uniform(0.15, 0.85, size=20),
-                 "non-rRNA": rng.uniform(0.15, 0.85, size=20)}
+genes = ["blaCTX-M", "blaCMY-2", "blaSHV"]
+share_resistant = 0.15
 
-def draw_labeled_read(share_rrna, presence_prob, rng):
-    if rng.random() < share_rrna:
-        label = "rRNA"
+# P(gene present | class). Resistant isolates mostly carry CTX-M; a few carry none of the
+# three. Susceptible isolates occasionally carry one.
+gene_prob = {"resistant":   np.array([0.75, 0.12, 0.08]),
+             "susceptible": np.array([0.02, 0.02, 0.03])}
+
+def draw_isolate(rng):
+    if rng.random() < share_resistant:
+        growth = "resistant"
     else:
-        label = "non-rRNA"
-    present = rng.random(20) < presence_prob[label]
-    return label, present
+        growth = "susceptible"
+    present = rng.random(3) < gene_prob[growth]
+    return growth, present
 
-rng = np.random.default_rng(67)
-label_list, reads = [], []
-for _ in range(100000):
-    label, present = draw_labeled_read(0.15, presence_prob, rng)
-    label_list.append(label)
-    reads.append(present)
-labels = np.array(label_list)
+def panel_call(present):
+    if present.any():
+        return "resistant"
+    return "susceptible"
 
-rng = np.random.default_rng(126)
-new_label, new_read = draw_labeled_read(0.15, presence_prob, rng)
+def draw_isolates(n, rng):
+    rows = []
+    for i in range(n):
+        growth, present = draw_isolate(rng)
+        rows.append({"isolate": f"EC-{i + 1:03d}", "present": present,
+                     "call": panel_call(present), "growth": growth})
+    return rows
 
-def likelihood(present, probs):
-    likelihood_p = 1.0
-    for i in range(len(probs)):
-        if present[i]:
-            likelihood_p = likelihood_p * probs[i]
+def confusion(rows):
+    c = {"TP": 0, "FP": 0, "FN": 0, "TN": 0}
+    for r in rows:
+        if r["call"] == "resistant" and r["growth"] == "resistant":
+            c["TP"] += 1
+        elif r["call"] == "resistant":
+            c["FP"] += 1
+        elif r["growth"] == "resistant":
+            c["FN"] += 1
         else:
-            likelihood_p = likelihood_p * (1 - probs[i])
-    return likelihood_p
+            c["TN"] += 1
+    return c
 
-like_rrna = likelihood(new_read, presence_prob["rRNA"])
-like_nonrrna = likelihood(new_read, presence_prob["non-rRNA"])
-posterior_given = like_rrna * 0.15 / (like_rrna * 0.15 + like_nonrrna * 0.85)
+def rates(c):
+    n = c["TP"] + c["FP"] + c["FN"] + c["TN"]
+    return {"n": n,
+            "agree": c["TP"] + c["TN"],
+            "accuracy":    (c["TP"] + c["TN"]) / n,
+            "sensitivity": c["TP"] / (c["TP"] + c["FN"]),
+            "specificity": c["TN"] / (c["TN"] + c["FP"]),
+            "PPV":         c["TP"] / (c["TP"] + c["FP"])}
 
-# The method block's three-measurement example. Every number it shows is printed from here,
-# so nothing on those slides is typed by hand.
-m_p = [0.80, 0.30, 0.60]          # P(answer i is yes | class A)
-m_q = [0.20, 0.70, 0.50]          # P(answer i is yes | class B)
-m_share_a, m_share_b = 0.40, 0.60
-m_answers = [True, False, True]   # the object we observed: yes, no, yes
+# The hand-countable table: 12 isolates. Seed 45 was chosen so that all four cells of the
+# confusion table are filled: 2 caught, 1 missed (EC-011), 1 over-called (EC-012), 8 cleared.
+small = draw_isolates(12, np.random.default_rng(45))
+s = confusion(small)
+sr = rates(s)
+assert s == {"TP": 2, "FP": 1, "FN": 1, "TN": 8}
+assert small[10]["call"] == "susceptible" and small[10]["growth"] == "resistant"
+assert small[11]["call"] == "resistant" and small[11]["growth"] == "susceptible"
 
-def m_factors(probs):
-    out = []
-    for i in range(3):
-        if m_answers[i]:
-            out.append(probs[i])
-        else:
-            out.append(1 - probs[i])
-    return out
-
-m_fac_a, m_fac_b = m_factors(m_p), m_factors(m_q)
-m_like_a = m_fac_a[0] * m_fac_a[1] * m_fac_a[2]
-m_like_b = m_fac_b[0] * m_fac_b[1] * m_fac_b[2]
-m_joint_a, m_joint_b = m_like_a * m_share_a, m_like_b * m_share_b
-m_post_a = m_joint_a / (m_joint_a + m_joint_b)
-m_post_b = m_joint_b / (m_joint_a + m_joint_b)
-
-# Step 1: measurement 1 alone, for the one-measurement slide
-m1_joint_a, m1_joint_b = m_share_a * m_p[0], m_share_b * m_q[0]
-m1_total = m1_joint_a + m1_joint_b
-m1_post_a, m1_post_b = m1_joint_a / m1_total, m1_joint_b / m1_total
-m_total = m_joint_a + m_joint_b
-
-# the 100-object table for the independence slide: class A, measurements 1 and 2
-m_n = 100
-m_cells = [[round(m_n * m_p[0] * m_p[1]), round(m_n * m_p[0] * (1 - m_p[1]))],
-           [round(m_n * (1 - m_p[0]) * m_p[1]), round(m_n * (1 - m_p[0]) * (1 - m_p[1]))]]
-
-# the cost slide: measurement 1 counted twice, with no new information
-m_dbl_a = m_share_a * m_p[0] * m_p[0]
-m_dbl_b = m_share_b * m_q[0] * m_q[0]
-m_dbl_post_a = m_dbl_a / (m_dbl_a + m_dbl_b)
+# A year of isolates: 500.
+year = draw_isolates(500, np.random.default_rng(606))
+y = confusion(year)
+yr = rates(y)
+y_res = y["TP"] + y["FN"]
+y_sus = y["TN"] + y["FP"]
+y_call_res = y["TP"] + y["FP"]
 
 def f2(x):
     return f"{x:.2f}"
 
-def f3(x):
-    return f"{x:.3f}"
-
-def f4(x):
-    return f"{x:.4f}"
-
-# Unit 4's 100,000 simulated reads at seed 41, for the counted likelihood, and its smooth GC curves
-from math import comb
-from scipy.stats import binom
-from scipy.special import gammaln
-import matplotlib.pyplot as plt
-
-def draw_gc_from_two_groups(share_a, gc_a, gc_b, n_bases, rng):
-    if rng.random() < share_a:
-        return "A", rng.binomial(n_bases, gc_a)
-    return "B", rng.binomial(n_bases, gc_b)
-
-rng = np.random.default_rng(41)
-species_list, gc_list = [], []
-for _ in range(100000):
-    s, g = draw_gc_from_two_groups(0.5, 0.66, 0.48, 40, rng)
-    species_list.append(s)
-    gc_list.append(g)
-species = np.array(species_list)
-gc = np.array(gc_list)
-is_a = (species == "A")
-n_a = is_a.sum()
-count_a_25 = (gc[is_a] == 25).sum()
-
-def smooth_binomial(k, n, p):
-    log_choose = gammaln(n + 1) - gammaln(k + 1) - gammaln(n - k + 1)
-    return np.exp(log_choose + k * np.log(p) + (n - k) * np.log(1 - p))
-
-pmf_a_25 = binom.pmf(25, 40, 0.66)
-pmf_b_25 = binom.pmf(25, 40, 0.48)
+def pct(x):
+    return f"{x:.0%}"
 ```
 
-# Model Evaluation, part 1
+# A new problem
 
-```{python}
-#| echo: false
-# Unit 5 session 3's example: made-up probabilities that each of the read's three k-mers appears
-# in a read of each class, and the chapter's prior, 15% of reads are rRNA.
-toy_kmers = ["ACGTGC", "CGTGCA", "GTGCAT"]
-toy_prob = {"rRNA":     [0.60, 0.56, 0.52],
-            "non-rRNA": [0.03, 0.04, 0.03]}
-toy_share = {"rRNA": 0.15, "non-rRNA": 0.85}
-toy_like = {c: toy_prob[c][0] * toy_prob[c][1] * toy_prob[c][2] for c in toy_prob}
-toy_joint = {c: toy_like[c] * toy_share[c] for c in toy_prob}
-toy_evidence = toy_joint["rRNA"] + toy_joint["non-rRNA"]
-toy_post = {c: toy_joint[c] / toy_evidence for c in toy_prob}
+## A bloodstream infection
 
-def sig(x):
-    """Four significant figures, in scientific notation once x is below 0.001."""
-    if x >= 0.001:
-        return f"{x:.4g}"
-    mantissa, exponent = f"{x:.3e}".split("e")
-    mantissa = mantissa.rstrip("0").rstrip(".")
-    return rf"{mantissa} \times 10^{{{int(exponent)}}}"
-```
-
-# Training
-
-## Where does our panel come from?
-
-Our panel is a subset of k-mers that have different frequencies in rRNA vs non-rRNA
+- A patient arrives at the hospital with a bloodstream infection caused by *E. coli*
+- A common first choice of antibiotic is **ceftriaxone**
+- Some *E. coli* are **resistant** to ceftriaxone: the drug doesn't stop them growing
+    - About 15% of *E. coli* infections in US hospitals are resistant
+- If the bacteria are resistant, the patient needs a different drug, and the sooner the better
 
 . . .
+
+The question for every patient: **is this patient's *E. coli* resistant to ceftriaxone?**
+
+## Two ways to find out
+
+![](img/illustrations/ch06-two-tests.drawio.svg){fig-align="center" width="100%"}
+
+- An **isolate** is a population of bacteria grown from one patient's sample
+- Both tests are run on the same isolate
+
+## The growth test
+
+- Spread the isolate on a plate that contains ceftriaxone, and wait
+    - Colonies grow → the isolate is **resistant**
+    - Nothing grows → the isolate is **susceptible**
+- The growth test measures resistance directly: it asks whether the bacteria survive the drug
+- It is the hospital lab's standard answer
+- But it takes 1–2 days, and the patient is waiting
+
+## The gene panel
+
+- Bacteria resist ceftriaxone mostly by carrying genes for enzymes that break the drug down
+- A **gene panel** tests an isolate for a short list of known resistance genes
+- Our panel tests for three: *blaCTX-M*, *blaCMY-2* and *blaSHV*
+- Results come back in a few hours
+
+. . .
+
+The panel's rule:
+
+- If any of the three genes is present → call the isolate **resistant**
+- If none is present → call the isolate **susceptible**
+
+## The gene panel is a classifier
+
+From last unit:
+
+- **instance**: a single observation we wish to classify → one isolate
+- **features**: characteristics used to tell instances apart → present or absent, for each of the three genes
+- **labels**: the classes → resistant or susceptible
+- **classifier**: a rule that assigns a label based on the features → *any gene present means resistant*
+
+. . .
+
+The panel never sees the drug. It **predicts** what the growth test will show.
+
+## Can the panel replace the growth test?
+
+- The panel is faster, but it is only useful if its predictions are right
+- To find out how often it is right, run **both** tests on the same isolates and compare
+- The growth test is our **reference**: the answer we treat as correct
+    - Every measure of how well a classifier works compares its predictions to some reference
+
+# Accuracy
+
+## Twelve isolates {.smaller}
+
+Twelve isolates from the hospital lab, run through the panel:
+
+| Isolate | *blaCTX-M* | *blaCMY-2* | *blaSHV* | Panel call |
+|---|:-:|:-:|:-:|---|
+| EC-001 | – | – | – | susceptible |
+| EC-002 | – | – | – | susceptible |
+| EC-003 | – | – | – | susceptible |
+| EC-004 | – | – | – | susceptible |
+| EC-005 | – | – | – | susceptible |
+| EC-006 | + | – | + | resistant |
+| EC-007 | – | – | – | susceptible |
+| EC-008 | + | – | – | resistant |
+| EC-009 | – | – | – | susceptible |
+| EC-010 | – | – | – | susceptible |
+| EC-011 | – | – | – | susceptible |
+| EC-012 | + | – | – | resistant |
+
+: {.striped}
+
+## Twelve isolates (cont.) {.smaller}
+
+The same isolates, with the growth test's result beside the panel's call:
+
+| Isolate | Panel call | Growth test |
+|---|---|---|
+| EC-001 | susceptible | susceptible |
+| EC-002 | susceptible | susceptible |
+| EC-003 | susceptible | susceptible |
+| EC-004 | susceptible | susceptible |
+| EC-005 | susceptible | susceptible |
+| EC-006 | resistant | resistant |
+| EC-007 | susceptible | susceptible |
+| EC-008 | resistant | resistant |
+| EC-009 | susceptible | susceptible |
+| EC-010 | susceptible | susceptible |
+| EC-011 | susceptible | resistant |
+| EC-012 | resistant | susceptible |
+
+: {.striped}
+
+## Twelve isolates (cont.) {.smaller}
+
+Does the panel's call agree with the growth test?
+
+| Isolate | Panel call | Growth test | Agree? |
+|---|---|---|:-:|
+| EC-001 | susceptible | susceptible | ✓ |
+| EC-002 | susceptible | susceptible | ✓ |
+| EC-003 | susceptible | susceptible | ✓ |
+| EC-004 | susceptible | susceptible | ✓ |
+| EC-005 | susceptible | susceptible | ✓ |
+| EC-006 | resistant | resistant | ✓ |
+| EC-007 | susceptible | susceptible | ✓ |
+| EC-008 | resistant | resistant | ✓ |
+| EC-009 | susceptible | susceptible | ✓ |
+| EC-010 | susceptible | susceptible | ✓ |
+| **EC-011** | **susceptible** | **resistant** | **✗** |
+| **EC-012** | **resistant** | **susceptible** | **✗** |
+
+: {.striped}
+
+## Accuracy
+
+- **Accuracy** is the fraction of instances where the classifier's prediction agrees with the reference
+
+. . .
+
+- The panel agrees with the growth test on `{python} sr["agree"]` of `{python} sr["n"]` isolates:
 
 ```{python}
 #| echo: false
 #| output: asis
-print(r"| feature | k-mer | $P(x_i \mid \text{rRNA})$ | $P(x_i \mid \text{non-rRNA})$ |")
-print("|:---:|:---:|:---:|:---:|")
-for i, kmer in enumerate(toy_kmers):
-    print(f"| $x_{i + 1}$ | `{kmer}` | {toy_prob['rRNA'][i]:.2f} | {toy_prob['non-rRNA'][i]:.2f} |")
-```
-
-Each probability is a fraction of reads containing the k-mer for each class
-
-. . .
-
-But how do we know what these fractions are for each class?
-
-. . .
-
-We either:
-
-- make guesses or
-- **learn them from previously labeled data**
-
-## Where do our labeled reads come from?
-
-```{python}
-#| echo: false
-# A fictional purification run: reads sequenced from the ribosome fraction and from the
-# ribosome-free fraction of one lysate, each class counted for the five k-mers of the panel. Every panel likelihood in this section is
-# a count here divided by its class's total.
-ref_n = {"rRNA": 50000, "non-rRNA": 200000}
-panel_kmers = ["ACGTGC", "TTAGCC", "GTGCAT", "GGATCA", "CATTGA"]
-panel_counts = {"rRNA":     [30000, 22500, 26000,  4000, 15000],
-                "non-rRNA": [ 6000, 20000,  6000, 70000, 10000]}
-panel_prob = {c: [k / ref_n[c] for k in panel_counts[c]] for c in ref_n}
-read_8 = "ACGTGCAT"
-read_8_kmers = [read_8[i:i + 6] for i in range(len(read_8) - 5)]
-
-def big(x):
-    return f"{x:,}".replace(",", "{,}")
-```
-
-- Our collaborator's organism has no reliable rRNA reference sequence, so we cannot simply align reads to rRNA
-- **Ribosome purification** is the gold standard: centrifugation separates a cell lysate into a ribosome fraction and a ribosome-free fraction, and each is sequenced
-- The ribosome fraction gives **high-confidence rRNA** reads, and the ribosome-free fraction gives **high-confidence non-rRNA** reads
-    - Ribosomes also carry the mRNA they are translating, so a few "rRNA" reads are not rRNA
-- Purification is slow, difficult and costly, so we run it once and train a classifier to label every later sample
-
-## New concept: training data
-
-- In classification, **training data** are instances whose class is already known
-- **Training** is the process of using a machine learning algorithm to **learn patterns** from training data
-- The patterns learned from the training data are used to interpret new data we haven't seen before
-
-## rRNA example training data
-
-- Our training data are the purification run's high-confidence rRNA and non-rRNA reads
-- Training our classifier means counting k-mers in those reads to build the two tables
-- The trained classifier is then applied to new reads whose class is unknown, such as our collaborator's sample
-
-## Building our k-mer probability tables {.smaller}
-
-- For each possible k-mer, count the reads of each class that contain it
-- Divide each count by that class's number of reads
-- The result is the k-mer's likelihood in each class, one entry of each table
-
-$$P(\text{k-mer} \mid \text{rRNA}) = \frac{\text{rRNA reads that contain the k-mer}}{\text{all rRNA reads}}$$
-
-. . .
-
-For example, `CGTAGC` might have these read frequencies:
-
-```{python}
-#| echo: false
-#| output: asis
-
-# Six of the 4,096 rows of the purification run's fictional count tables. Poly(A) tails and other
-# A-rich stretches are common in mRNA and rare in GC-rich rRNA, so AAAAAA leans non-rRNA.
-all_counts = {"AAAAAA": (1487, 60312), "AAAAAC": (2063, 29741),
-              "CGTAGA": (9134,  7869), "CGTAGC": (12418, 6127),
-              "TTTTTG": ( 978, 15836), "TTTTTT": (1521, 24205)}
-
-ex_kmer = "CGTAGC"
-ex_r, ex_n = all_counts[ex_kmer]
-print(rf"""$$
-P(\texttt{{{ex_kmer}}} \mid \text{{rRNA}}) = \frac{{{big(ex_r)}}}{{{big(ref_n['rRNA'])}}} \approx {ex_r / ref_n['rRNA']:.2f}
-\qquad
-P(\texttt{{{ex_kmer}}} \mid \text{{non-rRNA}}) = \frac{{{big(ex_n)}}}{{{big(ref_n['non-rRNA'])}}} \approx {ex_n / ref_n['non-rRNA']:.2f}
-$$""")
-```
-
-## Counting k-mers by class {.smaller}
-
-- For each of the 4,096 possible 6-mers, we counted the reads of each class that contain it
-
-$$P(\text{k-mer}_j \mid y) = \frac{\text{number of reads in class } y \text{ with k-mer}_j}{\text{number of reads in class } y}$$
-
-. . .
-
-```{python}
-#| echo: false
-#| output: asis
-def kmer_index(kmer):
-    """The k-mer's position j in alphabetical order, AAAAAA = 0 to TTTTTT = 4,095."""
-    j = 0
-    for base in kmer:
-        j = 4 * j + "ACGT".index(base)
-    return j
-
-print(r"| $j$ | k-mer | rRNA reads with it | $P(\text{k-mer}_j \mid \text{rRNA})$ | non-rRNA reads with it | $P(\text{k-mer}_j \mid \text{non-rRNA})$ |")
-print("|:---:|:---:|:---:|:---:|:---:|:---:|")
-for i, (kmer, (n_r, n_n)) in enumerate(all_counts.items()):
-    if i in (2, 4):
-        print(r"| $\vdots$ | $\vdots$ | $\vdots$ | $\vdots$ | $\vdots$ | $\vdots$ |")
-    print(f"| {kmer_index(kmer):,} | `{kmer}` | {n_r:,} | {n_r / ref_n['rRNA']:.2f} | {n_n:,} | {n_n / ref_n['non-rRNA']:.2f} |")
-print(f"\nThe class totals are {ref_n['rRNA']:,} rRNA reads and {ref_n['non-rRNA']:,} non-rRNA reads.")
-```
-
-
-## Choosing the panel from the full table {.smaller}
-
-- The full table holds both class probabilities for all 4,096 k-mers
-- A k-mer found at similar rates in both classes says little about which class a read belongs to
-- A k-mer found far more often in one class is strong evidence, so we score each k-mer by the ratio of its two probabilities
-
-$$\text{ratio}_j = \frac{P(\text{k-mer}_j \mid \text{rRNA})}{P(\text{k-mer}_j \mid \text{non-rRNA})}$$
-
-. . .
-
-```{python}
-#| echo: false
-#| output: asis
-# The same six rows as the count table, scored by the ratio of their class probabilities.
-print(r"| $j$ | k-mer | $P(\text{k-mer}_j \mid \text{rRNA})$ | $P(\text{k-mer}_j \mid \text{non-rRNA})$ | ratio | biased toward |")
-print("|:---:|:---:|:---:|:---:|:---:|:---:|")
-for i, (kmer, (n_r, n_n)) in enumerate(all_counts.items()):
-    if i in (2, 4):
-        print(r"| $\vdots$ | $\vdots$ | $\vdots$ | $\vdots$ | $\vdots$ | $\vdots$ |")
-    p_r, p_n = n_r / ref_n["rRNA"], n_n / ref_n["non-rRNA"]
-    ratio = p_r / p_n
-    biased = "rRNA" if ratio > 1 else "non-rRNA"
-    print(f"| {kmer_index(kmer):,} | `{kmer}` | {p_r:.2f} | {p_n:.2f} | {ratio:.2g} | {biased} |")
-```
-
-## Most k-mers don't differ between classes
-
-```{python}
-#| echo: false
-#| fig-align: center
-# log10 ratio for all 4,096 k-mers: the eleven the deck names (the six table rows and the five
-# panel k-mers) at their own values, and the rest drawn at seed 613 around 0, since most k-mers
-# favor neither class. The dashed tails at ratio 4 and 1/4 hold every panel k-mer.
-named_ratio = {k: (n_r / ref_n["rRNA"]) / (n_n / ref_n["non-rRNA"]) for k, (n_r, n_n) in all_counts.items()}
-for i, kmer in enumerate(panel_kmers):
-    named_ratio[kmer] = panel_prob["rRNA"][i] / panel_prob["non-rRNA"][i]
-rng = np.random.default_rng(613)
-log_ratio = np.concatenate([rng.normal(0, 0.25, size=4096 - len(named_ratio)),
-                            np.log10(list(named_ratio.values()))])
-tail = np.log10(4)
-
-fig, ax = plt.subplots(figsize=(7, 2.8))
-ax.hist(log_ratio, bins=60, color="#2a78d6", alpha=0.8)
-ax.set_xlim(-1.5, 1.5)
-for x in (-tail, tail):
-    ax.axvline(x, color="#52514e", ls="--", lw=1.5)
-ax.text(-tail - 0.05, ax.get_ylim()[1] * 0.85, "biased non-rRNA", color="#52514e", ha="right")
-ax.text(tail + 0.05, ax.get_ylim()[1] * 0.85, "biased rRNA", color="#52514e", ha="left")
-ax.set_xlabel(r"$\log_{10}$ ratio")
-ax.set_ylabel("number of k-mers")
-ax.spines[["top", "right"]].set_visible(False)
-plt.show()
-```
-
-- Only a subset of k-mers are strongly biased toward either class
-- Select a subset of those k-mers as the panel
-
-## Our tables were created with finite data
-
-```{python}
-#| echo: false
-# A k-mer the purification run never saw in its rRNA reads: its rRNA likelihood is counted as 0,
-# and it zeroes the rRNA likelihood of any read that contains it.
-unseen = "TACGCA"
-unseen_counts = {"rRNA": 0, "non-rRNA": 400}
-unseen_prob = {c: unseen_counts[c] / ref_n[c] for c in ref_n}
-seen = ["ACGTGC", "GTGCAT"]
-seen_prob = [panel_prob["rRNA"][panel_kmers.index(k)] for k in seen]
-zeroed = seen_prob[0] * seen_prob[1] * unseen_prob["rRNA"]
-```
-
-- Each table entry is an **estimate** from `{python} f"{ref_n['rRNA']:,}"` rRNA and `{python} f"{ref_n['non-rRNA']:,}"` non-rRNA reads, not the true probability
-- One purification run captures one tissue, in one condition, on one day, not every read that could exist
-- A k-mer that is rare, or missing, in the reference reads may still matter in our sample
-
-## One k-mer missing from the rRNA reads makes a read impossible as rRNA
-
-```{python}
-#| echo: false
-#| output: asis
-print(f"Suppose the panel includes `{unseen}`, and the purification run never saw it in an rRNA read:")
-```
-
-```{python}
-#| echo: false
-#| output: asis
-print(rf"""$$
-P(\texttt{{{unseen}}} \mid \text{{rRNA}}) = \frac{{{unseen_counts['rRNA']}}}{{{big(ref_n['rRNA'])}}} = {unseen_prob['rRNA']:.0f}
-$$""")
+print(rf"$$\text{{accuracy}} = \frac{{{sr['agree']}}}{{{sr['n']}}} = {f2(sr['accuracy'])}$$")
 ```
 
 . . .
 
-```{python}
-#| echo: false
-#| output: asis
-print(f"A read with `{seen[0]}`, `{seen[1]}` and `{unseen}` then has")
-```
+- Accuracy is always measured against a reference
+    - Here the reference is the growth test
+    - A different reference would give a different accuracy
+
+## Two kinds of mistakes
+
+The panel got two isolates wrong, and the two mistakes are different:
+
+- **EC-011**: the panel said *susceptible*, but the isolate grew on ceftriaxone
+    - → a resistant isolate the panel **missed**
+- **EC-012**: the panel said *resistant*, but the isolate did not grow
+    - → a susceptible isolate the panel **over-called**
+
+. . .
+
+Accuracy counts both as "wrong" and doesn't say which kind happened.
+
+## Where the panel's mistakes come from
+
+![](img/illustrations/ch06-panel-errors.drawio.svg){fig-align="center" width="100%"}
+
+- A missed isolate: resistance can come from genes the panel doesn't test
+- An over-called isolate: some versions of a panel gene don't break down ceftriaxone
+
+## Positive and negative
+
+- To name the kinds of mistakes, we first pick one class to call **positive**
+    - Usually the class we are looking for
+- Here: **resistant** is positive, **susceptible** is negative
+- This is a choice, and every term on the next slides depends on it
+
+## Four outcomes
+
+Every isolate falls into exactly one of four outcomes:
+
+| Outcome | Panel call | Growth test | In words |
+|---|---|---|---|
+| **true positive** (TP) | resistant | resistant | resistance caught |
+| **false positive** (FP) | resistant | susceptible | over-called |
+| **false negative** (FN) | susceptible | resistant | resistance missed |
+| **true negative** (TN) | susceptible | susceptible | correctly cleared |
+
+. . .
+
+- *positive* or *negative* is what the **panel** said
+- *true* or *false* is whether the panel **agreed with the growth test**
+
+## The confusion table
+
+A **confusion table** counts how many instances fall into each of the four outcomes:
+
+|  | Growth test: resistant | Growth test: susceptible |
+|---|:-:|:-:|
+| **Panel: resistant** | TP | FP |
+| **Panel: susceptible** | FN | TN |
+
+- Rows are the classifier's predictions
+- Columns are the reference
+
+## The confusion table (cont.)
+
+The twelve isolates:
+
+|  | Growth test: resistant | Growth test: susceptible | Total |
+|---|:-:|:-:|:-:|
+| **Panel: resistant** | `{python} s["TP"]` (EC-006, EC-008) | `{python} s["FP"]` (EC-012) | `{python} s["TP"] + s["FP"]` |
+| **Panel: susceptible** | `{python} s["FN"]` (EC-011) | `{python} s["TN"]` | `{python} s["FN"] + s["TN"]` |
+| **Total** | `{python} s["TP"] + s["FN"]` | `{python} s["FP"] + s["TN"]` | `{python} sr["n"]` |
+
+. . .
+
+- Accuracy is the two agreeing cells, TP and TN, out of the total:
 
 ```{python}
 #| echo: false
 #| output: asis
-print(rf"""$$
-P(\text{{read}} \mid \text{{rRNA}}) = {seen_prob[0]:.2f} \times {seen_prob[1]:.2f} \times {unseen_prob['rRNA']:.0f} \times \cdots = {zeroed:.0f}
-$$""")
+print(rf"$$\text{{accuracy}} = \frac{{\text{{TP}} + \text{{TN}}}}{{\text{{total}}}} = \frac{{{s['TP']} + {s['TN']}}}{{{sr['n']}}} = {f2(sr['accuracy'])}$$")
 ```
 
-The zero wipes out the evidence of every other panel k-mer, however strongly they point to rRNA.
+## Accuracy answers one question
+
+- Accuracy answers: *how often does the panel agree with the growth test?*
+- A doctor or a lab might ask narrower questions:
+    - Of the isolates that **are** resistant, how many does the panel catch?
+    - Of the isolates that **are** susceptible, how many does the panel clear?
+    - When the panel **says** resistant, how often is it right?
+- Each question reads one part of the confusion table
+
+## Sensitivity
+
+**Sensitivity**: of the instances that are truly positive, the fraction the classifier calls positive
+
+|  | **Growth test: resistant** | Growth test: susceptible |
+|---|:-:|:-:|
+| **Panel: resistant** | **`{python} s["TP"]`** | `{python} s["FP"]` |
+| **Panel: susceptible** | **`{python} s["FN"]`** | `{python} s["TN"]` |
+
+Read down the *resistant* column:
+
+```{python}
+#| echo: false
+#| output: asis
+print(rf"$$\text{{sensitivity}} = \frac{{\text{{TP}}}}{{\text{{TP}} + \text{{FN}}}} = \frac{{{s['TP']}}}{{{s['TP']} + {s['FN']}}} = {f2(sr['sensitivity'])}$$")
+```
+
+The panel caught `{python} s["TP"]` of the `{python} s["TP"] + s["FN"]` resistant isolates.
+
+## Specificity
+
+**Specificity**: of the instances that are truly negative, the fraction the classifier calls negative
+
+|  | Growth test: resistant | **Growth test: susceptible** |
+|---|:-:|:-:|
+| **Panel: resistant** | `{python} s["TP"]` | **`{python} s["FP"]`** |
+| **Panel: susceptible** | `{python} s["FN"]` | **`{python} s["TN"]`** |
+
+Read down the *susceptible* column:
+
+```{python}
+#| echo: false
+#| output: asis
+print(rf"$$\text{{specificity}} = \frac{{\text{{TN}}}}{{\text{{TN}} + \text{{FP}}}} = \frac{{{s['TN']}}}{{{s['TN']} + {s['FP']}}} = {f2(sr['specificity'])}$$")
+```
+
+The panel cleared `{python} s["TN"]` of the `{python} s["TN"] + s["FP"]` susceptible isolates.
+
+## Positive predictive value
+
+**Positive predictive value** (PPV): of the instances the classifier calls positive, the fraction that are truly positive
+
+|  | Growth test: resistant | Growth test: susceptible |
+|---|:-:|:-:|
+| **Panel: resistant** | **`{python} s["TP"]`** | **`{python} s["FP"]`** |
+| **Panel: susceptible** | `{python} s["FN"]` | `{python} s["TN"]` |
+
+Read across the *panel: resistant* row:
+
+```{python}
+#| echo: false
+#| output: asis
+print(rf"$$\text{{PPV}} = \frac{{\text{{TP}}}}{{\text{{TP}} + \text{{FP}}}} = \frac{{{s['TP']}}}{{{s['TP']} + {s['FP']}}} = {f2(sr['PPV'])}$$")
+```
+
+When the panel said *resistant*, it was right `{python} s["TP"]` times out of `{python} s["TP"] + s["FP"]`.
+
+## Sensitivity and PPV are different questions
+
+Both have TP on top, but they divide by different groups:
+
+- **Sensitivity** divides by the isolates that **are** resistant (a column)
+    - → starts from the growth test: *of the resistant isolates, how many did the panel catch?*
+- **PPV** divides by the isolates the panel **called** resistant (a row)
+    - → starts from the panel: *when the panel says resistant, how often is it right?*
+
+. . .
+
+A lab validating the panel asks about sensitivity. A doctor holding one panel result asks about PPV.
+
+## Four numbers, four questions
+
+| Measure | Question it answers | Part of the table | Twelve isolates |
+|---|---|---|:-:|
+| accuracy | How often does the panel agree with the growth test? | TP and TN, of all | `{python} f2(sr["accuracy"])` |
+| sensitivity | Of the resistant isolates, how many are caught? | resistant column | `{python} f2(sr["sensitivity"])` |
+| specificity | Of the susceptible isolates, how many are cleared? | susceptible column | `{python} f2(sr["specificity"])` |
+| PPV | When the panel says resistant, how often is it right? | *panel: resistant* row | `{python} f2(sr["PPV"])` |
+
+# A year of isolates
+
+## The full year
+
+Twelve isolates are enough to see where the numbers come from, but too few to judge the panel.
+
+The hospital lab ran both tests on `{python} yr["n"]` isolates over a year:
+
+|  | Growth test: resistant | Growth test: susceptible | Total |
+|---|:-:|:-:|:-:|
+| **Panel: resistant** | `{python} y["TP"]` | `{python} y["FP"]` | `{python} y_call_res` |
+| **Panel: susceptible** | `{python} y["FN"]` | `{python} y["TN"]` | `{python} y["FN"] + y["TN"]` |
+| **Total** | `{python} y_res` | `{python} y_sus` | `{python} yr["n"]` |
+
+## The full year (cont.)
+
+| Measure | Question it answers | Value |
+|---|---|:-:|
+| accuracy | How often does the panel agree with the growth test? | `{python} f2(yr["accuracy"])` |
+| sensitivity | Of the resistant isolates, how many are caught? | `{python} f2(yr["sensitivity"])` |
+| specificity | Of the susceptible isolates, how many are cleared? | `{python} f2(yr["specificity"])` |
+| PPV | When the panel says resistant, how often is it right? | `{python} f2(yr["PPV"])` |
+
+. . .
+
+- The panel agrees with the growth test on `{python} pct(yr["accuracy"])` of isolates
+- What else do the other three numbers tell us?
+
+## What the accuracy contains
+
+- `{python} pct(yr["accuracy"])` accuracy combines both kinds of mistake into one number
+- The other measures separate them:
+    - `{python} y["FN"]` of the `{python} y_res` resistant isolates were **missed** (sensitivity `{python} f2(yr["sensitivity"])`)
+    - `{python} y["FP"]` of the `{python} y_call_res` *resistant* calls were **over-called** (PPV `{python} f2(yr["PPV"])`)
+
+. . .
+
+- Each missed isolate is a patient given ceftriaxone for an infection it won't treat
+- Each over-called isolate is a patient moved off a drug that would have worked
+
+## Next time
+
+- Accuracy, sensitivity, specificity and PPV each answer a different question about the same predictions
+- The panel makes two kinds of mistakes, and they have different consequences for the patient
+
+Next time: which mistake is easier to live with, and how does that change which number we care about?
