@@ -29,11 +29,11 @@ unevenly, so units 2 to 4 run **Friday → Monday → Wednesday**: the topic and
 on Friday, you have the weekend with them, and Monday and Wednesday are working sessions. Class on
 Mon Sep 28 was cancelled, and every meeting after it moved one place later. From unit 5 on, a unit
 runs **Monday → Wednesday → Friday**: the topic and the new problem open on Monday, and Wednesday
-and Friday are working sessions. Unit 6 opens on a Tuesday, the Monday-schedule substitute day.
-On Oct 13, evaluation became two units, and unit 6 runs four sessions, ending Mon Oct 19. From unit
-7 on, a unit runs **Wednesday → Friday → Monday**: the topic and the new problem open on Wednesday,
+and Friday are working sessions. Unit 5 has a fourth session on Tue Oct 13, the Monday-schedule
+substitute day. On Oct 13, evaluation became two units, and unit 6 opens Wed Oct 14. From unit
+6 on, a unit runs **Wednesday → Friday → Monday**: the topic and the new problem open on Wednesday,
 and Friday and Monday are working sessions. Thanksgiving recess falls between units 11 and 12. No
-session of units 1 to 12 is dropped. The cancelled class and unit 6's fourth session both took
+session of units 1 to 12 is dropped. The cancelled class and unit 5's fourth session both took
 their meetings from the project unit, unit 13, which has two.
 
 **A problem set covers one unit's material and is assigned at the next unit's first session** —
@@ -61,8 +61,8 @@ pace afterwards.
 | [**2**]({{ site.baseurl }}/units/unit-02/) | Fri **Sep 11** · Mon **Sep 14** · Wed **Sep 16** | Null distributions; what a p-value is; multiple testing | NA / **PS2** |
 | [**3**]({{ site.baseurl }}/units/unit-03/) | Fri **Sep 18** · Mon **Sep 21** · Wed **Sep 23** | Nesting; overdispersion; why counts vary more than they should | **PS2** / **PS3** |
 | [**4**]({{ site.baseurl }}/units/unit-04/) | Fri **Sep 25** · Wed **Sep 30** · Fri **Oct 2** | Bayes' theorem; estimating probabilities from counts | **PS3** / **PS4** |
-| [**5**]({{ site.baseurl }}/units/unit-05/) | Mon **Oct 5** · Wed **Oct 7** · Fri **Oct 9** | Naive Bayes: classification as a generative story | **PS4** / **PS5** |
-| [**6**]({{ site.baseurl }}/units/unit-06/) | Tue **Oct 13** · Wed **Oct 14** · Fri **Oct 16** · Mon **Oct 19** | Evaluation I: held-out scores, the confusion table, the ROC curve, calibration | **PS5** / **PS6** |
+| [**5**]({{ site.baseurl }}/units/unit-05/) | Mon **Oct 5** · Wed **Oct 7** · Fri **Oct 9** · Tue **Oct 13** | Naive Bayes: classification as a generative story | **PS4** / **PS5** |
+| [**6**]({{ site.baseurl }}/units/unit-06/) | Wed **Oct 14** · Fri **Oct 16** · Mon **Oct 19** | Evaluation I: held-out scores, the confusion table, the ROC curve, calibration | **PS5** / **PS6** |
 | [**7**]({{ site.baseurl }}/units/unit-07/) | Wed **Oct 21** · Fri **Oct 23** · Mon **Oct 26** | Evaluation II: overfitting, cross-validation, leakage, the permutation null | NA / **PS7** |
 | [**8**]({{ site.baseurl }}/units/unit-08/) | Wed **Oct 28** · Fri **Oct 30** · Mon **Nov 2** | Regression, logistic and linear, and regularization | **PS7** / **PS8** |
 | [**9**]({{ site.baseurl }}/units/unit-09/) | Wed **Nov 4** · Fri **Nov 6** · Mon **Nov 9** | Generalized linear models: Poisson and negative binomial regression | **PS8** / NA |
@@ -80,7 +80,7 @@ problem set. **PS10, due Mon Nov 30, is the last one.**
 |---|---|
 | Mon **Sep 7** | Labor Day — no class. Falls inside unit 1, between Sep 4 and Sep 9 |
 | Mon **Sep 28** | Class cancelled. Falls inside unit 4, between Fri Sep 25 and Wed Sep 30. Every meeting after it moved down one place, so unit 4's last session is Fri Oct 2, PS4 is due Mon Oct 5, and unit 13 lost a session |
-| Mon **Oct 12** | Indigenous Peoples' Day — no class. BU substitutes a Monday schedule on **Tue Oct 13**, which is unit 6's first session. It is the only substitute day of the term; Labor Day is not made up |
+| Mon **Oct 12** | Indigenous Peoples' Day — no class. BU substitutes a Monday schedule on **Tue Oct 13**, which is unit 5's fourth session: PS5 is due and PS6 opens that day, and unit 6 opens Wed Oct 14. It is the only substitute day of the term; Labor Day is not made up |
 | Wed **Nov 25** – Sun **Nov 29** | Thanksgiving recess — no class. Falls between unit 11, which ends Mon Nov 23, and unit 12, which opens Mon Nov 30. PS10 is open over the recess and is due Mon Nov 30 |
 | Thu **Dec 10** | Last day of classes. We do not meet Thursdays, so **Wed Dec 9** is our last meeting |
 | **Dec 11–13** · **Dec 14–18** | Study period · final exams period — **no exam for this course** |

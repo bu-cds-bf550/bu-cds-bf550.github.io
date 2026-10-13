@@ -25,7 +25,7 @@ The project proposal is due **Wed Dec 9** and the project bundle during the fina
 **there is no exam during finals period.**
 
 Unit 13 carries the term's last meeting, Wed Dec 9. It has two sessions: class on Mon Sep 28 was
-cancelled, and on Oct 13 evaluation became two units, and each moved every later meeting one place. The last graded problem set,
+cancelled, and unit 5 took a fourth session on Tue Oct 13 when evaluation became two units; each moved every later meeting one place. The last graded problem set,
 **PS10, was due Mon Nov 30**; nothing is due in this unit but the project.
 
 ## Where this fits
