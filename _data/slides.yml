@@ -79,18 +79,18 @@
   file: unit-05-3b
 - unit: unit-06
   session: 1
-  date: "Tue Oct 13"
-  title: "Model evaluation, part 1"
+  date: "Wed Oct 14"
+  title: "Evaluating a classifier"
   file: unit-06-1
 - unit: unit-06
   session: 2
-  date: "Wed Oct 14"
-  title: "Model evaluation, part 2"
+  date: "Fri Oct 16"
+  title: "Mistakes and their consequences"
   file: unit-06-2
 - unit: unit-06
   session: 3
-  date: "Fri Oct 16"
-  title: "Model evaluation, part 3"
+  date: "Mon Oct 19"
+  title: "Scores, thresholds and calibration"
   file: unit-06-3
 - unit: unit-02
   session: 2

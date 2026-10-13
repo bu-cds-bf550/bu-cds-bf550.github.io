@@ -1,682 +1,459 @@
 ---
-# Unit 6, session 1 (Tue Oct 13): evaluation
-# multiclass Bayes classifier. Human-authored by the instructor, 7 Oct 2026; it replaced the
-# assistant-authored deck, which now lives unlinked at unit-05-2-shadow.qmd (record
-# bf550-instructor decisions/human-authored-content-first.md). The setup chunk below is the
-# previous deck's, kept so the chapter's seeds and tables stay available to later slides.
-title: ""
-subtitle: "BF550 · Unit 6 · Session 1 — Tue Oct 13"
+# Unit 6, session 1 (Wed Oct 14): evaluating a classifier. A new setting, a hospital lab's E. coli
+# isolates screened by a three-gene panel and grown on ceftriaxone, replaces unit 5's rRNA reads.
+# The session names accuracy, the confusion table, sensitivity, specificity and PPV; which
+# mistake is worse is session 2's question. Drafted by the assistant on 13 Oct 2026 at the
+# instructor's request, in the form of the instructor's hand-authored decks, for the instructor
+# to revise. The rRNA training-data deck it replaces is kept unlinked at _unit-06-1-rrna.qmd.
+#
+# Every number on the slides is printed from the setup chunk. The 12-isolate table is written
+# out by hand, and the chunk asserts that the simulation still produces it.
+title: "Evaluating a Classifier"
+subtitle: "BF550 · Unit 6 · Session 1 — Wed Oct 14"
 ---
 
 ```{python}
 #| echo: false
-# Session 1's model, simulated reads, new read and likelihood function, rebuilt with the
-# chapter's seeds so that this deck's numbers are the chapter's.
+# About 15% of E. coli are resistant to ceftriaxone, in line with US surveillance: 15.3% of
+# E. coli infections across VA hospitals in 2019 (Lancet Infect Dis 2024,
+# doi:10.1016/S1473-3099(24)00416-X) and 12.9% of febrile UTIs at Kaiser Northern California
+# (Ann Emerg Med 2021, doi:10.1016/j.annemergmed.2021.01.003).
+#
+# The panel's rule: any panel gene present -> call resistant. It misses resistance from a gene
+# the panel doesn't test, and over-calls isolates carrying a panel gene that doesn't break down
+# ceftriaxone.
 import numpy as np
 
-rng = np.random.default_rng(61)
-presence_prob = {"rRNA":     rng.uniform(0.15, 0.85, size=20),
-                 "non-rRNA": rng.uniform(0.15, 0.85, size=20)}
+genes = ["blaCTX-M", "blaCMY-2", "blaSHV"]
+share_resistant = 0.15
 
-def draw_labeled_read(share_rrna, presence_prob, rng):
-    if rng.random() < share_rrna:
-        label = "rRNA"
+# P(gene present | class). Resistant isolates mostly carry CTX-M; a few carry none of the
+# three. Susceptible isolates occasionally carry one.
+gene_prob = {"resistant":   np.array([0.75, 0.12, 0.08]),
+             "susceptible": np.array([0.02, 0.02, 0.03])}
+
+def draw_isolate(rng):
+    if rng.random() < share_resistant:
+        growth = "resistant"
     else:
-        label = "non-rRNA"
-    present = rng.random(20) < presence_prob[label]
-    return label, present
+        growth = "susceptible"
+    present = rng.random(3) < gene_prob[growth]
+    return growth, present
 
-rng = np.random.default_rng(67)
-label_list, reads = [], []
-for _ in range(100000):
-    label, present = draw_labeled_read(0.15, presence_prob, rng)
-    label_list.append(label)
-    reads.append(present)
-labels = np.array(label_list)
+def panel_call(present):
+    if present.any():
+        return "resistant"
+    return "susceptible"
 
-rng = np.random.default_rng(126)
-new_label, new_read = draw_labeled_read(0.15, presence_prob, rng)
+def draw_isolates(n, rng):
+    rows = []
+    for i in range(n):
+        growth, present = draw_isolate(rng)
+        rows.append({"isolate": f"EC-{i + 1:03d}", "present": present,
+                     "call": panel_call(present), "growth": growth})
+    return rows
 
-def likelihood(present, probs):
-    likelihood_p = 1.0
-    for i in range(len(probs)):
-        if present[i]:
-            likelihood_p = likelihood_p * probs[i]
+def confusion(rows):
+    c = {"TP": 0, "FP": 0, "FN": 0, "TN": 0}
+    for r in rows:
+        if r["call"] == "resistant" and r["growth"] == "resistant":
+            c["TP"] += 1
+        elif r["call"] == "resistant":
+            c["FP"] += 1
+        elif r["growth"] == "resistant":
+            c["FN"] += 1
         else:
-            likelihood_p = likelihood_p * (1 - probs[i])
-    return likelihood_p
+            c["TN"] += 1
+    return c
 
-like_rrna = likelihood(new_read, presence_prob["rRNA"])
-like_nonrrna = likelihood(new_read, presence_prob["non-rRNA"])
-posterior_given = like_rrna * 0.15 / (like_rrna * 0.15 + like_nonrrna * 0.85)
+def rates(c):
+    n = c["TP"] + c["FP"] + c["FN"] + c["TN"]
+    return {"n": n,
+            "agree": c["TP"] + c["TN"],
+            "accuracy":    (c["TP"] + c["TN"]) / n,
+            "sensitivity": c["TP"] / (c["TP"] + c["FN"]),
+            "specificity": c["TN"] / (c["TN"] + c["FP"]),
+            "PPV":         c["TP"] / (c["TP"] + c["FP"])}
 
-# The method block's three-measurement example. Every number it shows is printed from here,
-# so nothing on those slides is typed by hand.
-m_p = [0.80, 0.30, 0.60]          # P(answer i is yes | class A)
-m_q = [0.20, 0.70, 0.50]          # P(answer i is yes | class B)
-m_share_a, m_share_b = 0.40, 0.60
-m_answers = [True, False, True]   # the object we observed: yes, no, yes
+# The hand-countable table: 12 isolates. Seed 45 was chosen so that all four cells of the
+# confusion table are filled: 2 caught, 1 missed (EC-011), 1 over-called (EC-012), 8 cleared.
+small = draw_isolates(12, np.random.default_rng(45))
+s = confusion(small)
+sr = rates(s)
+assert s == {"TP": 2, "FP": 1, "FN": 1, "TN": 8}
+assert small[10]["call"] == "susceptible" and small[10]["growth"] == "resistant"
+assert small[11]["call"] == "resistant" and small[11]["growth"] == "susceptible"
 
-def m_factors(probs):
-    out = []
-    for i in range(3):
-        if m_answers[i]:
-            out.append(probs[i])
-        else:
-            out.append(1 - probs[i])
-    return out
-
-m_fac_a, m_fac_b = m_factors(m_p), m_factors(m_q)
-m_like_a = m_fac_a[0] * m_fac_a[1] * m_fac_a[2]
-m_like_b = m_fac_b[0] * m_fac_b[1] * m_fac_b[2]
-m_joint_a, m_joint_b = m_like_a * m_share_a, m_like_b * m_share_b
-m_post_a = m_joint_a / (m_joint_a + m_joint_b)
-m_post_b = m_joint_b / (m_joint_a + m_joint_b)
-
-# Step 1: measurement 1 alone, for the one-measurement slide
-m1_joint_a, m1_joint_b = m_share_a * m_p[0], m_share_b * m_q[0]
-m1_total = m1_joint_a + m1_joint_b
-m1_post_a, m1_post_b = m1_joint_a / m1_total, m1_joint_b / m1_total
-m_total = m_joint_a + m_joint_b
-
-# the 100-object table for the independence slide: class A, measurements 1 and 2
-m_n = 100
-m_cells = [[round(m_n * m_p[0] * m_p[1]), round(m_n * m_p[0] * (1 - m_p[1]))],
-           [round(m_n * (1 - m_p[0]) * m_p[1]), round(m_n * (1 - m_p[0]) * (1 - m_p[1]))]]
-
-# the cost slide: measurement 1 counted twice, with no new information
-m_dbl_a = m_share_a * m_p[0] * m_p[0]
-m_dbl_b = m_share_b * m_q[0] * m_q[0]
-m_dbl_post_a = m_dbl_a / (m_dbl_a + m_dbl_b)
+# A year of isolates: 500.
+year = draw_isolates(500, np.random.default_rng(606))
+y = confusion(year)
+yr = rates(y)
+y_res = y["TP"] + y["FN"]
+y_sus = y["TN"] + y["FP"]
+y_call_res = y["TP"] + y["FP"]
 
 def f2(x):
     return f"{x:.2f}"
 
-def f3(x):
-    return f"{x:.3f}"
-
-def f4(x):
-    return f"{x:.4f}"
-
-# Unit 4's 100,000 simulated reads at seed 41, for the counted likelihood, and its smooth GC curves
-from math import comb
-from scipy.stats import binom
-from scipy.special import gammaln
-import matplotlib.pyplot as plt
-
-def draw_gc_from_two_groups(share_a, gc_a, gc_b, n_bases, rng):
-    if rng.random() < share_a:
-        return "A", rng.binomial(n_bases, gc_a)
-    return "B", rng.binomial(n_bases, gc_b)
-
-rng = np.random.default_rng(41)
-species_list, gc_list = [], []
-for _ in range(100000):
-    s, g = draw_gc_from_two_groups(0.5, 0.66, 0.48, 40, rng)
-    species_list.append(s)
-    gc_list.append(g)
-species = np.array(species_list)
-gc = np.array(gc_list)
-is_a = (species == "A")
-n_a = is_a.sum()
-count_a_25 = (gc[is_a] == 25).sum()
-
-def smooth_binomial(k, n, p):
-    log_choose = gammaln(n + 1) - gammaln(k + 1) - gammaln(n - k + 1)
-    return np.exp(log_choose + k * np.log(p) + (n - k) * np.log(1 - p))
-
-pmf_a_25 = binom.pmf(25, 40, 0.66)
-pmf_b_25 = binom.pmf(25, 40, 0.48)
+def pct(x):
+    return f"{x:.0%}"
 ```
 
-# Model Evaluation, part 1
+# A new problem
 
-## Naive Bayes Classification cont'd
+## A bloodstream infection
 
-- Naive Bayes assumes all features are **conditionally independent** of each other
-- Allows **joint probabilities** e.g. $P(\text{read1, read2} | A)$ to be factored into individual likelihoods
-- Using Bayes theorem to compute the posterior, in notation:
-    $$\begin{aligned}
-    P(A \mid \text{read1, read2}) &= \frac{P(\text{read1, read2} \mid A) P(A)}{P(\text{read1, read2})} \\
-    &= \frac{P(\text{read1} \mid A) \; P(\text{read2} \mid A) P(A)}{P(\text{read1, read2})}
-    &= P(A) \prod_{i=1}^{n} P(read_i \mid y)$$
-    \end{aligned}
-    $$
-- This makes computing the posterior simple and easy
-- The assumption of conditional independence of all features usually does not hold
-
-## 
-
-{TODO} illustration of a 
-
-## Likelihood of a single feature
-
-```
-ATGCACCCTGTGGGCGAGCTGCCTATCGGCCGAAATACGC
-```
-
-```{python}
-#| echo: false
-#| fig-align: center
-counts = np.linspace(0, 40, 801)
-fig, ax = plt.subplots(figsize=(7, 2.8))
-ax.plot(counts, smooth_binomial(counts, 40, 0.66), color="#eb6834", lw=2)
-ax.plot(counts, smooth_binomial(counts, 40, 0.48), color="#2a78d6", lw=2)
-ax.text(31, 0.085, "Microbe A, 66% GC", color="#eb6834")
-ax.text(15, 0.085, "Microbe B, 48% GC", color="#2a78d6", ha="right")
-ax.axvline(25, color="#52514e", ls=":", lw=1.5)
-ax.text(25.4, ax.get_ylim()[1] * 0.93, "observed read", color="#52514e")
-ax.plot([25, 25], [pmf_a_25, pmf_b_25], "o", ms=6, color="#52514e")
-ax.set_xlabel("G or C bases, out of 40")
-ax.set_ylabel("expected share of reads")
-ax.spines[["top", "right"]].set_visible(False)
-plt.show()
-```
-
-```{python}
-#| echo: false
-#| output: asis
-print(rf"$P(\text{{read}} \mid A) = {pmf_a_25:.3f}$ and $P(\text{{read}} \mid B) = {pmf_b_25:.3f}$")
-```
-
-## Likelihood of a single feature (cont.)
-
-The read is the **instance**
+- A patient arrives at the hospital with a bloodstream infection caused by *E. coli*
+- A common first choice of antibiotic is **ceftriaxone**
+- Some *E. coli* are **resistant** to ceftriaxone: the drug doesn't stop them growing
+    - About 15% of *E. coli* infections in US hospitals are resistant
+- If the bacteria are resistant, the patient needs a different drug, and the sooner the better
 
 . . .
 
-The GC content is its only **feature**
+The question for every patient: **is this patient's *E. coli* resistant to ceftriaxone?**
+
+## Two ways to find out
+
+![](img/illustrations/ch06-two-tests.drawio.svg){fig-align="center" width="100%"}
+
+- An **isolate** is a population of bacteria grown from one patient's sample
+- Both tests are run on the same isolate
+
+## The growth test
+
+- Spread the isolate on a plate that contains ceftriaxone, and wait
+    - Colonies grow → the isolate is **resistant**
+    - Nothing grows → the isolate is **susceptible**
+- The growth test measures resistance directly: it asks whether the bacteria survive the drug
+- It is the hospital lab's standard answer
+- But it takes 1–2 days, and the patient is waiting
+
+## The gene panel
+
+- Bacteria resist ceftriaxone mostly by carrying genes for enzymes that break the drug down
+- A **gene panel** tests an isolate for a short list of known resistance genes
+- Our panel tests for three: *blaCTX-M*, *blaCMY-2* and *blaSHV*
+- Results come back in a few hours
 
 . . .
 
-We computed the likelihood of the read given Microbe A by:
+The panel's rule:
 
-```{python}
-#| echo: false
-#| output: asis
-print(rf"$$P(\text{{read}} \mid A) = \frac{{\text{{A's reads with 25 G or C}}}}{{\text{{all of A's reads}}}}"
-      rf" = \frac{{{count_a_25:,}}}{{{n_a:,}}} = {count_a_25 / n_a:.3f}$$".replace(",", "{,}"))
-```
+- If any of the three genes is present → call the isolate **resistant**
+- If none is present → call the isolate **susceptible**
 
-## GC is modeled as a binomial distribution
+## The gene panel is a classifier
 
-The binomial distribution models:
+From last unit:
 
-- the number of successes $k$ 
-- in a fixed number of independent trials $n$
-- that each have the same probability of success $p$
+- **instance**: a single observation we wish to classify → one isolate
+- **features**: characteristics used to tell instances apart → present or absent, for each of the three genes
+- **labels**: the classes → resistant or susceptible
+- **classifier**: a rule that assigns a label based on the features → *any gene present means resistant*
 
 . . .
 
-$$ k \sim \text{Binomial}(n, p) $$
+The panel never sees the drug. It **predicts** what the growth test will show.
+
+## Can the panel replace the growth test?
+
+- The panel is faster, but it is only useful if its predictions are right
+- To find out how often it is right, run **both** tests on the same isolates and compare
+- The growth test is our **reference**: the answer we treat as correct
+    - Every measure of how well a classifier works compares its predictions to some reference
+
+# Accuracy
+
+## Twelve isolates {.smaller}
+
+Twelve isolates from the hospital lab, run through the panel:
+
+| Isolate | *blaCTX-M* | *blaCMY-2* | *blaSHV* | Panel call |
+|---|:-:|:-:|:-:|---|
+| EC-001 | – | – | – | susceptible |
+| EC-002 | – | – | – | susceptible |
+| EC-003 | – | – | – | susceptible |
+| EC-004 | – | – | – | susceptible |
+| EC-005 | – | – | – | susceptible |
+| EC-006 | + | – | + | resistant |
+| EC-007 | – | – | – | susceptible |
+| EC-008 | + | – | – | resistant |
+| EC-009 | – | – | – | susceptible |
+| EC-010 | – | – | – | susceptible |
+| EC-011 | – | – | – | susceptible |
+| EC-012 | + | – | – | resistant |
+
+: {.striped}
+
+## Twelve isolates (cont.) {.smaller}
+
+The same isolates, with the growth test's result beside the panel's call:
+
+| Isolate | Panel call | Growth test |
+|---|---|---|
+| EC-001 | susceptible | susceptible |
+| EC-002 | susceptible | susceptible |
+| EC-003 | susceptible | susceptible |
+| EC-004 | susceptible | susceptible |
+| EC-005 | susceptible | susceptible |
+| EC-006 | resistant | resistant |
+| EC-007 | susceptible | susceptible |
+| EC-008 | resistant | resistant |
+| EC-009 | susceptible | susceptible |
+| EC-010 | susceptible | susceptible |
+| EC-011 | susceptible | resistant |
+| EC-012 | resistant | susceptible |
+
+: {.striped}
+
+## Twelve isolates (cont.) {.smaller}
+
+Does the panel's call agree with the growth test?
+
+| Isolate | Panel call | Growth test | Agree? |
+|---|---|---|:-:|
+| EC-001 | susceptible | susceptible | ✓ |
+| EC-002 | susceptible | susceptible | ✓ |
+| EC-003 | susceptible | susceptible | ✓ |
+| EC-004 | susceptible | susceptible | ✓ |
+| EC-005 | susceptible | susceptible | ✓ |
+| EC-006 | resistant | resistant | ✓ |
+| EC-007 | susceptible | susceptible | ✓ |
+| EC-008 | resistant | resistant | ✓ |
+| EC-009 | susceptible | susceptible | ✓ |
+| EC-010 | susceptible | susceptible | ✓ |
+| **EC-011** | **susceptible** | **resistant** | **✗** |
+| **EC-012** | **resistant** | **susceptible** | **✗** |
+
+: {.striped}
+
+## Accuracy
+
+- **Accuracy** is the fraction of instances where the classifier's prediction agrees with the reference
 
 . . .
 
-In our read:
-
-- $p = 0.66$ - the probability of success, the GC content of Microbe A
-- $n = 40$ - the number of bases in the read
-- $k = 25$ - the number of G or C bases in the read, the "successes"
-
-## The binomial distribution has a closed form
-
-$$ P(k \mid n, p) = \binom{n}{k} \, p^k \, (1 - p)^{n - k} $$
-
-. . .
-
-Plug in our values:
-
-```{python}
-#| echo: false
-#| output: asis
-def sci(x):
-    mantissa, exponent = f"{x:.2e}".split("e")
-    return rf"{mantissa} \times 10^{{{int(exponent)}}}"
-
-n_choose_k = f"{comb(40, 25):,}".replace(",", "{,}")
-print(rf"""$$
-\begin{{aligned}}
-P(25 \mid 40, 0.66) &= \binom{{40}}{{25}} \, 0.66^{{25}} \, (1 - 0.66)^{{15}} \\
-&= {n_choose_k} \times {sci(0.66**25)} \times {sci(0.34**15)} \\
-&= {pmf_a_25:.4f}
-\end{{aligned}}
-$$""")
-```
-
-. . .
+- The panel agrees with the growth test on `{python} sr["agree"]` of `{python} sr["n"]` isolates:
 
 ```{python}
 #| echo: false
 #| output: asis
-sim_frac = rf"\frac{{{count_a_25:,}}}{{{n_a:,}}}".replace(",", "{,}")
-print(rf"From the simulation: ${sim_frac} = {count_a_25 / n_a:.4f}$, and the formula gives ${pmf_a_25:.4f}$")
-```
-
-## Probability Mass Functions
-
-The function $P(k \mid n, p)$ is called a **probability mass function** (PMF)
-
-```{python}
-#| echo: false
-#| fig-align: center
-ks = np.arange(0, 41)
-pmf_a = binom.pmf(ks, 40, 0.66)
-bar_colours = ["#eb6834" if k == 25 else "#f5c3ad" for k in ks]
-fig, ax = plt.subplots(figsize=(7, 2.8))
-ax.bar(ks, pmf_a, width=0.8, color=bar_colours)
-ax.annotate(rf"$k = 25$: {pmf_a_25:.3f}", xy=(25, pmf_a_25), xytext=(12, pmf_a_25 * 1.05),
-            color="#eb6834", arrowprops=dict(arrowstyle="->", color="#eb6834"))
-ax.set_xlabel("G or C bases $k$, out of $n = 40$")
-ax.set_ylabel(r"$P(k \mid 40, 0.66)$")
-ax.set_xlim(5, 40)
-ax.set_title("Microbe A, 66% GC", color="#eb6834", loc="left")
-ax.spines[["top", "right"]].set_visible(False)
-plt.show()
-```
-
-It's called a "mass" function because the binomial distribution is discrete
-
-. . .
-
-The probability mass function returns the *likelihood* of $k$, given $n$ and $p$
-
-## PMF in python {.smaller}
-
-```{python}
-#| echo: true
-from scipy.stats import binom
-
-# binom.pmf(k, n, p): the probability of exactly k successes in n trials
-print(f"{binom.pmf(25, 40, 0.66):.4f}")    # our read under Microbe A
-print(f"{binom.pmf(25, 40, 0.48):.4f}")    # the same read under Microbe B
-print(f"{binom.pmf(25, 60, 0.66):.4f}")    # 25 G or C bases in a 60-base read
-print(binom.pmf([20, 25, 30], 40, 0.66).round(4))   # several k at once
-```
-
-## The next experiment
-
-Our collaborator streaked a mixture of Microbe A and Microbe B on a plate, then added a drug that kills one of the microbes 
-
-We're not sure which one it killed, but we know that every surviving colony is the same microbe
-
-![](img/illustrations/ch05-colony-plating.drawio.svg){fig-align="center" width="90%"}
-
-Which microbe survived?
-
-## Two reads
-
-We now sequenced two reads
-
-```
->read1
-ATGCACCCTGTGGGCGAGCTGCCTATCGGCCGAAATACGC
->read2
-GTGCGGGCCACGCGGTGACCCATCTAGATGCGGGGTCTGC
+print(rf"$$\text{{accuracy}} = \frac{{{sr['agree']}}}{{{sr['n']}}} = {f2(sr['accuracy'])}$$")
 ```
 
 . . .
 
-The drug killed one of the microbes, so every surviving colony is the same microbe, and both reads come from it
+- Accuracy is always measured against a reference
+    - Here the reference is the growth test
+    - A different reference would give a different accuracy
+
+## Two kinds of mistakes
+
+The panel got two isolates wrong, and the two mistakes are different:
+
+- **EC-011**: the panel said *susceptible*, but the isolate grew on ceftriaxone
+    - → a resistant isolate the panel **missed**
+- **EC-012**: the panel said *resistant*, but the isolate did not grow
+    - → a susceptible isolate the panel **over-called**
 
 . . .
 
-Only one read left the probability of A at 0.83, we want to be more confident
+Accuracy counts both as "wrong" and doesn't say which kind happened.
+
+## Where the panel's mistakes come from
+
+![](img/illustrations/ch06-panel-errors.drawio.svg){fig-align="center" width="100%"}
+
+- A missed isolate: resistance can come from genes the panel doesn't test
+- An over-called isolate: some versions of a panel gene don't break down ceftriaxone
+
+## Positive and negative
+
+- To name the kinds of mistakes, we first pick one class to call **positive**
+    - Usually the class we are looking for
+- Here: **resistant** is positive, **susceptible** is negative
+- This is a choice, and every term on the next slides depends on it
+
+## Four outcomes
+
+Every isolate falls into exactly one of four outcomes:
+
+| Outcome | Panel call | Growth test | In words |
+|---|---|---|---|
+| **true positive** (TP) | resistant | resistant | resistance caught |
+| **false positive** (FP) | resistant | susceptible | over-called |
+| **false negative** (FN) | susceptible | resistant | resistance missed |
+| **true negative** (TN) | susceptible | susceptible | correctly cleared |
 
 . . .
 
-Which microbe is more likely to have produced both reads?
+- *positive* or *negative* is what the **panel** said
+- *true* or *false* is whether the panel **agreed with the growth test**
 
-## Joint probability
+## The confusion table
 
-With two reads, we ask: if Microbe A survived, what is the probability of observing
+A **confusion table** counts how many instances fall into each of the four outcomes:
 
-- read1 **AND**
-- read2?
+|  | Growth test: resistant | Growth test: susceptible |
+|---|:-:|:-:|
+| **Panel: resistant** | TP | FP |
+| **Panel: susceptible** | FN | TN |
 
-. . .
+- Rows are the classifier's predictions
+- Columns are the reference
 
-The probability of two events happening together is called a **joint probability**
+## The confusion table (cont.)
 
-. . .
+The twelve isolates:
 
-The notation is $P(\text{read1, read2} \mid A)$
-
-## The chain rule splits a joint probability
-
-Any joint probability can be split into two pieces:
-
-$$P(\text{read1, read2} \mid A) = P(\text{read1} \mid A) \times P(\text{read2} \mid \text{read1}, A)$$
-
-. . .
-
-- $P(\text{read1} \mid A)$ is the likelihood of read1, as before
-- $P(\text{read2} \mid \text{read1}, A)$ is the likelihood of read2, *given that we have already seen read1*
+|  | Growth test: resistant | Growth test: susceptible | Total |
+|---|:-:|:-:|:-:|
+| **Panel: resistant** | `{python} s["TP"]` (EC-006, EC-008) | `{python} s["FP"]` (EC-012) | `{python} s["TP"] + s["FP"]` |
+| **Panel: susceptible** | `{python} s["FN"]` (EC-011) | `{python} s["TN"]` | `{python} s["FN"] + s["TN"]` |
+| **Total** | `{python} s["TP"] + s["FN"]` | `{python} s["FP"] + s["TN"]` | `{python} sr["n"]` |
 
 . . .
 
-This is the **chain rule**, and it always holds: it makes no assumption about the reads
-
-## The reads are independent given the microbe
-
-Shotgun sequencing reads come from random places in the genome
-
-. . .
-
-If we know the survivor is Microbe A, read1's GC content tells us nothing new about read2's
-
-. . .
-
-The reads are **independent given the microbe**:
-
-$$P(\text{read2} \mid \text{read1}, A) = P(\text{read2} \mid A)$$
-
-. . .
-
-So the joint probability is a product of the single-read likelihoods:
-
-$$P(\text{read1, read2} \mid A) = P(\text{read1} \mid A) \times P(\text{read2} \mid A)$$
-
-## Compute the likelihoods {.smaller}
-
-```{python}
-#| echo: true
-from scipy.stats import binom
-
-read1 = "ATGCACCCTGTGGGCGAGCTGCCTATCGGCCGAAATACGC"
-read2 = "GTGCGGGCCACGCGGTGACCCATCTAGATGCGGGGTCTGC"
-k1 = read1.count("G") + read1.count("C")     # G or C bases in read1
-k2 = read2.count("G") + read2.count("C")     # G or C bases in read2
-
-like1_a = binom.pmf(k1, 40, 0.66)            # P(read1 | A)
-like2_a = binom.pmf(k2, 40, 0.66)            # P(read2 | A)
-like1_b = binom.pmf(k1, 40, 0.48)            # P(read1 | B)
-like2_b = binom.pmf(k2, 40, 0.48)            # P(read2 | B)
-
-joint_a = like1_a * like2_a                  # P(read1, read2 | A)
-joint_b = like1_b * like2_b                  # P(read1, read2 | B)
-print(f"A: {like1_a:.4f} x {like2_a:.4f} = {joint_a:.6f}")
-print(f"B: {like1_b:.4f} x {like2_b:.4f} = {joint_b:.6f}")
-```
-
-## Two reads are more convincing than one
-
-```{python}
-#| echo: false
-# The two reads on the "Two reads" slide, scored under each microbe; the drug leaves an even
-# prior over which one survived.
-two_reads = ["ATGCACCCTGTGGGCGAGCTGCCTATCGGCCGAAATACGC",
-             "GTGCGGGCCACGCGGTGACCCATCTAGATGCGGGGTCTGC"]
-two_k = [sum(base in "GC" for base in read) for read in two_reads]
-two_like_a = binom.pmf(two_k[0], 40, 0.66) * binom.pmf(two_k[1], 40, 0.66)
-two_like_b = binom.pmf(two_k[0], 40, 0.48) * binom.pmf(two_k[1], 40, 0.48)
-two_post_a = two_like_a * 0.5 / (two_like_a * 0.5 + two_like_b * 0.5)
-
-def p4(x):
-    """Four decimals, or scientific notation once four decimals would round it away."""
-    return f"{x:.4f}" if x >= 0.001 else sci(x)
-
-one_post_a = binom.pmf(two_k[0], 40, 0.66) / (binom.pmf(two_k[0], 40, 0.66) + binom.pmf(two_k[0], 40, 0.48))
-```
-
-read1 has `{python} two_k[0]` and read2 has `{python} two_k[1]` of their 40 bases G or C
-
-. . .
+- Accuracy is the two agreeing cells, TP and TN, out of the total:
 
 ```{python}
 #| echo: false
 #| output: asis
-print(rf"""$$
-\begin{{aligned}}
-P(\text{{read1, read2}} \mid A) &= P(\text{{read1}} \mid A) \times P(\text{{read2}} \mid A) \\
-&= {binom.pmf(two_k[0], 40, 0.66):.4f} \times {binom.pmf(two_k[1], 40, 0.66):.4f} \\
-&= {p4(two_like_a)} \\[10pt]
-P(\text{{read1, read2}} \mid B) &= P(\text{{read1}} \mid B) \times P(\text{{read2}} \mid B) \\
-&= {binom.pmf(two_k[0], 40, 0.48):.4f} \times {binom.pmf(two_k[1], 40, 0.48):.4f} \\
-&= {p4(two_like_b)}
-\end{{aligned}}
-$$""")
+print(rf"$$\text{{accuracy}} = \frac{{\text{{TP}} + \text{{TN}}}}{{\text{{total}}}} = \frac{{{s['TP']} + {s['TN']}}}{{{sr['n']}}} = {f2(sr['accuracy'])}$$")
 ```
 
-## Bayes theorem to compute the posterior
+## Accuracy answers one question
 
-$P(\text{read1, read2} \mid A)$ is the likelihood of both reads under Microbe A
+- Accuracy answers: *how often does the panel agree with the growth test?*
+- A doctor or a lab might ask narrower questions:
+    - Of the isolates that **are** resistant, how many does the panel catch?
+    - Of the isolates that **are** susceptible, how many does the panel clear?
+    - When the panel **says** resistant, how often is it right?
+- Each question reads one part of the confusion table
 
-. . .
+## Sensitivity
 
-Applying Bayes' theorem:
+**Sensitivity**: of the instances that are truly positive, the fraction the classifier calls positive
 
-$$\begin{aligned}
-P(A \mid \text{read1, read2}) &= \frac{P(\text{read1, read2} \mid A) P(A)}{P(\text{read1, read2})} \\
-&= \frac{P(\text{read1} \mid A) \; P(\text{read2} \mid A) P(A)}{P(\text{read1, read2})}
-\end{aligned}
-$$
+|  | **Growth test: resistant** | Growth test: susceptible |
+|---|:-:|:-:|
+| **Panel: resistant** | **`{python} s["TP"]`** | `{python} s["FP"]` |
+| **Panel: susceptible** | **`{python} s["FN"]`** | `{python} s["TN"]` |
 
-. . .
-
-$$\begin{aligned}
-P(\text{read1, read2}) = &P(\text{read1, read2} \mid A) P(A) + \\
-    &P(\text{read1, read2} \mid B) P(B)
-\end{aligned}$$
-
-## Two reads are more convincing than one
+Read down the *resistant* column:
 
 ```{python}
 #| echo: false
 #| output: asis
-print(rf"$$\begin{{aligned}} P(A \mid \text{{read1, read2}}) &= \frac{{{p4(like1_a)} \times {p4(like2_a)} \times 0.5}}{{{p4(two_like_a)} \times 0.5 + {p4(two_like_b)} \times 0.5}} \\ &= {two_post_a:.3f} \end{{aligned}} $$")
+print(rf"$$\text{{sensitivity}} = \frac{{\text{{TP}}}}{{\text{{TP}} + \text{{FN}}}} = \frac{{{s['TP']}}}{{{s['TP']} + {s['FN']}}} = {f2(sr['sensitivity'])}$$")
 ```
 
+The panel caught `{python} s["TP"]` of the `{python} s["TP"] + s["FN"]` resistant isolates.
 
-With one read, $P(A \mid \text{read1})$ was `{python} f"{one_post_a:.2f}"`; the second read raises it to `{python} f"{two_post_a:.3f}"`
+## Specificity
 
-. . .
+**Specificity**: of the instances that are truly negative, the fraction the classifier calls negative
+
+|  | Growth test: resistant | **Growth test: susceptible** |
+|---|:-:|:-:|
+| **Panel: resistant** | `{python} s["TP"]` | **`{python} s["FP"]`** |
+| **Panel: susceptible** | `{python} s["FN"]` | **`{python} s["TN"]`** |
+
+Read down the *susceptible* column:
 
 ```{python}
 #| echo: false
 #| output: asis
-two_post_b = two_like_b * 0.5 / (two_like_a * 0.5 + two_like_b * 0.5)
-print(rf"$$\begin{{aligned}} P(B \mid \text{{read1, read2}}) &= \frac{{{p4(like1_b)} \times {p4(like2_b)} \times 0.5}}{{{p4(two_like_a)} \times 0.5 + {p4(two_like_b)} \times 0.5}} \\ &= {two_post_b:.3f} \end{{aligned}} $$")
+print(rf"$$\text{{specificity}} = \frac{{\text{{TN}}}}{{\text{{TN}} + \text{{FP}}}} = \frac{{{s['TN']}}}{{{s['TN']} + {s['FP']}}} = {f2(sr['specificity'])}$$")
 ```
 
-## Bayes classifier on two reads
+The panel cleared `{python} s["TN"]` of the `{python} s["TN"] + s["FP"]` susceptible isolates.
 
-Compare the two posteriors with their ratio; the evidence $P(\text{read1, read2})$ cancels
+## Positive predictive value
+
+**Positive predictive value** (PPV): of the instances the classifier calls positive, the fraction that are truly positive
+
+|  | Growth test: resistant | Growth test: susceptible |
+|---|:-:|:-:|
+| **Panel: resistant** | **`{python} s["TP"]`** | **`{python} s["FP"]`** |
+| **Panel: susceptible** | `{python} s["FN"]` | `{python} s["TN"]` |
+
+Read across the *panel: resistant* row:
 
 ```{python}
 #| echo: false
 #| output: asis
-two_ratio = two_post_a / two_post_b
-one_ratio = one_post_a / (1 - one_post_a)
-print(rf"""$$
-\begin{{aligned}}
-\frac{{P(A \mid \text{{read1, read2}})}}{{P(B \mid \text{{read1, read2}})}}
-&= \frac{{P(\text{{read1, read2}} \mid A) \, P(A)}}{{P(\text{{read1, read2}} \mid B) \, P(B)}} \\
-&= \frac{{{p4(two_like_a)} \times 0.5}}{{{p4(two_like_b)} \times 0.5}} = {two_ratio:.0f}
-\end{{aligned}}
-$$""")
+print(rf"$$\text{{PPV}} = \frac{{\text{{TP}}}}{{\text{{TP}} + \text{{FP}}}} = \frac{{{s['TP']}}}{{{s['TP']} + {s['FP']}}} = {f2(sr['PPV'])}$$")
 ```
 
-. . .
+When the panel said *resistant*, it was right `{python} s["TP"]` times out of `{python} s["TP"] + s["FP"]`.
 
-The decision boundary is a ratio of 1:
+## Sensitivity and PPV are different questions
 
-- ratio >> 1 → classify the survivor as Microbe A
+Both have TP on top, but they divide by different groups:
 
-. . .
-
-The ratio is `{python} f"{two_ratio:.0f}"`, far above 1, so the survivor is **Microbe A**; with read1 alone it was `{python} f"{one_ratio:.1f}"`
-
-## Conditional independence
-
-We assumed the two reads are independent *once we know the microbe*
+- **Sensitivity** divides by the isolates that **are** resistant (a column)
+    - → starts from the growth test: *of the resistant isolates, how many did the panel catch?*
+- **PPV** divides by the isolates the panel **called** resistant (a row)
+    - → starts from the panel: *when the panel says resistant, how often is it right?*
 
 . . .
 
-Independence given something else, here the microbe, is called **conditional independence**
+A lab validating the panel asks about sensitivity. A doctor holding one panel result asks about PPV.
+
+## Four numbers, four questions
+
+| Measure | Question it answers | Part of the table | Twelve isolates |
+|---|---|---|:-:|
+| accuracy | How often does the panel agree with the growth test? | TP and TN, of all | `{python} f2(sr["accuracy"])` |
+| sensitivity | Of the resistant isolates, how many are caught? | resistant column | `{python} f2(sr["sensitivity"])` |
+| specificity | Of the susceptible isolates, how many are cleared? | susceptible column | `{python} f2(sr["specificity"])` |
+| PPV | When the panel says resistant, how often is it right? | *panel: resistant* row | `{python} f2(sr["PPV"])` |
+
+# A year of isolates
+
+## The full year
+
+Twelve isolates are enough to see where the numbers come from, but too few to judge the panel.
+
+The hospital lab ran both tests on `{python} yr["n"]` isolates over a year:
+
+|  | Growth test: resistant | Growth test: susceptible | Total |
+|---|:-:|:-:|:-:|
+| **Panel: resistant** | `{python} y["TP"]` | `{python} y["FP"]` | `{python} y_call_res` |
+| **Panel: susceptible** | `{python} y["FN"]` | `{python} y["TN"]` | `{python} y["FN"] + y["TN"]` |
+| **Total** | `{python} y_res` | `{python} y_sus` | `{python} yr["n"]` |
+
+## The full year (cont.)
+
+| Measure | Question it answers | Value |
+|---|---|:-:|
+| accuracy | How often does the panel agree with the growth test? | `{python} f2(yr["accuracy"])` |
+| sensitivity | Of the resistant isolates, how many are caught? | `{python} f2(yr["sensitivity"])` |
+| specificity | Of the susceptible isolates, how many are cleared? | `{python} f2(yr["specificity"])` |
+| PPV | When the panel says resistant, how often is it right? | `{python} f2(yr["PPV"])` |
 
 . . .
 
-Without it, $P(\text{read1, read2} \mid A)$ needs a probability for every pair of GC counts: $41 \times 41 = 1{,}681$ of them, for each microbe
+- The panel agrees with the growth test on `{python} pct(yr["accuracy"])` of isolates
+- What else do the other three numbers tell us?
+
+## What the accuracy contains
+
+- `{python} pct(yr["accuracy"])` accuracy combines both kinds of mistake into one number
+- The other measures separate them:
+    - `{python} y["FN"]` of the `{python} y_res` resistant isolates were **missed** (sensitivity `{python} f2(yr["sensitivity"])`)
+    - `{python} y["FP"]` of the `{python} y_call_res` *resistant* calls were **over-called** (PPV `{python} f2(yr["PPV"])`)
 
 . . .
 
-With it, we only need the one-read PMF, used twice
-
-## Conditional independence (cont.)
-
-In general, for features $x_1, x_2, \dots, x_n$ of an instance with class $y$:
-
-$$
-\begin{aligned}
-P(x_1, x_2, \dots, x_n \mid y) &= P(x_1 \mid y) \times P(x_2 \mid y) \times \dots \times P(x_n \mid y) \\
-&= \prod_{i=1}^{n} P(x_i \mid y)
-\end{aligned}
-$$
-
-Here, $x_1$ and $x_2$ are the GC counts of read1 and read2, and $y$ is the microbe
-
-## Naive Bayes
-
-**Naive Bayes** is Bayes' theorem with one added assumption: the features are conditionally independent given the class
-
-$$P(x_1, \dots, x_n \mid y) = \prod_{i=1}^{n} P(x_i \mid y)$$
-
-. . .
-
-The assumption is the "naive" part: in most real data it is **incorrect**
-
-. . .
-
-Features measured on the same instance are usually related, even within one class
-
-## rRNA vs non-rRNA classification
-
-A read's k-mers are its overlapping 6-base windows, as in session 1
-
-. . .
-
-![](img/illustrations/ch05-kmer-overlap.drawio.svg){fig-align="center" width="90%"}
-
-. . .
-
-Neighbouring k-mers share five bases, so knowing k-mer 1 leaves only four possibilities for k-mer 2
-
-. . .
-
-That holds for rRNA and non-rRNA reads alike: the k-mers are **not** independent, even within a class
-
-## Compute the likelihood of a read given each class {.smaller}
-
-```{python}
-#| echo: false
-# Made-up probabilities that each of the previous slide's three k-mers appears in a read of each
-# class. Every number on this slide is computed from this table.
-toy_kmers = ["ACGTGC", "CGTGCA", "GTGCAT"]
-toy_prob = {"rRNA":     [0.60, 0.56, 0.52],
-            "non-rRNA": [0.03, 0.04, 0.03]}
-toy_like = {c: toy_prob[c][0] * toy_prob[c][1] * toy_prob[c][2] for c in toy_prob}
-
-def toy_likelihood(c):
-    """The joint, the product of k-mer probabilities, and the numbers, for one class."""
-    terms = " \\times ".join(rf"P(\texttt{{{k}}} \mid \text{{{c}}})" for k in toy_kmers)
-    nums = " \\times ".join(f"{x:.2f}" for x in toy_prob[c])
-    return (rf"P(\text{{read}} \mid \text{{{c}}}) &= "
-            rf"P(\texttt{{ACGTGC}}, \texttt{{CGTGCA}}, \texttt{{GTGCAT}} \mid \text{{{c}}}) \\"
-            "\n" rf"&= {terms} \\" "\n" rf"&= {nums} = {p4(toy_like[c])}")
-```
-
-The probability that each k-mer of the read `ACGTGCAT` appears in a read of each class:
-
-```{python}
-#| echo: false
-#| output: asis
-print(r"| k-mer | $P(\text{k-mer} \mid \text{rRNA})$ | $P(\text{k-mer} \mid \text{non-rRNA})$ |")
-print("|:---:|:---:|:---:|")
-for i, kmer in enumerate(toy_kmers):
-    print(f"| `{kmer}` | {toy_prob['rRNA'][i]:.2f} | {toy_prob['non-rRNA'][i]:.2f} |")
-```
-
-. . .
-
-```{python}
-#| echo: false
-#| output: asis
-print(f"$$\n\\begin{{aligned}}\n{toy_likelihood('rRNA')}\n\\end{{aligned}}\n$$")
-```
-
-. . .
-
-```{python}
-#| echo: false
-#| output: asis
-print(f"$$\n\\begin{{aligned}}\n{toy_likelihood('non-rRNA')}\n\\end{{aligned}}\n$$")
-```
-
-## Naive Bayes classifier
-
-```{python}
-#| echo: false
-# The previous slide's two likelihoods, with the chapter's prior: 15% of reads are rRNA.
-toy_share = 0.15
-toy_joint = {"rRNA": toy_like["rRNA"] * toy_share, "non-rRNA": toy_like["non-rRNA"] * (1 - toy_share)}
-toy_evidence = toy_joint["rRNA"] + toy_joint["non-rRNA"]
-toy_post = {c: toy_joint[c] / toy_evidence for c in toy_joint}
-toy_ratio = toy_post["rRNA"] / toy_post["non-rRNA"]
-```
-
-Combine each likelihood with the prior: `{python} f"{toy_share:.0%}"` of reads are rRNA
-
-. . .
-
-```{python}
-#| echo: false
-#| output: asis
-print(rf"""$$
-\begin{{aligned}}
-P(\text{{rRNA}} \mid \text{{read}}) &= \frac{{{p4(toy_like['rRNA'])} \times {toy_share}}}{{{p4(toy_like['rRNA'])} \times {toy_share} + {p4(toy_like['non-rRNA'])} \times {1 - toy_share:.2f}}} = {toy_post['rRNA']:.3f} \\[6pt]
-P(\text{{non-rRNA}} \mid \text{{read}}) &= \frac{{{p4(toy_like['non-rRNA'])} \times {1 - toy_share:.2f}}}{{{p4(toy_like['rRNA'])} \times {toy_share} + {p4(toy_like['non-rRNA'])} \times {1 - toy_share:.2f}}} = {toy_post['non-rRNA']:.3f}
-\end{{aligned}}
-$$""")
-```
-
-. . .
-
-```{python}
-#| echo: false
-#| output: asis
-print(rf"$$\frac{{P(\text{{rRNA}} \mid \text{{read}})}}{{P(\text{{non-rRNA}} \mid \text{{read}})}} = {toy_ratio:,.0f} > 1$$".replace(",", "{,}"))
-```
-
-The ratio is above 1, so the read is classified as **rRNA**, and set aside
-
-## Naive Bayes classifier (cont.)
-
-Overlapping k-mers violate the assumption of conditional independence, yet naive Bayes is often a good classifier
-
-. . .
-
-**The call only needs the right winner, not perfectly accurate posterior** 
-
-. . .
-
-Features that are correlated under naive Bayes *counts the same evidence more than once*
-
-. . .
-
-**The cost is the confidence** -- the posteriors themselves are not trustworthy
-
-. . .
-
-Our read's three overlapping k-mers convey mostly the same information, so its posterior of `{python} f"{toy_post['rRNA']:.3f}"` claims more certainty than the read really gives
-
-. . .
-
-A posterior of 0.99 should mean the call is right 99 times in 100; naive Bayes is often less accurate than the posterior implies
+- Each missed isolate is a patient given ceftriaxone for an infection it won't treat
+- Each over-called isolate is a patient moved off a drug that would have worked
 
 ## Next time
 
-How good is our rRNA classifier?
+- Accuracy, sensitivity, specificity and PPV each answer a different question about the same predictions
+- The panel makes two kinds of mistakes, and they have different consequences for the patient
 
-. . .
-
-We can count how often its calls are right: its **accuracy**
+Next time: which mistake is easier to live with, and how does that change which number we care about?
