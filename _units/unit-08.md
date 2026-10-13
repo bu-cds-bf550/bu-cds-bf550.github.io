@@ -1,19 +1,20 @@
 ---
-title: "Unit 8 — Linear regression and regularization"
+title: "Unit 8 — Regression, logistic and linear, and regularization"
 ---
 
 **Act II** · composition operation: **condition**
 
-**Sessions:** Mon **Oct 26** · Wed **Oct 28** · Fri **Oct 30**
+**Sessions:** Wed **Oct 28** · Fri **Oct 30** · Mon **Nov 2**
 
-**PS7** is due at the start of the first session, Mon **Oct 26** · **PS8** (on unit 7's material) is assigned in that same session · due Mon **Nov 2**
+**PS7** is due at the start of the first session, Wed **Oct 28** · **PS8** (on unit 7's material) is assigned in that same session · due Wed **Nov 4**
 
-> *Can expression predict dose response?*
+> *Is this variant pathogenic? Can expression predict drug response?*
 
 ## Before the first meeting
 
-Read [chapter 8 — Regression, and regularization as a prior](https://bu-cds-bf550.github.io/bf550-textbook/chapters/ch08-linear-regression.html). Budget about two hours: the chapter
-plus its worked notebook. The chapter's practice problems are ungraded and have worked solutions —
+Read [chapter 7 — Condition: logistic regression](https://bu-cds-bf550.github.io/bf550-textbook/chapters/ch07-logistic-regression.html)
+and [chapter 8 — Regression, and regularization as a prior](https://bu-cds-bf550.github.io/bf550-textbook/chapters/ch08-linear-regression.html).
+Budget about two hours for each: the chapter plus its worked notebook. The chapter's practice problems are ungraded and have worked solutions —
 they are the cheapest way to find out whether the reading landed.
 
 ## In class

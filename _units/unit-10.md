@@ -4,9 +4,9 @@ title: "Unit 10 — Trees, forests, and boosting: prediction with no probability
 
 **Act III**
 
-**Sessions:** Mon **Nov 9** · Wed **Nov 11** · Fri **Nov 13**
+**Sessions:** Wed **Nov 11** · Fri **Nov 13** · Mon **Nov 16**
 
-**PS9** (on unit 8's material) is assigned in the first session · due Mon **Nov 16**
+**PS9** (on unit 8's material) is assigned in the first session · due Wed **Nov 18**
 
 > *Which genes mark treatment response?*
 
@@ -24,7 +24,7 @@ they are the cheapest way to find out whether the reading landed.
 The topic opens in the first meeting. The rest of the unit is working sessions on the problem set,
 with instructors and TAs in the room.
 
-**The midterm is Mon Nov 9**, in the first session — closed book, no AI, code reading, covering
+**The midterm is Wed Nov 11**, in the first session — closed book, no AI, code reading, covering
 Acts I and II, units 1–9. The unit's topic opens in the rest of that session.
 
 ## Where this fits

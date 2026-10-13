@@ -1,10 +1,10 @@
 ---
-title: "Unit 6 — Evaluation: overfitting, cross-validation, leakage, calibration"
+title: "Unit 6 — Evaluation I: held-out scores, the confusion table, the ROC curve, calibration"
 ---
 
 **Act II**
 
-**Sessions:** Tue **Oct 13** · Wed **Oct 14** · Fri **Oct 16**
+**Sessions:** Tue **Oct 13** · Wed **Oct 14** · Fri **Oct 16** · Mon **Oct 19**
 
 **PS5** is due at the start of the first session, Tue **Oct 13** · **PS6** (on unit 5's material) is assigned in that same session · due Mon **Oct 19**
 
@@ -26,6 +26,10 @@ with instructors and TAs in the room.
 
 Our first session meets **Tuesday Oct 13**: BU runs a Monday schedule that day to make up for
 Indigenous Peoples' Day. It is the only substitute day of the term.
+
+Evaluation is two units: this one asks what a classifier's scores on new data mean, and
+[unit 7]({{ site.baseurl }}/units/unit-07/) asks whether a reported score can be trusted. This unit
+has four sessions, the last on **Mon Oct 19**, the day PS6 is due.
 
 ## Where this fits
 
