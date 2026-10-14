@@ -47,21 +47,28 @@ case "$mode" in
     # The export cache. decktape spends about three seconds per slide, for every slide of every
     # deck, so a site of fifteen decks pays twelve minutes per build even when one deck changed.
     # Each deck's PDF and .pptx are kept under $cache, named by a hash of everything the export
-    # depends on: the deck source, the shared theme and config, the images, the assembler, and
-    # the quarto and decktape versions. A deck whose key is already present is copied out of the
-    # cache instead of re-exported. CI persists the directory between runs (actions/cache in
-    # .github/workflows/jekyll.yml); locally it lives beside _site and `make clean` removes it.
+    # depends on: the deck source, the shared theme and config, the images that deck names, the
+    # assembler, and the quarto and decktape versions. Images are per deck, not the whole of
+    # slides/img: a new illustration for one unit must not re-export every other unit's deck.
+    # A deck whose key is already present is copied out of the cache instead of re-exported.
+    # CI persists the directory between runs (actions/cache in .github/workflows/jekyll.yml);
+    # locally it lives beside _site and `make clean` removes it.
     cache="${DECK_EXPORT_CACHE:-.deck-export-cache}"
     mkdir -p "$cache"
     tool_versions="$(quarto --version 2>/dev/null; "${decktape[@]}" version 2>/dev/null)"
     shared_inputs=(slides/_quarto.yml slides/strip-notes.lua tools/pptx_from_screenshots.py)
-    while IFS= read -r f; do shared_inputs+=("$f"); done < <(find slides/theme slides/img -type f 2>/dev/null | sort)
+    while IFS= read -r f; do shared_inputs+=("$f"); done < <(find slides/theme -type f 2>/dev/null | sort)
     keep=()
     exported=0; reused=0
     for html in _site/slides/*.html; do
       [[ "$(basename "$html")" == "index.html" ]] && continue   # the Jekyll index page, not a deck
       name="$(basename "${html%.html}")"
-      key="$( { printf '%s\n' "$tool_versions"; cat "slides/$name.qmd" "${shared_inputs[@]}"; } | sha256sum | cut -c1-16)"
+      # The images this deck names (img/... paths in its source), each one only if it is a file.
+      deck_images=()
+      while IFS= read -r ref; do
+        if [[ -f "slides/$ref" ]]; then deck_images+=("slides/$ref"); fi
+      done < <(grep -oE 'img/[A-Za-z0-9_./-]+' "slides/$name.qmd" | sort -u)
+      key="$( { printf '%s\n' "$tool_versions" "${deck_images[@]}"; cat "slides/$name.qmd" "${shared_inputs[@]}" "${deck_images[@]}"; } | sha256sum | cut -c1-16)"
       entry="$cache/$name-$key"
       keep+=("$name-$key")
       if [[ -f "$entry.pdf" && -f "$entry.pptx" ]]; then
