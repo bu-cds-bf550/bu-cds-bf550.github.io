@@ -32,6 +32,19 @@ $code-block-bg: #f6f6f4;
 // Tables: the design-launch table and the like, scannable at projection size.
 .reveal table { font-size: 0.8em; }
 .reveal table th { border-bottom: 2px solid $ink; }
+// A row to pick out: put [text]{.row-mark} in any one cell and the whole row is tinted and bold.
+// Pipe tables take no row classes, so the cell span marks the row. Beats .striped's shading.
+.reveal table tr:has(.row-mark) td {
+  background: rgba($bu-scarlet, 0.14);
+  box-shadow: none;
+  font-weight: 600;
+}
+
+// Class labels, written as code with a class: `resistant`{.pos} and `susceptible`{.neg}.
+// The colours tell the two labels apart anywhere in a deck, and rows where a prediction and
+// the reference differ show as two colours side by side.
+.reveal .pos { color: $bu-scarlet-dark; font-weight: 600; }
+.reveal .neg { color: #1f5fa8; }
 
 // Executed code echoes: keep them compact so code and its output share a slide.
 .reveal div.sourceCode { margin: 0.4em 0; }
