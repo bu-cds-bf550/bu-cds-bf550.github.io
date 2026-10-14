@@ -17,9 +17,9 @@ subtitle: "BF550 · Unit 6 · Session 2 — Fri Oct 16"
 # doi:10.1016/S1473-3099(24)00416-X) and 12.9% of febrile UTIs at Kaiser Northern California
 # (Ann Emerg Med 2021, doi:10.1016/j.annemergmed.2021.01.003).
 #
-# The panel's rule: any panel gene present -> call resistant. It misses resistance from a gene
-# the panel doesn't test, and over-calls isolates carrying a panel gene that doesn't break down
-# ceftriaxone.
+# The panel's rule: any panel gene present -> call resistant. It gives a false negative when
+# resistance comes from a gene the panel doesn't test, and a false positive when an isolate
+# carries a panel gene that doesn't break down ceftriaxone.
 import numpy as np
 
 genes = ["blaCTX-M", "blaCMY-2", "blaSHV"]
@@ -74,7 +74,7 @@ def rates(c):
             "PPV":         c["TP"] / (c["TP"] + c["FP"])}
 
 # The hand-countable table: 12 isolates. Seed 45 was chosen so that all four cells of the
-# confusion table are filled: 2 caught, 1 missed (EC-011), 1 over-called (EC-012), 8 cleared.
+# confusion table are filled: 2 TP, 1 FN (EC-011), 1 FP (EC-012), 8 TN.
 small = draw_isolates(12, np.random.default_rng(45))
 s = confusion(small)
 sr = rates(s)
@@ -134,9 +134,7 @@ hosp = {name: hospital(share) for name, share in (("rare", 0.02), ("ours", share
 ## The panel's two kinds of mistakes
 
 - **False negatives**: `{python} y["FN"]` resistant isolates the panel called susceptible
-    - → resistance **missed**
 - **False positives**: `{python} y["FP"]` susceptible isolates the panel called resistant
-    - → resistance **over-called**
 
 . . .
 
@@ -156,14 +154,14 @@ The panel's call decides the patient's first drug:
 - The growth test still runs, and 1–2 days later it confirms or corrects the call
 - So each mistake costs something during those 1–2 days
 
-## A missed resistant isolate
+## A false negative: a resistant isolate called susceptible
 
 - The panel says susceptible, so the patient gets ceftriaxone
 - The bacteria are resistant, so ceftriaxone doesn't stop them
 - The infection keeps growing until the growth test comes back
 - In a bloodstream infection, each hour without a drug that works raises the risk of death
 
-## An over-called susceptible isolate
+## A false positive: a susceptible isolate called resistant
 
 - The panel says resistant, so the patient gets a carbapenem
 - Ceftriaxone would have worked
@@ -190,7 +188,7 @@ Discuss with a neighbour:
 ## Which mistake is easier to live with? (cont.)
 
 - There is no single right answer: it depends on how the panel's call is used
-- For a patient with a bloodstream infection, a missed resistant isolate is usually judged worse
+- For a patient with a bloodstream infection, a false negative is usually judged worse
     - → we want few false negatives
 - But false positives are not free
     - → a panel that calls everything resistant would spend carbapenems on every patient
@@ -200,13 +198,13 @@ Discuss with a neighbour:
 
 | Mistake | Measure that tracks it | Fewer of these mistakes means |
 |---|---|---|
-| false negative (missed) | sensitivity | higher sensitivity |
-| false positive (over-called) | specificity, PPV | higher specificity and PPV |
+| false negative | sensitivity | higher sensitivity |
+| false positive | specificity, PPV | higher specificity and PPV |
 | both, mixed together | accuracy | higher accuracy |
 
 . . .
 
-If missed isolates are what we fear most, sensitivity is the number to watch, not accuracy.
+If false negatives are what we fear most, sensitivity is the number to watch, not accuracy.
 
 # Accuracy and how common resistance is
 
@@ -230,13 +228,13 @@ print(rf"$$\text{{accuracy}} = \frac{{\text{{TP}} + \text{{TN}}}}{{\text{{total}
 
 . . .
 
-- sensitivity = 0: it misses every resistant isolate
-- specificity = 1: it never over-calls
+- sensitivity = 0: every resistant isolate is a false negative
+- specificity = 1: it gives no false positives
 - PPV can't be computed: it never says resistant
 
 . . .
 
-It misses all `{python} y_res` resistant isolates, and its accuracy is still `{python} pct(never_acc)`.
+All `{python} y_res` resistant isolates are false negatives, and its accuracy is still `{python} pct(never_acc)`.
 
 ## Comparing the two panels
 
@@ -312,7 +310,7 @@ Each hospital runs both tests on 10,000 isolates.
 In the hospital where resistance is rare:
 
 - There are only `{python} big(hosp["rare"][0]["TP"] + hosp["rare"][0]["FN"])` resistant isolates to catch, and the panel catches `{python} big(hosp["rare"][0]["TP"])`
-- There are `{python} big(hosp["rare"][0]["FP"] + hosp["rare"][0]["TN"])` susceptible isolates, and the panel over-calls `{python} big(hosp["rare"][0]["FP"])` of them
+- There are `{python} big(hosp["rare"][0]["FP"] + hosp["rare"][0]["TN"])` susceptible isolates, and `{python} big(hosp["rare"][0]["FP"])` of them are false positives
 
 . . .
 
@@ -334,17 +332,17 @@ A PPV or accuracy reported by another hospital tells you about their isolates as
 
 ## Trading one mistake for the other
 
-- To miss fewer resistant isolates, the panel would have to call more isolates resistant
-    - → more over-calls
-- To over-call fewer isolates, it would have to call fewer resistant
-    - → more misses
+- To get fewer false negatives, the panel would have to call more isolates resistant
+    - → more false positives
+- To get fewer false positives, it would have to call fewer isolates resistant
+    - → more false negatives
 - Fewer of one kind of mistake usually means more of the other
 
 ## Trading one mistake for the other (cont.)
 
 - The rule *any gene present → resistant* has no setting to move
     - It gives one confusion table, and one sensitivity and specificity
-- To choose how many misses to accept, we need a classifier that gives a **score**: how strongly the genes point to resistance
+- To choose how many false negatives to accept, we need a classifier that gives a **score**: how strongly the genes point to resistance
 - Then we choose the cutoff ourselves
 
 ## Next time

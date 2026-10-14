@@ -19,9 +19,9 @@ subtitle: "BF550 · Unit 6 · Session 1 — Wed Oct 14"
 # doi:10.1016/S1473-3099(24)00416-X) and 12.9% of febrile UTIs at Kaiser Northern California
 # (Ann Emerg Med 2021, doi:10.1016/j.annemergmed.2021.01.003).
 #
-# The panel's rule: any panel gene present -> call resistant. It misses resistance from a gene
-# the panel doesn't test, and over-calls isolates carrying a panel gene that doesn't break down
-# ceftriaxone.
+# The panel's rule: any panel gene present -> call resistant. It gives a false negative when
+# resistance comes from a gene the panel doesn't test, and a false positive when an isolate
+# carries a panel gene that doesn't break down ceftriaxone.
 import numpy as np
 
 genes = ["blaCTX-M", "blaCMY-2", "blaSHV"]
@@ -76,7 +76,7 @@ def rates(c):
             "PPV":         c["TP"] / (c["TP"] + c["FP"])}
 
 # The hand-countable table: 12 isolates. Seed 45 was chosen so that all four cells of the
-# confusion table are filled: 2 caught, 1 missed (EC-011), 1 over-called (EC-012), 8 cleared.
+# confusion table are filled: 2 TP, 1 FN (EC-011), 1 FP (EC-012), 8 TN.
 small = draw_isolates(12, np.random.default_rng(45))
 s = confusion(small)
 sr = rates(s)
@@ -294,14 +294,6 @@ Every isolate falls into exactly one of four outcomes:
 - *positive* or *negative* is what the classifier (our gene panel) labeled the isolates
 - *true* or *false* is whether the panel **agreed with the growth test**
 
-## Where the panel's mistakes come from
-
-![](img/illustrations/ch06-panel-errors.drawio.svg){fig-align="center" width="100%"}
-
-- A missed isolate: resistance can come from genes the panel doesn't test
-- An over-called isolate: some versions of a panel gene don't break down ceftriaxone
-
-
 ## The confusion table
 
 A **confusion table** counts how many instances fall into each of the four outcomes:
@@ -454,13 +446,13 @@ The hospital lab ran both tests on `{python} yr["n"]` isolates over a year:
 
 - `{python} pct(yr["accuracy"])` accuracy combines both kinds of mistake into one number
 - The other measures separate them:
-    - `{python} y["FN"]` of the `{python} y_res` resistant isolates were **missed** (sensitivity `{python} f2(yr["sensitivity"])`)
-    - `{python} y["FP"]` of the `{python} y_call_res` `resistant`{.pos} calls were **over-called** (PPV `{python} f2(yr["PPV"])`)
+    - `{python} y["FN"]` of the `{python} y_res` resistant isolates were **false negatives** (sensitivity `{python} f2(yr["sensitivity"])`)
+    - `{python} y["FP"]` of the `{python} y_call_res` `resistant`{.pos} calls were **false positives** (PPV `{python} f2(yr["PPV"])`)
 
 . . .
 
-- Each missed isolate is a patient given ceftriaxone for an infection it won't treat
-- Each over-called isolate is a patient moved off a drug that would have worked
+- Each false negative is a patient given ceftriaxone for an infection it won't treat
+- Each false positive is a patient moved off a drug that would have worked
 
 ## Next time
 

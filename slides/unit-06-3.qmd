@@ -17,9 +17,9 @@ subtitle: "BF550 · Unit 6 · Session 3 — Mon Oct 19"
 # doi:10.1016/S1473-3099(24)00416-X) and 12.9% of febrile UTIs at Kaiser Northern California
 # (Ann Emerg Med 2021, doi:10.1016/j.annemergmed.2021.01.003).
 #
-# The panel's rule: any panel gene present -> call resistant. It misses resistance from a gene
-# the panel doesn't test, and over-calls isolates carrying a panel gene that doesn't break down
-# ceftriaxone.
+# The panel's rule: any panel gene present -> call resistant. It gives a false negative when
+# resistance comes from a gene the panel doesn't test, and a false positive when an isolate
+# carries a panel gene that doesn't break down ceftriaxone.
 import numpy as np
 
 genes = ["blaCTX-M", "blaCMY-2", "blaSHV"]
@@ -74,7 +74,7 @@ def rates(c):
             "PPV":         c["TP"] / (c["TP"] + c["FP"])}
 
 # The hand-countable table: 12 isolates. Seed 45 was chosen so that all four cells of the
-# confusion table are filled: 2 caught, 1 missed (EC-011), 1 over-called (EC-012), 8 cleared.
+# confusion table are filled: 2 TP, 1 FN (EC-011), 1 FP (EC-012), 8 TN.
 small = draw_isolates(12, np.random.default_rng(45))
 s = confusion(small)
 sr = rates(s)
@@ -206,7 +206,7 @@ cal3, cal6 = calibration(score3), calibration(score6)
 ## Where we left off
 
 - The rule *any gene present → resistant* gives one call per isolate
-- It can't trade misses for over-calls: it has no setting to move
+- It can't trade false negatives for false positives: it has no setting to move
 - What we want instead: a **score** for each isolate, and a **threshold** we choose
 
 ## A score for each isolate
@@ -310,8 +310,8 @@ The year's `{python} yr["n"]` isolates, grouped by which genes they carry:
 
 . . .
 
-- A **lower** threshold calls more isolates resistant → fewer misses, more over-calls
-- A **higher** threshold calls fewer isolates resistant → fewer over-calls, more misses
+- A **lower** threshold calls more isolates resistant → fewer false negatives, more false positives
+- A **higher** threshold calls fewer isolates resistant → fewer false positives, more false negatives
 - Moving the threshold is how we trade one mistake for the other
 
 # The ROC curve
@@ -321,7 +321,7 @@ The year's `{python} yr["n"]` isolates, grouped by which genes they carry:
 - Each threshold gives one sensitivity and one specificity
 - To see all the choices together, plot every threshold as a point:
     - up: **sensitivity**, the share of resistant isolates caught
-    - across: **1 − specificity**, the share of susceptible isolates over-called
+    - across: **1 − specificity**, the share of susceptible isolates called resistant
 - The plot is called the **ROC curve** (receiver operating characteristic)
 
 ## The ROC curve
@@ -337,7 +337,7 @@ for t, (dx, dy) in ((0.05, (0.12, -0.02)), (0.5, (0.12, -0.14)), (0.95, (0.12, 0
     ax.annotate(f"threshold {t}", (1 - r["specificity"], r["sensitivity"]),
                 xytext=(1 - r["specificity"] + dx, r["sensitivity"] + dy), fontsize=13,
                 color="#52514e", arrowprops=dict(arrowstyle="-", color="#52514e", lw=0.8))
-ax.set_xlabel("1 − specificity (susceptible isolates over-called)")
+ax.set_xlabel("1 − specificity (susceptible isolates called resistant)")
 ax.set_ylabel("sensitivity (resistant caught)")
 ax.set_xlim(-0.02, 1.02)
 ax.set_ylim(-0.02, 1.02)
@@ -349,20 +349,20 @@ plt.show()
 
 - **Bottom left** (0, 0): call nothing resistant, the panel from last session that never says resistant
 - **Top right** (1, 1): call everything resistant
-- **Top left** (0, 1): catch every resistant isolate and over-call none, a perfect classifier
+- **Top left** (0, 1): no false negatives and no false positives, a perfect classifier
 - **The dashed diagonal**: calls made at random, ignoring the genes
 
 . . .
 
 - The closer the curve comes to the top left, the better the score separates the classes
-- Our curve rises steeply: a few over-calls buy most of the sensitivity
+- Our curve rises steeply: a few false positives buy most of the sensitivity
 
 ## Choosing a threshold
 
 - The ROC curve shows every trade on offer; it doesn't choose one
 - The choice comes from last session's question: which mistake is easier to live with?
-    - Missed resistance worse → choose a point high on the curve, and accept more over-calls
-    - Over-calls worse → choose a point further left, and accept more misses
+    - False negatives worse → choose a point high on the curve, and accept more false positives
+    - False positives worse → choose a point further left, and accept more false negatives
 - Same score, same isolates, different thresholds for different uses
 
 # Can the score be trusted?
