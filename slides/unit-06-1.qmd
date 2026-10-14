@@ -140,49 +140,53 @@ The question for every patient: **is this patient's *E. coli* resistant to ceftr
 
 The panel's rule:
 
-- If any of the three genes is present → call the isolate **resistant**
-- If none is present → call the isolate **susceptible**
+- If any of the three genes is present → call the isolate `resistant`{.pos}
+- If none is present → call the isolate `susceptible`{.neg}
 
 ## The gene panel is a classifier
 
 From last unit:
 
 - **instance**: a single observation we wish to classify → one isolate
-- **features**: characteristics used to tell instances apart → present or absent, for each of the three genes
-- **labels**: the classes → resistant or susceptible
-- **classifier**: a rule that assigns a label based on the features → *any gene present means resistant*
+- **features**: characteristics used to tell instances apart → whether each gene is present or absent
+- **labels**: the classes → `resistant`{.pos} or `susceptible`{.neg}
+- **classifier**: a rule that assigns a label based on the features → *if the microbe has any of the three genes, label as `resistant`{.pos}, otherwise label as `susceptible`{.neg}*
 
 . . .
 
-The panel never sees the drug. It **predicts** what the growth test will show.
+The gene panel is used to **predict** what the growth test will show.
 
 ## Can the panel replace the growth test?
 
-- The panel is faster, but it is only useful if its predictions are right
+- The gene panel is faster, but it is only useful if its predictions are right
 - To find out how often it is right, run **both** tests on the same isolates and compare
 - The growth test is our **reference**: the answer we treat as correct
-    - Every measure of how well a classifier works compares its predictions to some reference
+    - → We compare our gene panel predictions to the reference and assess how well our classifier works
 
 # Accuracy
 
 ## Twelve isolates {.smaller}
 
-Twelve isolates from the hospital lab, run through the panel:
+Twelve isolates from the hospital lab, run through the panel
+
+A `+` indicates an isolate has the gene
+
+Our classifier labels an isolate as `resistant`{.pos} if it has at least one panel gene
 
 | Isolate | *blaCTX-M* | *blaCMY-2* | *blaSHV* | Panel call |
 |---|:-:|:-:|:-:|---|
-| EC-001 | – | – | – | susceptible |
-| EC-002 | – | – | – | susceptible |
-| EC-003 | – | – | – | susceptible |
-| EC-004 | – | – | – | susceptible |
-| EC-005 | – | – | – | susceptible |
-| EC-006 | + | – | + | resistant |
-| EC-007 | – | – | – | susceptible |
-| EC-008 | + | – | – | resistant |
-| EC-009 | – | – | – | susceptible |
-| EC-010 | – | – | – | susceptible |
-| EC-011 | – | – | – | susceptible |
-| EC-012 | + | – | – | resistant |
+| EC-001 | – | – | – | `susceptible`{.neg} |
+| EC-002 | – | – | – | `susceptible`{.neg} |
+| EC-003 | – | – | – | `susceptible`{.neg} |
+| EC-004 | – | – | – | `susceptible`{.neg} |
+| EC-005 | – | – | – | `susceptible`{.neg} |
+| EC-006 | + | – | + | `resistant`{.pos .row-mark} |
+| EC-007 | – | – | – | `susceptible`{.neg} |
+| EC-008 | + | – | – | `resistant`{.pos .row-mark} |
+| EC-009 | – | – | – | `susceptible`{.neg} |
+| EC-010 | – | – | – | `susceptible`{.neg} |
+| EC-011 | – | – | – | `susceptible`{.neg} |
+| EC-012 | + | – | – | `resistant`{.pos .row-mark} |
 
 : {.striped}
 
@@ -190,20 +194,20 @@ Twelve isolates from the hospital lab, run through the panel:
 
 The same isolates, with the growth test's result beside the panel's call:
 
-| Isolate | Panel call | Growth test |
+| Isolate | Label from panel | Label from Growth test |
 |---|---|---|
-| EC-001 | susceptible | susceptible |
-| EC-002 | susceptible | susceptible |
-| EC-003 | susceptible | susceptible |
-| EC-004 | susceptible | susceptible |
-| EC-005 | susceptible | susceptible |
-| EC-006 | resistant | resistant |
-| EC-007 | susceptible | susceptible |
-| EC-008 | resistant | resistant |
-| EC-009 | susceptible | susceptible |
-| EC-010 | susceptible | susceptible |
-| EC-011 | susceptible | resistant |
-| EC-012 | resistant | susceptible |
+| EC-001 | `susceptible`{.neg} | `susceptible`{.neg} |
+| EC-002 | `susceptible`{.neg} | `susceptible`{.neg} |
+| EC-003 | `susceptible`{.neg} | `susceptible`{.neg} |
+| EC-004 | `susceptible`{.neg} | `susceptible`{.neg} |
+| EC-005 | `susceptible`{.neg} | `susceptible`{.neg} |
+| EC-006 | `resistant`{.pos} | `resistant`{.pos} |
+| EC-007 | `susceptible`{.neg} | `susceptible`{.neg} |
+| EC-008 | `resistant`{.pos} | `resistant`{.pos} |
+| EC-009 | `susceptible`{.neg} | `susceptible`{.neg} |
+| EC-010 | `susceptible`{.neg} | `susceptible`{.neg} |
+| EC-011 | `susceptible`{.neg} | `resistant`{.pos} [🡄]{.row-mark} |
+| EC-012 | `resistant`{.pos} | `susceptible`{.neg}  [🡄]{.row-mark} |
 
 : {.striped}
 
@@ -213,24 +217,24 @@ Does the panel's call agree with the growth test?
 
 | Isolate | Panel call | Growth test | Agree? |
 |---|---|---|:-:|
-| EC-001 | susceptible | susceptible | ✓ |
-| EC-002 | susceptible | susceptible | ✓ |
-| EC-003 | susceptible | susceptible | ✓ |
-| EC-004 | susceptible | susceptible | ✓ |
-| EC-005 | susceptible | susceptible | ✓ |
-| EC-006 | resistant | resistant | ✓ |
-| EC-007 | susceptible | susceptible | ✓ |
-| EC-008 | resistant | resistant | ✓ |
-| EC-009 | susceptible | susceptible | ✓ |
-| EC-010 | susceptible | susceptible | ✓ |
-| **EC-011** | **susceptible** | **resistant** | **✗** |
-| **EC-012** | **resistant** | **susceptible** | **✗** |
+| EC-001 | `susceptible`{.neg} | `susceptible`{.neg} | ✓ |
+| EC-002 | `susceptible`{.neg} | `susceptible`{.neg} | ✓ |
+| EC-003 | `susceptible`{.neg} | `susceptible`{.neg} | ✓ |
+| EC-004 | `susceptible`{.neg} | `susceptible`{.neg} | ✓ |
+| EC-005 | `susceptible`{.neg} | `susceptible`{.neg} | ✓ |
+| EC-006 | `resistant`{.pos} | `resistant`{.pos} | ✓ |
+| EC-007 | `susceptible`{.neg} | `susceptible`{.neg} | ✓ |
+| EC-008 | `resistant`{.pos} | `resistant`{.pos} | ✓ |
+| EC-009 | `susceptible`{.neg} | `susceptible`{.neg} | ✓ |
+| EC-010 | `susceptible`{.neg} | `susceptible`{.neg} | ✓ |
+| **EC-011** | **`susceptible`{.neg}** | **`resistant`{.pos}** | [**✗**]{.row-mark} |
+| **EC-012** | **`resistant`{.pos}** | **`susceptible`{.neg}** | [**✗**]{.row-mark} |
 
 : {.striped}
 
 ## Accuracy
 
-- **Accuracy** is the fraction of instances where the classifier's prediction agrees with the reference
+- **Accuracy** is the fraction of instances (isolates) where the classifier's prediction agrees with the reference
 
 . . .
 
@@ -246,20 +250,49 @@ print(rf"$$\text{{accuracy}} = \frac{{{sr['agree']}}}{{{sr['n']}}} = {f2(sr['acc
 
 - Accuracy is always measured against a reference
     - Here the reference is the growth test
-    - A different reference would give a different accuracy
 
 ## Two kinds of mistakes
 
 The panel got two isolates wrong, and the two mistakes are different:
 
-- **EC-011**: the panel said *susceptible*, but the isolate grew on ceftriaxone
-    - → a resistant isolate the panel **missed**
-- **EC-012**: the panel said *resistant*, but the isolate did not grow
-    - → a susceptible isolate the panel **over-called**
+- **EC-011**: the gene panel classified as `susceptible`{.neg}, but the isolate grew on ceftriaxone (microbe is resistant)
+- **EC-012**: the gene panel classified as `resistant`{.pos}, but the isolate did not grow (microbe died)
 
 . . .
 
-Accuracy counts both as "wrong" and doesn't say which kind happened.
+```{python}
+#| echo: false
+#| output: asis
+print(rf"Our accuracy is $\frac{{{sr['agree']}}}{{{sr['n']}}} = {f2(sr['accuracy'])}$")
+```
+
+. . .
+
+Accuracy counts both as "wrong" but the accuracy alone doesn't show how the classifier was wrong.
+
+## Designating positive and negative classes
+
+- To name the kinds of mistakes, we first pick one class to call **positive** and the other **negative**
+- The choice is arbitrary, but is usually chosen to be convenient for the question being asked
+- All instances classified by the gene panel as:
+    - `resistant`{.pos} are considered positive
+    - `susceptible`{.neg} are considered negative
+
+## Four outcomes
+
+Every isolate falls into exactly one of four outcomes:
+
+| Outcome | Panel label | Growth test | Classifier |
+|---|---|---|---|
+| **true positive** (TP) | `resistant`{.pos} | `resistant`{.pos} | correct |
+| **false positive** (FP) | `resistant`{.pos} | `susceptible`{.neg} | incorrect |
+| **false negative** (FN) | `susceptible`{.neg} | `resistant`{.pos} | incorrect |
+| **true negative** (TN) | `susceptible`{.neg} | `susceptible`{.neg} | correct |
+
+. . .
+
+- *positive* or *negative* is what the classifier (our gene panel) labeled the isolates
+- *true* or *false* is whether the panel **agreed with the growth test**
 
 ## Where the panel's mistakes come from
 
@@ -268,37 +301,15 @@ Accuracy counts both as "wrong" and doesn't say which kind happened.
 - A missed isolate: resistance can come from genes the panel doesn't test
 - An over-called isolate: some versions of a panel gene don't break down ceftriaxone
 
-## Positive and negative
-
-- To name the kinds of mistakes, we first pick one class to call **positive**
-    - Usually the class we are looking for
-- Here: **resistant** is positive, **susceptible** is negative
-- This is a choice, and every term on the next slides depends on it
-
-## Four outcomes
-
-Every isolate falls into exactly one of four outcomes:
-
-| Outcome | Panel call | Growth test | In words |
-|---|---|---|---|
-| **true positive** (TP) | resistant | resistant | resistance caught |
-| **false positive** (FP) | resistant | susceptible | over-called |
-| **false negative** (FN) | susceptible | resistant | resistance missed |
-| **true negative** (TN) | susceptible | susceptible | correctly cleared |
-
-. . .
-
-- *positive* or *negative* is what the **panel** said
-- *true* or *false* is whether the panel **agreed with the growth test**
 
 ## The confusion table
 
 A **confusion table** counts how many instances fall into each of the four outcomes:
 
-|  | Growth test: resistant | Growth test: susceptible |
+|  | Growth test: `resistant`{.pos} | Growth test: `susceptible`{.neg} |
 |---|:-:|:-:|
-| **Panel: resistant** | TP | FP |
-| **Panel: susceptible** | FN | TN |
+| **Panel: `resistant`{.pos}** | TP | FP |
+| **Panel: `susceptible`{.neg}** | FN | TN |
 
 - Rows are the classifier's predictions
 - Columns are the reference
@@ -307,10 +318,10 @@ A **confusion table** counts how many instances fall into each of the four outco
 
 The twelve isolates:
 
-|  | Growth test: resistant | Growth test: susceptible | Total |
+|  | Growth test: `resistant`{.pos} | Growth test: `susceptible`{.neg} | Total |
 |---|:-:|:-:|:-:|
-| **Panel: resistant** | `{python} s["TP"]` (EC-006, EC-008) | `{python} s["FP"]` (EC-012) | `{python} s["TP"] + s["FP"]` |
-| **Panel: susceptible** | `{python} s["FN"]` (EC-011) | `{python} s["TN"]` | `{python} s["FN"] + s["TN"]` |
+| **Panel: `resistant`{.pos}** | `{python} s["TP"]` (EC-006, EC-008) | `{python} s["FP"]` (EC-012) | `{python} s["TP"] + s["FP"]` |
+| **Panel: `susceptible`{.neg}** | `{python} s["FN"]` (EC-011) | `{python} s["TN"]` | `{python} s["FN"] + s["TN"]` |
 | **Total** | `{python} s["TP"] + s["FN"]` | `{python} s["FP"] + s["TN"]` | `{python} sr["n"]` |
 
 . . .
@@ -329,19 +340,19 @@ print(rf"$$\text{{accuracy}} = \frac{{\text{{TP}} + \text{{TN}}}}{{\text{{total}
 - A doctor or a lab might ask narrower questions:
     - Of the isolates that **are** resistant, how many does the panel catch?
     - Of the isolates that **are** susceptible, how many does the panel clear?
-    - When the panel **says** resistant, how often is it right?
+    - When the panel **says** `resistant`{.pos}, how often is it right?
 - Each question reads one part of the confusion table
 
 ## Sensitivity
 
 **Sensitivity**: of the instances that are truly positive, the fraction the classifier calls positive
 
-|  | **Growth test: resistant** | Growth test: susceptible |
+|  | **Growth test: `resistant`{.pos}** | Growth test: `susceptible`{.neg} |
 |---|:-:|:-:|
-| **Panel: resistant** | **`{python} s["TP"]`** | `{python} s["FP"]` |
-| **Panel: susceptible** | **`{python} s["FN"]`** | `{python} s["TN"]` |
+| **Panel: `resistant`{.pos}** | **`{python} s["TP"]`** | `{python} s["FP"]` |
+| **Panel: `susceptible`{.neg}** | **`{python} s["FN"]`** | `{python} s["TN"]` |
 
-Read down the *resistant* column:
+Read down the `resistant`{.pos} column:
 
 ```{python}
 #| echo: false
@@ -355,12 +366,12 @@ The panel caught `{python} s["TP"]` of the `{python} s["TP"] + s["FN"]` resistan
 
 **Specificity**: of the instances that are truly negative, the fraction the classifier calls negative
 
-|  | Growth test: resistant | **Growth test: susceptible** |
+|  | Growth test: `resistant`{.pos} | **Growth test: `susceptible`{.neg}** |
 |---|:-:|:-:|
-| **Panel: resistant** | `{python} s["TP"]` | **`{python} s["FP"]`** |
-| **Panel: susceptible** | `{python} s["FN"]` | **`{python} s["TN"]`** |
+| **Panel: `resistant`{.pos}** | `{python} s["TP"]` | **`{python} s["FP"]`** |
+| **Panel: `susceptible`{.neg}** | `{python} s["FN"]` | **`{python} s["TN"]`** |
 
-Read down the *susceptible* column:
+Read down the `susceptible`{.neg} column:
 
 ```{python}
 #| echo: false
@@ -374,12 +385,12 @@ The panel cleared `{python} s["TN"]` of the `{python} s["TN"] + s["FP"]` suscept
 
 **Positive predictive value** (PPV): of the instances the classifier calls positive, the fraction that are truly positive
 
-|  | Growth test: resistant | Growth test: susceptible |
+|  | Growth test: `resistant`{.pos} | Growth test: `susceptible`{.neg} |
 |---|:-:|:-:|
-| **Panel: resistant** | **`{python} s["TP"]`** | **`{python} s["FP"]`** |
-| **Panel: susceptible** | `{python} s["FN"]` | `{python} s["TN"]` |
+| **Panel: `resistant`{.pos}** | **`{python} s["TP"]`** | **`{python} s["FP"]`** |
+| **Panel: `susceptible`{.neg}** | `{python} s["FN"]` | `{python} s["TN"]` |
 
-Read across the *panel: resistant* row:
+Read across the *panel: `resistant`{.pos}* row:
 
 ```{python}
 #| echo: false
@@ -387,7 +398,7 @@ Read across the *panel: resistant* row:
 print(rf"$$\text{{PPV}} = \frac{{\text{{TP}}}}{{\text{{TP}} + \text{{FP}}}} = \frac{{{s['TP']}}}{{{s['TP']} + {s['FP']}}} = {f2(sr['PPV'])}$$")
 ```
 
-When the panel said *resistant*, it was right `{python} s["TP"]` times out of `{python} s["TP"] + s["FP"]`.
+When the panel said `resistant`{.pos}, it was right `{python} s["TP"]` times out of `{python} s["TP"] + s["FP"]`.
 
 ## Sensitivity and PPV are different questions
 
@@ -395,8 +406,8 @@ Both have TP on top, but they divide by different groups:
 
 - **Sensitivity** divides by the isolates that **are** resistant (a column)
     - → starts from the growth test: *of the resistant isolates, how many did the panel catch?*
-- **PPV** divides by the isolates the panel **called** resistant (a row)
-    - → starts from the panel: *when the panel says resistant, how often is it right?*
+- **PPV** divides by the isolates the panel **called** `resistant`{.pos} (a row)
+    - → starts from the panel: *when the panel says `resistant`{.pos}, how often is it right?*
 
 . . .
 
@@ -407,9 +418,9 @@ A lab validating the panel asks about sensitivity. A doctor holding one panel re
 | Measure | Question it answers | Part of the table | Twelve isolates |
 |---|---|---|:-:|
 | accuracy | How often does the panel agree with the growth test? | TP and TN, of all | `{python} f2(sr["accuracy"])` |
-| sensitivity | Of the resistant isolates, how many are caught? | resistant column | `{python} f2(sr["sensitivity"])` |
-| specificity | Of the susceptible isolates, how many are cleared? | susceptible column | `{python} f2(sr["specificity"])` |
-| PPV | When the panel says resistant, how often is it right? | *panel: resistant* row | `{python} f2(sr["PPV"])` |
+| sensitivity | Of the resistant isolates, how many are caught? | `resistant`{.pos} column | `{python} f2(sr["sensitivity"])` |
+| specificity | Of the susceptible isolates, how many are cleared? | `susceptible`{.neg} column | `{python} f2(sr["specificity"])` |
+| PPV | When the panel says `resistant`{.pos}, how often is it right? | *panel: `resistant`{.pos}* row | `{python} f2(sr["PPV"])` |
 
 # A year of isolates
 
@@ -419,10 +430,10 @@ Twelve isolates are enough to see where the numbers come from, but too few to ju
 
 The hospital lab ran both tests on `{python} yr["n"]` isolates over a year:
 
-|  | Growth test: resistant | Growth test: susceptible | Total |
+|  | Growth test: `resistant`{.pos} | Growth test: `susceptible`{.neg} | Total |
 |---|:-:|:-:|:-:|
-| **Panel: resistant** | `{python} y["TP"]` | `{python} y["FP"]` | `{python} y_call_res` |
-| **Panel: susceptible** | `{python} y["FN"]` | `{python} y["TN"]` | `{python} y["FN"] + y["TN"]` |
+| **Panel: `resistant`{.pos}** | `{python} y["TP"]` | `{python} y["FP"]` | `{python} y_call_res` |
+| **Panel: `susceptible`{.neg}** | `{python} y["FN"]` | `{python} y["TN"]` | `{python} y["FN"] + y["TN"]` |
 | **Total** | `{python} y_res` | `{python} y_sus` | `{python} yr["n"]` |
 
 ## The full year (cont.)
@@ -432,7 +443,7 @@ The hospital lab ran both tests on `{python} yr["n"]` isolates over a year:
 | accuracy | How often does the panel agree with the growth test? | `{python} f2(yr["accuracy"])` |
 | sensitivity | Of the resistant isolates, how many are caught? | `{python} f2(yr["sensitivity"])` |
 | specificity | Of the susceptible isolates, how many are cleared? | `{python} f2(yr["specificity"])` |
-| PPV | When the panel says resistant, how often is it right? | `{python} f2(yr["PPV"])` |
+| PPV | When the panel says `resistant`{.pos}, how often is it right? | `{python} f2(yr["PPV"])` |
 
 . . .
 
@@ -444,7 +455,7 @@ The hospital lab ran both tests on `{python} yr["n"]` isolates over a year:
 - `{python} pct(yr["accuracy"])` accuracy combines both kinds of mistake into one number
 - The other measures separate them:
     - `{python} y["FN"]` of the `{python} y_res` resistant isolates were **missed** (sensitivity `{python} f2(yr["sensitivity"])`)
-    - `{python} y["FP"]` of the `{python} y_call_res` *resistant* calls were **over-called** (PPV `{python} f2(yr["PPV"])`)
+    - `{python} y["FP"]` of the `{python} y_call_res` `resistant`{.pos} calls were **over-called** (PPV `{python} f2(yr["PPV"])`)
 
 . . .
 
