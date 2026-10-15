@@ -48,12 +48,12 @@ agents. The course makes a deliberate bet: the primary coding learning objective
   description, design, assessment weights, materials, and policies.
 - **[Schedule](https://bu-cds-bf550.github.io/schedule/)** — the twelve-unit topic progression,
   organized by how each unit's generative process composes from the last, and the Fall 2026 grid:
-  every meeting date, deadline, and both exam dates.
+  every meeting date, deadline, and the final exam date.
 - **[Problem sets](https://bu-cds-bf550.github.io/assignments/)** — the unit format: our design of
   the unit's problem, the pieces you build and check, and the reasoning questions in your own
   words.
 - **[Assessment & AI policy](https://bu-cds-bf550.github.io/assessment/)** — problem sets, the two
-  written exams, grading, and the per-question AIAS mapping.
+  the final exam, grading, and the per-question AIAS mapping.
 - **[Textbook](https://bu-cds-bf550.github.io/bf550-textbook/)** — the course's own free, open
   textbook, one chapter per unit, in the [`bf550-textbook`](https://github.com/bu-cds-bf550/bf550-textbook)
   repository.

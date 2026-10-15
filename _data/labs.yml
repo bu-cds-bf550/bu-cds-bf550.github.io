@@ -59,10 +59,10 @@
 - id: unit-07
   path: "unit-07.ipynb"
   unit: unit-07
-  date: "Wed Oct 21 · Fri Oct 23 · Mon Oct 26"
+  date: "Fri Oct 23 · Mon Oct 26 · Wed Oct 28"
   title: "Splits, folds, and shuffled labels"
-- id: unit-08
-  path: "unit-08.ipynb"
-  unit: unit-08
-  date: "Wed Oct 28 · Fri Oct 30 · Mon Nov 2"
+- id: unit-09
+  path: "unit-09.ipynb"
+  unit: unit-09
+  date: "Fri Nov 6 · Mon Nov 9 · Wed Nov 11"
   title: "`np.exp`, best-so-far, and the sum of squared misfits"

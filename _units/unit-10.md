@@ -1,18 +1,18 @@
 ---
-title: "Unit 10 — Trees, forests, and boosting: prediction with no probability story"
+title: "Unit 10 — Generalized linear models: Poisson and negative binomial regression"
 ---
 
-**Act III**
+**Act II** · composition operation: **nest + condition**
 
-**Sessions:** Wed **Nov 11** · Fri **Nov 13** · Mon **Nov 16**
+**Sessions:** Fri **Nov 13** · Mon **Nov 16** · Wed **Nov 18**
 
-**PS9** (on unit 8's material) is assigned in the first session · due Wed **Nov 18**
+**PS9** is due at the start of the first session, Fri **Nov 13** · **PS10** (on unit 9's material) is assigned in that same session · due Mon **Nov 30**, after Thanksgiving recess
 
-> *Which genes mark treatment response?*
+> *Are these genes really differentially expressed?*
 
 ## Before the first meeting
 
-Read [chapter 10 — Trees and forests: the honest outlier](https://bu-cds-bf550.github.io/bf550-textbook/chapters/ch10-trees.html). Budget about two hours: the chapter
+Read [chapter 9 — Generalized linear models: Poisson and negative binomial regression](https://bu-cds-bf550.github.io/bf550-textbook/chapters/ch09-glms.html). Budget about two hours: the chapter
 plus its worked notebook. The chapter's practice problems are ungraded and have worked solutions —
 they are the cheapest way to find out whether the reading landed.
 
@@ -23,9 +23,6 @@ they are the cheapest way to find out whether the reading landed.
 
 The topic opens in the first meeting. The rest of the unit is working sessions on the problem set,
 with instructors and TAs in the room.
-
-**The midterm is Wed Nov 11**, in the first session — closed book, no AI, code reading, covering
-Acts I and II, units 1–9. The unit's topic opens in the rest of that session.
 
 ## Where this fits
 

@@ -47,8 +47,8 @@ Every question states its [AI level](https://aiassessmentscale.com/), and **the 
 maximum** — the most AI use we recommend, and a pointer to where your attention belongs. You may
 always use less. Code questions are level 3: have the agent draft if you like, then read what it
 wrote, run the checks, and say what you kept. The reasoning questions — read our design, read a
-piece of code, say what the checks cannot see — are level 1, no AI. Both exams are code-reading
-exams, so those questions are the rehearsal, happening in every set in the ordinary course of the
+piece of code, say what the checks cannot see — are level 1, no AI. The final exam is a code-reading
+exam, so those questions are the rehearsal, happening in every set in the ordinary course of the
 work. Using AI on them costs you the practice, not the points. The
 [assessment page]({{ site.baseurl }}/assessment/) has the levels in full.
 

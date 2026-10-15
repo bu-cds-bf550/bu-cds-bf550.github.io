@@ -67,7 +67,7 @@ ambiguity about what's allowed.
 
 | Level | Name | What it means |
 |------:|------|---------------|
-| 1 | No AI | Work on your own (e.g. the three reasoning questions in every problem set, and both exams). |
+| 1 | No AI | Work on your own (e.g. the three reasoning questions in every problem set, and the final exam). |
 | 2 | AI Planning | AI for brainstorming/outlining; you develop the ideas yourself. |
 | 3 | AI Collaboration | AI helps draft; you critically evaluate and revise its output. |
 | 4 | Full AI | Use the agent throughout; you direct it, verify it, and own the result. |
@@ -75,8 +75,8 @@ ambiguity about what's allowed.
 
 Every level is a **maximum** — the most AI use we recommend, and where your attention belongs.
 Code questions in the problem sets are **Level 3**: the agent may draft; you read, test, and say
-what you kept. The project is **Level 4**. The three reasoning questions in every problem set, the
-midterm, and the Act III exam are **Level 1**, so you and we can both see your unaided reading
+what you kept. The project is **Level 4**. The three reasoning questions in every problem set and
+the final exam are **Level 1**, so you and we can both see your unaided reading
 skills grow over the term.
 
 ## Why this course is built the way it is
@@ -148,8 +148,7 @@ its [AI level](https://aiassessmentscale.com/) — not every assignment, every q
 - **Reading our design, reading code, and saying what the checks cannot see — no AI.** Three
   questions in every set. These are the skills that quietly disappear if you delegate them, and
   they are exactly what the exams assess.
-- **The two exams — no AI.** A midterm (Wed Nov 11) and an Act III exam (Mon Dec 7), closed-book, both
-  code-reading.
+- **The final exam — no AI.** One closed-book, code-reading exam, in class on Wed Dec 9.
 
 The no-AI questions exist for your benefit as much as ours. Research on novices using AI finds that
 the students who struggle most are often the ones most convinced they're doing fine. Two unaided
@@ -162,14 +161,13 @@ One notebook per set: your code, your figures, and your answers in complete sent
 
 | | Weight | AI level |
 |---|---:|---|
-| Problem sets (10) | 40% | Stated per question — two are no-AI in every set |
-| Written midterm (Wed Nov 11) | 10% | None |
-| Act III exam (Mon Dec 7) | 10% | None |
-| Synthesis project | 35% | Full |
+| Problem sets (10) | 60% | Stated per question — two are no-AI in every set |
+| Final exam (Wed Dec 9) | 15% | None |
+| Synthesis project | 20% | Full |
 | Participation | 5% | — |
 
-The synthesis project is the course in miniature and the culminating assessment — **there is no
-exam during finals period**. You design a generative process for a biological question you care
+The synthesis project is the course in miniature and the culminating assessment. It opens Mon
+Nov 30 and is due during the finals period; **there is no exam during finals period**. You design a generative process for a biological question you care
 about, then show what a method can and cannot recover from it. By then you'll have done exactly
 that ten times; the difference is that this time you choose the question.
 
