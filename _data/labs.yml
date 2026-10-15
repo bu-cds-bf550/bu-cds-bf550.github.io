@@ -61,6 +61,11 @@
   unit: unit-07
   date: "Fri Oct 23 · Mon Oct 26 · Wed Oct 28"
   title: "Splits, folds, and shuffled labels"
+- id: unit-08
+  path: "unit-08.ipynb"
+  unit: unit-08
+  date: "Fri Oct 30 · Mon Nov 2 · Wed Nov 4"
+  title: "Trees, forests and feature importance"
 - id: unit-09
   path: "unit-09.ipynb"
   unit: unit-09
