@@ -29,10 +29,12 @@ unevenly, so units 2 to 4 run **Friday → Monday → Wednesday**: the topic and
 on Friday, you have the weekend with them, and Monday and Wednesday are working sessions. Class on
 Mon Sep 28 was cancelled, and every meeting after it moved one place later. From unit 5 on, a unit
 runs **Monday → Wednesday → Friday**: the topic and the new problem open on Monday, and Wednesday
-and Friday are working sessions. Two holidays bend that pattern: unit 6 opens on a Tuesday, and
-unit 12 has Thanksgiving recess inside it, so unit 13 opens on a Friday. No session of units 1 to
-12 is dropped. A holiday bends a unit rather than shortening it, and the cancelled class took its
-meeting from the project unit, unit 13.
+and Friday are working sessions. Unit 5 has a fourth session on Tue Oct 13, the Monday-schedule
+substitute day. On Oct 13, evaluation became two units, and unit 6 opens Wed Oct 14. From unit
+6 on, a unit runs **Wednesday → Friday → Monday**: the topic and the new problem open on Wednesday,
+and Friday and Monday are working sessions. Thanksgiving recess falls between units 11 and 12. No
+session of units 1 to 12 is dropped. The cancelled class and unit 5's fourth session both took
+their meetings from the project unit, unit 13, which has two.
 
 **A problem set covers one unit's material and is assigned at the next unit's first session** —
 after the chapter, the lectures, and the labs — **and is due at the first session of the unit after
@@ -45,8 +47,8 @@ a unit's sessions carry working time on the set assigned in the first of them, s
 room, the instructors and the TAs for the whole of a set's life.
 
 **Two units assign nothing: units 9 and 12.** That is deliberate. It means no problem set is ever
-open while you are preparing for an exam. The midterm is Mon Nov 9, at the start of unit 10; the
-Act III exam is Fri Dec 4, at the start of unit 13. It is also why there are **ten problem sets
+open while you are preparing for an exam. The midterm is Wed Nov 11, at the start of unit 10; the
+Act III exam is Mon Dec 7, at the start of unit 13. It is also why there are **ten problem sets
 across thirteen units** rather than one per unit.
 
 Each unit number links to that unit's page, which carries the slides and the labs for its
@@ -59,27 +61,27 @@ pace afterwards.
 | [**2**]({{ site.baseurl }}/units/unit-02/) | Fri **Sep 11** · Mon **Sep 14** · Wed **Sep 16** | Null distributions; what a p-value is; multiple testing | NA / **PS2** |
 | [**3**]({{ site.baseurl }}/units/unit-03/) | Fri **Sep 18** · Mon **Sep 21** · Wed **Sep 23** | Nesting; overdispersion; why counts vary more than they should | **PS2** / **PS3** |
 | [**4**]({{ site.baseurl }}/units/unit-04/) | Fri **Sep 25** · Wed **Sep 30** · Fri **Oct 2** | Bayes' theorem; estimating probabilities from counts | **PS3** / **PS4** |
-| [**5**]({{ site.baseurl }}/units/unit-05/) | Mon **Oct 5** · Wed **Oct 7** · Fri **Oct 9** | Naive Bayes: classification as a generative story | **PS4** / **PS5** |
-| [**6**]({{ site.baseurl }}/units/unit-06/) | Tue **Oct 13** · Wed **Oct 14** · Fri **Oct 16** | Evaluation: overfitting, cross-validation, leakage, calibration | **PS5** / **PS6** |
-| [**7**]({{ site.baseurl }}/units/unit-07/) | Mon **Oct 19** · Wed **Oct 21** · Fri **Oct 23** | Logistic regression: modeling the boundary directly | **PS6** / **PS7** |
-| [**8**]({{ site.baseurl }}/units/unit-08/) | Mon **Oct 26** · Wed **Oct 28** · Fri **Oct 30** | Linear regression and regularization | **PS7** / **PS8** |
-| [**9**]({{ site.baseurl }}/units/unit-09/) | Mon **Nov 2** · Wed **Nov 4** · Fri **Nov 6** | Generalized linear models: Poisson and negative binomial regression | **PS8** / NA |
-| [**10**]({{ site.baseurl }}/units/unit-10/) | Mon **Nov 9** · Wed **Nov 11** · Fri **Nov 13** | **MIDTERM Mon Nov 9** (no AI, closed book — Acts I & II), then trees, forests, and boosting | NA / **PS9** |
-| [**11**]({{ site.baseurl }}/units/unit-11/) | Mon **Nov 16** · Wed **Nov 18** · Fri **Nov 20** | Dimensionality reduction: PCA (t-SNE/UMAP demo) | **PS9** / **PS10** |
-| [**12**]({{ site.baseurl }}/units/unit-12/) | Mon **Nov 23** · Mon **Nov 30** · Wed **Dec 2** | Clustering: mixture models → k-means; validating *k* | **PS10** / NA |
-| [**13**]({{ site.baseurl }}/units/unit-13/) | Fri **Dec 4** · Mon **Dec 7** · Wed **Dec 9** | **ACT III EXAM Fri Dec 4** (no AI, closed book — units 10–12), then the project launches and the rest is studio | — *the project* |
+| [**5**]({{ site.baseurl }}/units/unit-05/) | Mon **Oct 5** · Wed **Oct 7** · Fri **Oct 9** · Tue **Oct 13** | Naive Bayes: classification as a generative story | **PS4** / **PS5** |
+| [**6**]({{ site.baseurl }}/units/unit-06/) | Wed **Oct 14** · Fri **Oct 16** · Mon **Oct 19** | Evaluation I: held-out scores, the confusion table, the ROC curve, calibration | **PS5** / **PS6** |
+| [**7**]({{ site.baseurl }}/units/unit-07/) | Wed **Oct 21** · Fri **Oct 23** · Mon **Oct 26** | Evaluation II: overfitting, cross-validation, leakage, the permutation null | NA / **PS7** |
+| [**8**]({{ site.baseurl }}/units/unit-08/) | Wed **Oct 28** · Fri **Oct 30** · Mon **Nov 2** | Regression, logistic and linear, and regularization | **PS7** / **PS8** |
+| [**9**]({{ site.baseurl }}/units/unit-09/) | Wed **Nov 4** · Fri **Nov 6** · Mon **Nov 9** | Generalized linear models: Poisson and negative binomial regression | **PS8** / NA |
+| [**10**]({{ site.baseurl }}/units/unit-10/) | Wed **Nov 11** · Fri **Nov 13** · Mon **Nov 16** | **MIDTERM Wed Nov 11** (no AI, closed book — Acts I & II), then trees, forests, and boosting | NA / **PS9** |
+| [**11**]({{ site.baseurl }}/units/unit-11/) | Wed **Nov 18** · Fri **Nov 20** · Mon **Nov 23** | Dimensionality reduction: PCA (t-SNE/UMAP demo) | **PS9** / **PS10** |
+| [**12**]({{ site.baseurl }}/units/unit-12/) | Mon **Nov 30** · Wed **Dec 2** · Fri **Dec 4** | Clustering: mixture models → k-means; validating *k* | **PS10** / NA |
+| [**13**]({{ site.baseurl }}/units/unit-13/) | Mon **Dec 7** · Wed **Dec 9** | **ACT III EXAM Mon Dec 7** (no AI, closed book — units 10–12), then the project launches and the rest is studio | — *the project* |
 
 **Unit 13 is the project unit.** It carries the term's last meeting, Wed Dec 9, and assigns no
-problem set. **PS10, due Mon Nov 23, is the last one.**
+problem set. **PS10, due Mon Nov 30, is the last one.**
 
 ### Holidays, recesses, and the two odd days
 
 | | |
 |---|---|
 | Mon **Sep 7** | Labor Day — no class. Falls inside unit 1, between Sep 4 and Sep 9 |
-| Mon **Sep 28** | Class cancelled. Falls inside unit 4, between Fri Sep 25 and Wed Sep 30. Every meeting after it moved down one place, so unit 4's last session is Fri Oct 2, PS4 is due Mon Oct 5, and unit 13 has three sessions instead of four |
-| Mon **Oct 12** | Indigenous Peoples' Day — no class. BU substitutes a Monday schedule on **Tue Oct 13**, which is unit 6's first session. It is the only substitute day of the term; Labor Day is not made up |
-| Wed **Nov 25** – Sun **Nov 29** | Thanksgiving recess — no class. Falls inside unit 12, between Mon Nov 23 and Mon Nov 30. Unit 12 assigns no set, so the recess lands in a stretch with nothing due |
+| Mon **Sep 28** | Class cancelled. Falls inside unit 4, between Fri Sep 25 and Wed Sep 30. Every meeting after it moved down one place, so unit 4's last session is Fri Oct 2, PS4 is due Mon Oct 5, and unit 13 lost a session |
+| Mon **Oct 12** | Indigenous Peoples' Day — no class. BU substitutes a Monday schedule on **Tue Oct 13**, which is unit 5's fourth session: PS5 is due and PS6 opens that day, and unit 6 opens Wed Oct 14. It is the only substitute day of the term; Labor Day is not made up |
+| Wed **Nov 25** – Sun **Nov 29** | Thanksgiving recess — no class. Falls between unit 11, which ends Mon Nov 23, and unit 12, which opens Mon Nov 30. PS10 is open over the recess and is due Mon Nov 30 |
 | Thu **Dec 10** | Last day of classes. We do not meet Thursdays, so **Wed Dec 9** is our last meeting |
 | **Dec 11–13** · **Dec 14–18** | Study period · final exams period — **no exam for this course** |
 
@@ -89,13 +91,13 @@ problem set. **PS10, due Mon Nov 23, is the last one.**
 
 | | When | Covers | Format |
 |---|---|---|---|
-| **Midterm** | Mon Nov 9 | Units 1–9 — simulating processes through generalized linear models | Closed book, no AI, code reading |
-| **Act III exam** | Fri Dec 4 | Units 10–12 — trees, PCA, clustering | Closed book, no AI, code reading |
+| **Midterm** | Wed Nov 11 | Units 1–9 — simulating processes through generalized linear models | Closed book, no AI, code reading |
+| **Act III exam** | Mon Dec 7 | Units 10–12 — trees, PCA, clustering | Closed book, no AI, code reading |
 
 Each takes the first part of its session; the rest of that session belongs to what comes next —
 trees after the midterm, the project launch after the Act III exam.
 
-**There is no exam during finals period.** After Dec 4, every remaining session is project studio.
+**There is no exam during finals period.** After Dec 7, every remaining session is project studio.
 
 ## The synthesis project
 
@@ -105,7 +107,7 @@ thing you will have done ten times by then, on a problem you chose.
 
 | | When |
 |---|---|
-| **Launch** | Fri Dec 4, after the Act III exam |
-| **Studio** — instructors and TAs in the room | Mon Dec 7 · Wed Dec 9 |
-| **Proposal** | Mon Dec 7 |
+| **Launch** | Mon Dec 7, after the Act III exam |
+| **Studio** — instructors and TAs in the room | Wed Dec 9 |
+| **Proposal** | Wed Dec 9 |
 | **Project bundle** | during the finals period, Dec 14–18 |

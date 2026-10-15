@@ -1,19 +1,19 @@
 ---
-title: "Unit 7 — Logistic regression: modeling the boundary directly"
+title: "Unit 7 — Evaluation II: overfitting, cross-validation, leakage, the permutation null"
 ---
 
-**Act II** · composition operation: **condition**
+**Act II**
 
-**Sessions:** Mon **Oct 19** · Wed **Oct 21** · Fri **Oct 23**
+**Sessions:** Wed **Oct 21** · Fri **Oct 23** · Mon **Oct 26**
 
-**PS6** is due at the start of the first session, Mon **Oct 19** · **PS7** (on unit 6's material) is assigned in that same session · due Mon **Oct 26**
+**PS7** (on unit 6's material) is assigned in the first session, Wed **Oct 21** · due Wed **Oct 28**. PS6 was due Mon Oct 19, in unit 6's last session
 
-> *Is this variant pathogenic?*
+> *Is the score real, or did the way it was measured produce it?*
 
 ## Before the first meeting
 
-Read [chapter 7 — Condition: logistic regression](https://bu-cds-bf550.github.io/bf550-textbook/chapters/ch07-logistic-regression.html). Budget about two hours: the chapter
-plus its worked notebook. The chapter's practice problems are ungraded and have worked solutions —
+This unit continues [chapter 6 — Did it actually work? Evaluation and generalization](https://bu-cds-bf550.github.io/bf550-textbook/chapters/ch06-evaluation.html):
+cross-validation, leakage and the permutation null are its later sections. The chapter's practice problems are ungraded and have worked solutions —
 they are the cheapest way to find out whether the reading landed.
 
 ## In class

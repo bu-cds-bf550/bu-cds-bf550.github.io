@@ -51,3 +51,18 @@
   unit: unit-05
   date: "Mon Oct 5 · Wed Oct 7 · Fri Oct 9"
   title: "Dictionaries, `and`, and sums of logs"
+- id: unit-06
+  path: "unit-06.ipynb"
+  unit: unit-06
+  date: "Wed Oct 14 · Fri Oct 16 · Mon Oct 19"
+  title: "Tables, `axis=`, and calls counted against truth"
+- id: unit-07
+  path: "unit-07.ipynb"
+  unit: unit-07
+  date: "Wed Oct 21 · Fri Oct 23 · Mon Oct 26"
+  title: "Splits, folds, and shuffled labels"
+- id: unit-08
+  path: "unit-08.ipynb"
+  unit: unit-08
+  date: "Wed Oct 28 · Fri Oct 30 · Mon Nov 2"
+  title: "`np.exp`, best-so-far, and the sum of squared misfits"

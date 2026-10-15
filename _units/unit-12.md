@@ -4,9 +4,9 @@ title: "Unit 12 — Clustering: mixture models → k-means; validating *k*"
 
 **Act III** · composition operation: **mix, hidden**
 
-**Sessions:** Mon **Nov 23** · Mon **Nov 30** · Wed **Dec 2**
+**Sessions:** Mon **Nov 30** · Wed **Dec 2** · Fri **Dec 4**
 
-**PS10** is due at the start of the first session, Mon **Nov 23** · **no new set is assigned** — this unit is the run-up to the Act III exam, Fri Dec 4
+**PS10** is due at the start of the first session, Mon **Nov 30** · **no new set is assigned** — this unit is the run-up to the Act III exam, Mon Dec 7
 
 > *Do these cells form distinct types — and how many?*
 
@@ -23,8 +23,6 @@ they are the cheapest way to find out whether the reading landed.
 
 The topic opens in the first meeting. The rest of the unit is working sessions on the problem set,
 with instructors and TAs in the room.
-
-Thanksgiving recess falls inside this unit: after Mon Nov 23 we next meet **Mon Nov 30**.
 
 ## Where this fits
 
