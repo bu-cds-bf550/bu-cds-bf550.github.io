@@ -69,7 +69,7 @@ pace afterwards.
 | [**8**]({{ site.baseurl }}/units/unit-08/) | Fri **Oct 30** · Mon **Nov 2** · Wed **Nov 4** | Trees, forests, and boosting: prediction with no probability story | **PS7** / **PS8** |
 | [**9**]({{ site.baseurl }}/units/unit-09/) | Fri **Nov 6** · Mon **Nov 9** · Wed **Nov 11** | Regression, logistic and linear, and regularization | **PS8** / **PS9** |
 | [**10**]({{ site.baseurl }}/units/unit-10/) | Fri **Nov 13** · Mon **Nov 16** · Wed **Nov 18** | Generalized linear models: Poisson and negative binomial regression | **PS9** / **PS10** |
-| [**11**]({{ site.baseurl }}/units/unit-11/) | Fri **Nov 20** · Mon **Nov 23** · Mon **Nov 30** | Dimensionality reduction: PCA (t-SNE/UMAP demo) | NA / NA · **PS10** due Mon **Nov 30** |
+| [**11**]({{ site.baseurl }}/units/unit-11/) | Fri **Nov 20** · Mon **Nov 23** · Mon **Nov 30** | Dimensionality reduction: PCA (t-SNE/UMAP demo) | NA / NA |
 | [**12**]({{ site.baseurl }}/units/unit-12/) | Wed **Dec 2** · Fri **Dec 4** · Mon **Dec 7** | Clustering: mixture models → k-means; validating *k* | NA / NA |
 | [**13**]({{ site.baseurl }}/units/unit-13/) | Wed **Dec 9** | **FINAL EXAM Wed Dec 9** (no AI, closed book, code reading — the whole course) | — |
 
