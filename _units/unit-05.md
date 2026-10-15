@@ -26,7 +26,7 @@ with instructors and TAs in the room.
 
 The unit has a fourth session, **Tue Oct 13**: BU runs a Monday schedule that day to make up for
 Indigenous Peoples' Day, the only substitute day of the term, and it carries the rest of the naive
-Bayes material. PS5 is due at its start, and PS6 opens then.
+Bayes material. PS5 is due at its start. PS6, on this unit's material, opens Fri **Oct 16**.
 
 ## Where this fits
 

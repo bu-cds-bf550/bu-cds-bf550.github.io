@@ -65,7 +65,7 @@ pace afterwards.
 | [**4**]({{ site.baseurl }}/units/unit-04/) | Fri **Sep 25** · Wed **Sep 30** · Fri **Oct 2** | Bayes' theorem; estimating probabilities from counts | **PS3** / **PS4** |
 | [**5**]({{ site.baseurl }}/units/unit-05/) | Mon **Oct 5** · Wed **Oct 7** · Fri **Oct 9** · Tue **Oct 13** | Naive Bayes: classification as a generative story | **PS4** / **PS5** |
 | [**6**]({{ site.baseurl }}/units/unit-06/) | Wed **Oct 14** · Fri **Oct 16** · Mon **Oct 19** | Evaluation I: held-out scores, the confusion table, the ROC curve, calibration | **PS5** / **PS6** |
-| [**7**]({{ site.baseurl }}/units/unit-07/) | Fri **Oct 23** · Mon **Oct 26** · Wed **Oct 28** | Evaluation II: overfitting, cross-validation, leakage, the permutation null | NA / **PS7** |
+| [**7**]({{ site.baseurl }}/units/unit-07/) | Fri **Oct 23** · Mon **Oct 26** · Wed **Oct 28** | Evaluation II: overfitting, cross-validation, leakage, the permutation null | **PS6** / **PS7** |
 | [**8**]({{ site.baseurl }}/units/unit-08/) | Fri **Oct 30** · Mon **Nov 2** · Wed **Nov 4** | Trees, forests, and boosting: prediction with no probability story | **PS7** / **PS8** |
 | [**9**]({{ site.baseurl }}/units/unit-09/) | Fri **Nov 6** · Mon **Nov 9** · Wed **Nov 11** | Regression, logistic and linear, and regularization | **PS8** / **PS9** |
 | [**10**]({{ site.baseurl }}/units/unit-10/) | Fri **Nov 13** · Mon **Nov 16** · Wed **Nov 18** | Generalized linear models: Poisson and negative binomial regression | **PS9** / **PS10** |
@@ -83,8 +83,9 @@ term's last meeting.
 |---|---|
 | Mon **Sep 7** | Labor Day — no class. Falls inside unit 1, between Sep 4 and Sep 9 |
 | Mon **Sep 28** | Class cancelled. Falls inside unit 4, between Fri Sep 25 and Wed Sep 30. Every meeting after it moved down one place, so unit 4's last session is Fri Oct 2, PS4 is due Mon Oct 5, and unit 13 lost a session |
+| Mon **Oct 12** | Indigenous Peoples' Day — no class. BU substitutes a Monday schedule on **Tue Oct 13**, which is unit 5's fourth session: PS5 is due that day, and unit 6 opens Wed Oct 14. It is the only substitute day of the term; Labor Day is not made up |
+| Fri **Oct 16** · Fri **Oct 23** | PS6 opens Fri Oct 16, unit 6's second session, and is due Fri Oct 23 at 12:20, unit 7's first session |
 | Wed **Oct 21** | Class cancelled. Falls between unit 6, which ends Mon Oct 19, and unit 7, which now opens Fri Oct 23. Every meeting after it moved down one place, and unit 13 lost another session |
-| Mon **Oct 12** | Indigenous Peoples' Day — no class. BU substitutes a Monday schedule on **Tue Oct 13**, which is unit 5's fourth session: PS5 is due and PS6 opens that day, and unit 6 opens Wed Oct 14. It is the only substitute day of the term; Labor Day is not made up |
 | Wed **Nov 25** – Sun **Nov 29** | Thanksgiving recess — no class. Falls inside unit 11, between Mon Nov 23 and Mon Nov 30. PS10 is open over the recess and is due Mon Nov 30 |
 | Thu **Dec 10** | Last day of classes. We do not meet Thursdays, so **Wed Dec 9** is our last meeting |
 | **Dec 11–13** · **Dec 14–18** | Study period · final exams period — the final exam is in class on Wed Dec 9, not in the finals period |
