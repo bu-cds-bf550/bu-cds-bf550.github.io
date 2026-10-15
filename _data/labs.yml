@@ -70,4 +70,9 @@
   path: "unit-09.ipynb"
   unit: unit-09
   date: "Fri Nov 6 · Mon Nov 9 · Wed Nov 11"
-  title: "`np.exp`, best-so-far, and the sum of squared misfits"
+  title: "Logistic regression, linear regression and penalties"
+- id: unit-11
+  path: "unit-11.ipynb"
+  unit: unit-11
+  date: "Fri Nov 20 · Mon Nov 23 · Mon Nov 30"
+  title: "Principal component analysis"
