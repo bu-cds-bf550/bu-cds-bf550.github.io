@@ -6,7 +6,7 @@ title: "Unit 7 — Evaluation II: overfitting, cross-validation, leakage, the pe
 
 **Sessions:** Wed **Oct 21** · Fri **Oct 23** · Mon **Oct 26**
 
-**PS7** (on unit 6's material) is assigned in the first session, Wed **Oct 21** · due Wed **Oct 28**. PS6 was due Mon Oct 19, in unit 6's last session
+**PS7** (on unit 6's material) is assigned in the first session, Wed **Oct 21** · due Wed **Oct 28**. PS6 is due Fri **Oct 23**, this unit's second session
 
 > *Is the score real, or did the way it was measured produce it?*
 

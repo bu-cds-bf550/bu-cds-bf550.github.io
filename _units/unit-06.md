@@ -6,7 +6,7 @@ title: "Unit 6 — Evaluation I: held-out scores, the confusion table, the ROC c
 
 **Sessions:** Wed **Oct 14** · Fri **Oct 16** · Mon **Oct 19**
 
-**PS5** was due Tue **Oct 13**, unit 5's last session, and **PS6** (on unit 5's material) was assigned that day · due Mon **Oct 19**, this unit's last session
+**PS5** was due Tue **Oct 13**, unit 5's last session, and **PS6** (on unit 5's material) is assigned Fri **Oct 16**, this unit's second session · due Fri **Oct 23**, unit 7's second session
 
 > *Does the classifier actually work, or does it just look like it does?*
 
@@ -26,7 +26,7 @@ with instructors and TAs in the room.
 
 Evaluation is two units: this one asks what a classifier's scores on new data mean, and
 [unit 7]({{ site.baseurl }}/units/unit-07/) asks whether a reported score can be trusted. This unit
-opens on a Wednesday, and its last session, **Mon Oct 19**, is the day PS6 is due.
+opens on a Wednesday, and PS6 opens in its second session, **Fri Oct 16**.
 
 ## Where this fits
 
