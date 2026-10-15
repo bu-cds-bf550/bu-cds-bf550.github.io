@@ -6,7 +6,7 @@ title: "Unit 6 — Evaluation I: held-out scores, the confusion table, the ROC c
 
 **Sessions:** Wed **Oct 14** · Fri **Oct 16** · Mon **Oct 19**
 
-**PS5** was due Tue **Oct 13**, unit 5's last session, and **PS6** (on unit 5's material) is assigned Fri **Oct 16**, this unit's second session · due Fri **Oct 23**, unit 7's second session
+**PS5** was due Tue **Oct 13**, unit 5's last session, and **PS6** (on unit 5's material) is assigned Fri **Oct 16**, this unit's second session · due Fri **Oct 23**
 
 > *Does the classifier actually work, or does it just look like it does?*
 

@@ -81,7 +81,7 @@ problem set. **PS10, due Mon Nov 30, is the last one.**
 | Mon **Sep 7** | Labor Day — no class. Falls inside unit 1, between Sep 4 and Sep 9 |
 | Mon **Sep 28** | Class cancelled. Falls inside unit 4, between Fri Sep 25 and Wed Sep 30. Every meeting after it moved down one place, so unit 4's last session is Fri Oct 2, PS4 is due Mon Oct 5, and unit 13 lost a session |
 | Mon **Oct 12** | Indigenous Peoples' Day — no class. BU substitutes a Monday schedule on **Tue Oct 13**, which is unit 5's fourth session: PS5 is due that day, and unit 6 opens Wed Oct 14. It is the only substitute day of the term; Labor Day is not made up |
-| Fri **Oct 16** · Fri **Oct 23** | PS6 opens Fri Oct 16, unit 6's second session, and is due Fri Oct 23 at 12:20, unit 7's second session, rather than at the first sessions of units 6 and 7 |
+| Fri **Oct 16** · Fri **Oct 23** | PS6 opens Fri Oct 16, unit 6's second session, and is due Fri Oct 23 at 12:20 |
 | Wed **Nov 25** – Sun **Nov 29** | Thanksgiving recess — no class. Falls between unit 11, which ends Mon Nov 23, and unit 12, which opens Mon Nov 30. PS10 is open over the recess and is due Mon Nov 30 |
 | Thu **Dec 10** | Last day of classes. We do not meet Thursdays, so **Wed Dec 9** is our last meeting |
 | **Dec 11–13** · **Dec 14–18** | Study period · final exams period — **no exam for this course** |
