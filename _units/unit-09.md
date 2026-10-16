@@ -1,19 +1,20 @@
 ---
-title: "Unit 9 — Generalized linear models: Poisson and negative binomial regression"
+title: "Unit 9 — Regression, logistic and linear, and regularization"
 ---
 
-**Act II** · composition operation: **nest + condition**
+**Act II** · composition operation: **condition**
 
-**Sessions:** Wed **Nov 4** · Fri **Nov 6** · Mon **Nov 9**
+**Sessions:** Fri **Nov 6** · Mon **Nov 9** · Wed **Nov 11**
 
-**PS8** is due at the start of the first session, Wed **Nov 4** · **no new set is assigned** — this unit is the run-up to the midterm, Wed Nov 11
+**PS8** is due at the start of the first session, Fri **Nov 6** · **PS9** (on unit 8's material) is assigned in that same session · due Fri **Nov 13**
 
-> *Are these genes really differentially expressed?*
+> *Is this variant pathogenic? Can expression predict drug response?*
 
 ## Before the first meeting
 
-Read [chapter 9 — Generalized linear models: Poisson and negative binomial regression](https://bu-cds-bf550.github.io/bf550-textbook/chapters/ch09-glms.html). Budget about two hours: the chapter
-plus its worked notebook. The chapter's practice problems are ungraded and have worked solutions —
+Read [chapter 7 — Condition: logistic regression](https://bu-cds-bf550.github.io/bf550-textbook/chapters/ch07-logistic-regression.html)
+and [chapter 8 — Regression, and regularization as a prior](https://bu-cds-bf550.github.io/bf550-textbook/chapters/ch08-linear-regression.html).
+Budget about two hours for each: the chapter plus its worked notebook. The chapter's practice problems are ungraded and have worked solutions —
 they are the cheapest way to find out whether the reading landed.
 
 ## In class

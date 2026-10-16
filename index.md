@@ -56,17 +56,16 @@ progression and the three-act arc.
 ## Assessment
 
 See [Assessment & AI Policy]({{ site.baseurl }}/assessment/). Your grade comes
-from ten problem sets (each with three no-AI reasoning questions), two written code-reading
-exams (no AI: a midterm on Wed Nov 11 and an Act III exam on Mon Dec 7), a synthesis project, and
-participation. **There is no exam during finals period** — the synthesis project is the culminating
-assessment, and unit 13, the term's last two meetings, belongs to it.
+from ten problem sets (each with three no-AI reasoning questions), one written code-reading
+exam (no AI: the final exam, in class on Wed Dec 9), a synthesis project, and participation.
+**There is no exam during finals period** — the final exam is the term's last meeting, and the
+synthesis project, which opens Mon Nov 30, is due during the finals period.
 
 | Component | Weight |
 |---|---:|
-| Problem sets (10) | 40% |
-| Written midterm — Wed Nov 11 | 10% |
-| Act III exam — Mon Dec 7 | 10% |
-| Synthesis project | 35% |
+| Problem sets (10) | 60% |
+| Final exam — Wed Dec 9 | 15% |
+| Synthesis project | 20% |
 | Participation | 5% |
 
 Every meeting date and deadline is on the [schedule]({{ site.baseurl }}/schedule/).
@@ -116,7 +115,7 @@ code requires. See BU's [academic policies](https://www.bu.edu/academics/policie
 Using the provided coding agent is **expected, not a shortcut** — on most questions it is the
 assignment. What governs is the level printed on each individual question, from the
 [AI Assessment Scale](https://aiassessmentscale.com/): level 4 means use the agent freely and own
-the result; level 1 means work unaided. Two questions on every problem set and both exams are
+the result; level 1 means work unaided. Two questions on every problem set and the final exam are
 level 1, and those two questions are the ones that tell you — before an exam does — whether your
 own code literacy is growing. Using the agent there is not a shortcut past a hurdle; it is
 throwing away the only unaided measurement you get. Full detail is on the
@@ -140,7 +139,7 @@ instructor.
 If you have a documented disability, or think you may have one, work with
 [Disability & Access Services](https://www.bu.edu/disability/) to arrange accommodations, and send us
 your letter as early in the term as you can so we can implement it properly rather than
-retroactively. Accommodations for the two closed-book exams need to be arranged before the exam
+retroactively. Accommodations for the closed-book final exam need to be arranged before the exam
 date, not after.
 
 If any part of this course or its materials is a barrier — the site, the textbook, the notebooks,

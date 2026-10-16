@@ -4,9 +4,9 @@ title: "Unit 12 — Clustering: mixture models → k-means; validating *k*"
 
 **Act III** · composition operation: **mix, hidden**
 
-**Sessions:** Mon **Nov 30** · Wed **Dec 2** · Fri **Dec 4**
+**Sessions:** Wed **Dec 2** · Fri **Dec 4** · Mon **Dec 7**
 
-**PS10** is due at the start of the first session, Mon **Nov 30** · **no new set is assigned** — this unit is the run-up to the Act III exam, Mon Dec 7
+**No new set is assigned** — the project, opened Mon Nov 30, is the work of this unit, and the final exam follows on Wed Dec 9
 
 > *Do these cells form distinct types — and how many?*
 
@@ -21,7 +21,7 @@ they are the cheapest way to find out whether the reading landed.
 {% include slide-links.html unit="unit-12" %}
 {% include lab-links.html unit="unit-12" %}
 
-The topic opens in the first meeting. The rest of the unit is working sessions on the problem set,
+The topic opens in the first meeting. The rest of the unit is working sessions on the project,
 with instructors and TAs in the room.
 
 ## Where this fits

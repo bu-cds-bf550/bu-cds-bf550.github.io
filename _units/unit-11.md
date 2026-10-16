@@ -4,9 +4,9 @@ title: "Unit 11 — Dimensionality reduction: PCA (t-SNE/UMAP as demo)"
 
 **Act III** · composition operation: **latent**
 
-**Sessions:** Wed **Nov 18** · Fri **Nov 20** · Mon **Nov 23**
+**Sessions:** Fri **Nov 20** · Mon **Nov 23** · Mon **Nov 30** — Thanksgiving recess falls between the second and third
 
-**PS9** is due at the start of the first session, Wed **Nov 18** · **PS10** (on unit 10's material) is assigned in that same session · due Mon **Nov 30**, after Thanksgiving recess
+**No new set is assigned** · **PS10** is due at the start of the last session, Mon **Nov 30**, and **the project opens** in that same session
 
 > *What structure hides in this expression matrix?*
 
@@ -21,8 +21,8 @@ they are the cheapest way to find out whether the reading landed.
 {% include slide-links.html unit="unit-11" %}
 {% include lab-links.html unit="unit-11" %}
 
-The topic opens in the first meeting. The rest of the unit is working sessions on the problem set,
-with instructors and TAs in the room.
+The topic opens in the first meeting. The rest of the unit is working sessions on PS10 and, from
+Mon Nov 30, the project, with instructors and TAs in the room.
 
 ## Where this fits
 
