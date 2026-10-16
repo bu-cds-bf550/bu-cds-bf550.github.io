@@ -99,6 +99,11 @@ def pct(x):
 def big(n):
     return f"{n:,}"
 
+# The conventions for reporting balance: prevalence is the diagnostic-accuracy term (STARD); the
+# imbalance ratio is the imbalanced-learning literature's measure (KEEL groups datasets by it);
+# the mild/moderate/extreme bands are the Google ML crash course's rule of thumb; the
+# no-information rate is what R's caret prints beside every accuracy, and here it is the accuracy
+# of the panel that never says resistant.
 # A panel that calls every isolate susceptible, on the same year of isolates.
 never = {"TP": 0, "FP": 0, "FN": y_res, "TN": y_sus}
 never_acc = y_sus / yr["n"]
@@ -129,9 +134,31 @@ hosp = {name: hospital(share) for name, share in (("rare", 0.02), ("ours", share
 | **Panel: susceptible** | `{python} y["FN"]` | `{python} y["TN"]` | `{python} y["FN"] + y["TN"]` |
 | **Total** | `{python} y_res` | `{python} y_sus` | `{python} yr["n"]` |
 
-- accuracy `{python} f2(yr["accuracy"])`, sensitivity `{python} f2(yr["sensitivity"])`, specificity `{python} f2(yr["specificity"])`, PPV `{python} f2(yr["PPV"])`
+. . .
+
+```{python}
+#| echo: false
+#| output: asis
+print(rf"""$$
+\begin{{aligned}}
+\text{{accuracy}} &= \frac{{\text{{TP}} + \text{{TN}}}}{{\text{{total}}}} = {f2(yr['accuracy'])}
+&
+\text{{sensitivity}} &= \frac{{\text{{TP}}}}{{\text{{TP}} + \text{{FN}}}} = {f2(yr['sensitivity'])} \\[0.6em]
+\text{{specificity}} &= \frac{{\text{{TN}}}}{{\text{{TN}} + \text{{FP}}}} = {f2(yr['specificity'])}
+&
+\text{{PPV}} &= \frac{{\text{{TP}}}}{{\text{{TP}} + \text{{FP}}}} = {f2(yr['PPV'])}
+\end{{aligned}}
+$$""")
+```
 
 ## The panel's two kinds of mistakes
+
+|  | Growth test: resistant | Growth test: susceptible | Total |
+|---|:-:|:-:|:-:|
+| **Panel: resistant** | `{python} y["TP"]` | **`{python} y["FP"]`** | `{python} y_call_res` |
+| **Panel: susceptible** | **`{python} y["FN"]`** | `{python} y["TN"]` | `{python} y["FN"] + y["TN"]` |
+| **Total** | `{python} y_res` | `{python} y_sus` | `{python} yr["n"]` |
+
 
 - **False negatives**: `{python} y["FN"]` resistant isolates the panel called susceptible
 - **False positives**: `{python} y["FP"]` susceptible isolates the panel called resistant
@@ -140,7 +167,7 @@ hosp = {name: hospital(share) for name, share in (("rare", 0.02), ("ours", share
 
 Both count as "wrong" in the accuracy. Do they matter equally?
 
-# Consequences
+# Consequences of mistakes
 
 ## What happens after the panel's call
 
@@ -170,20 +197,20 @@ The panel's call decides the patient's first drug:
     - every use of a carbapenem gives bacteria a chance to become resistant to it
 - Carbapenems are among the last drugs that work on resistant *E. coli*, so hospitals try to save them
 
+## Which mistake is easier to live with?
+
+Discuss with a neighbor:
+
+- Who is harmed by each mistake, and when?
+- Can the harm be undone when the growth test comes back?
+- What is the worst thing that can happen after each one?
+
 ## Where the consequences come from
 
 ![](img/illustrations/ch06-error-consequences.drawio.svg){fig-align="center" width="100%"}
 
 - A false negative harms **this patient**, now
 - A false positive mostly harms **later patients**, by spending a drug we want to keep working
-
-## Which mistake is easier to live with?
-
-Discuss with a neighbour:
-
-- Who is harmed by each mistake, and when?
-- Can the harm be undone when the growth test comes back?
-- What is the worst thing that can happen after each one?
 
 ## Which mistake is easier to live with? (cont.)
 
@@ -206,7 +233,7 @@ Discuss with a neighbour:
 
 If false negatives are what we fear most, sensitivity is the number to watch, not accuracy.
 
-# Accuracy and how common resistance is
+# Accuracy on imbalanced classes
 
 ## A panel that never says resistant
 
@@ -219,6 +246,13 @@ Imagine a "panel" that skips the genes and calls every isolate susceptible:
 | **Total** | `{python} y_res` | `{python} y_sus` | `{python} yr["n"]` |
 
 ## A panel that never says resistant (cont.)
+
+
+|  | Growth test: resistant | Growth test: susceptible | Total |
+|---|:-:|:-:|:-:|
+| **Panel: resistant** | `{python} never["TP"]` | `{python} never["FP"]` | `{python} never["TP"] + never["FP"]` |
+| **Panel: susceptible** | `{python} never["FN"]` | `{python} never["TN"]` | `{python} never["FN"] + never["TN"]` |
+| **Total** | `{python} y_res` | `{python} y_sus` | `{python} yr["n"]` |
 
 ```{python}
 #| echo: false
@@ -247,6 +281,31 @@ All `{python} y_res` resistant isolates are false negatives, and its accuracy is
 - The accuracies differ by only `{python} round(100 * (yr["accuracy"] - never_acc))` points
 - The sensitivities show the real difference: one panel catches resistance and the other doesn't
 
+## New terminology: balance
+
+- A dataset with roughly the same number of instances in each class is **balanced**
+- A dataset where the classes have very different numbers of instances is **imbalanced**
+
+. . .
+
+- There is no hard rule for where balanced ends and imbalanced begins
+- How balanced the classes are influences how we judge the results
+
+. . .
+
+Our isolates are imbalanced: `{python} pct(share_year)` resistant, `{python} pct(1 - share_year)` susceptible.
+
+## Reporting class balance
+
+- **Prevalence**: the share of the rarer class, `{python} y_res` of `{python} yr["n"]` = `{python} pct(share_year)`
+- **Imbalance ratio**: larger class ÷ smaller class, `{python} y_sus` / `{python} y_res` = `{python} f"{y_sus / y_res:.2f}"`
+- Rough bands for prevalence: mild 20–40%, moderate 1–20%, extreme under 1%
+
+. . .
+
+- **No-information rate**: the accuracy of always calling the larger class, `{python} f2(never_acc)` here
+- Report accuracy next to it
+
 ## Accuracy is weighted by how common each class is
 
 - `{python} y_sus` of the `{python} yr["n"]` isolates are susceptible, and only `{python} y_res` are resistant
@@ -257,7 +316,7 @@ All `{python} y_res` resistant isolates are false negatives, and its accuracy is
 #| output: asis
 print(rf"""$$
 \begin{{aligned}}
-\text{{accuracy}} &= \text{{share resistant}} \times \text{{sensitivity}} + \text{{share susceptible}} \times \text{{specificity}} \\
+\text{{accuracy}} &= \text{{% resistant}} \times \text{{sensitivity}} + \text{{% susceptible}} \times \text{{specificity}} \\
 &= {share_year:.2f} \times {yr['sensitivity']:.3f} + {1 - share_year:.2f} \times {yr['specificity']:.3f} = {f2(yr['accuracy'])}
 \end{{aligned}}
 $$""")
@@ -286,11 +345,54 @@ Each hospital runs both tests on 10,000 isolates.
 
 ## Three hospitals (cont.)
 
-| Hospital | Resistant | TP | FN | Susceptible | FP | TN |
-|---|:-:|:-:|:-:|:-:|:-:|:-:|
-| resistance rare (2%) | `{python} big(hosp["rare"][0]["TP"] + hosp["rare"][0]["FN"])` | `{python} big(hosp["rare"][0]["TP"])` | `{python} big(hosp["rare"][0]["FN"])` | `{python} big(hosp["rare"][0]["FP"] + hosp["rare"][0]["TN"])` | `{python} big(hosp["rare"][0]["FP"])` | `{python} big(hosp["rare"][0]["TN"])` |
-| ours (`{python} pct(share_year)`) | `{python} big(hosp["ours"][0]["TP"] + hosp["ours"][0]["FN"])` | `{python} big(hosp["ours"][0]["TP"])` | `{python} big(hosp["ours"][0]["FN"])` | `{python} big(hosp["ours"][0]["FP"] + hosp["ours"][0]["TN"])` | `{python} big(hosp["ours"][0]["FP"])` | `{python} big(hosp["ours"][0]["TN"])` |
-| resistance common (40%) | `{python} big(hosp["common"][0]["TP"] + hosp["common"][0]["FN"])` | `{python} big(hosp["common"][0]["TP"])` | `{python} big(hosp["common"][0]["FN"])` | `{python} big(hosp["common"][0]["FP"] + hosp["common"][0]["TN"])` | `{python} big(hosp["common"][0]["FP"])` | `{python} big(hosp["common"][0]["TN"])` |
+```{python}
+#| echo: false
+# One bar per hospital, 10,000 isolates long. Fill colour is the growth test's class, in the
+# class label colours (.pos, .neg), so a false positive is blue: truly susceptible. Hatching
+# marks the panel's mistakes. The cells are grouped by class, as in the confusion table's
+# columns: resistant isolates (TP, FN) on the left, susceptible isolates (FP, TN) on the right.
+import matplotlib
+import matplotlib.pyplot as plt
+plt.rcParams.update({"font.size": 14})
+
+cells = [("TP", "#a30000", None,     "#ffffff"),
+         ("FN", "#f2c4c4", "///",    "#a30000"),
+         ("FP", "#c9daf0", "\\\\\\", "#1f5fa8"),
+         ("TN", "#1f5fa8", None,     "#ffffff")]
+rows = [("rare", "resistance rare (2%)"), ("ours", f"ours ({pct(share_year)})"),
+        ("common", "resistance common (40%)")]
+fig, ax = plt.subplots(figsize=(10, 4.6))
+for y, (key, name) in enumerate(reversed(rows)):
+    c = hosp[key][0]
+    left = 0
+    last_above = -10000
+    for cell, fill, hatch, ink in cells:
+        ax.barh(y, c[cell], left=left, height=0.55, color=fill, hatch=hatch,
+                edgecolor=ink if hatch else "white", lw=0.8)
+        mid = left + c[cell] / 2
+        if c[cell] >= 600:
+            box = dict(boxstyle="round,pad=0.15", fc=fill, ec="none") if hatch else None
+            ax.text(mid, y, big(c[cell]), ha="center", va="center", color=ink, fontsize=13, bbox=box)
+        else:
+            # labels above the bar; a label too close to the one before it moves right on a leader
+            x = max(mid, last_above + 700)
+            ax.annotate(big(c[cell]), (mid, y + 0.28), xytext=(x, y + 0.36), ha="center", va="bottom",
+                        color="#52514e", fontsize=11,
+                        arrowprops=dict(arrowstyle="-", color="#52514e", lw=0.8) if x != mid else None)
+            last_above = x
+        left += c[cell]
+ax.set_yticks(range(3), [name for _, name in reversed(rows)])
+ax.set_xlim(0, 10000)
+ax.set_xlabel("isolates")
+ax.xaxis.set_major_formatter(matplotlib.ticker.FuncFormatter(lambda v, p: big(int(v))))
+ax.spines[["top", "right", "left"]].set_visible(False)
+ax.tick_params(axis="y", length=0)
+handles = [matplotlib.patches.Patch(facecolor=f, hatch=h, edgecolor=i if h else f, label=l)
+           for l, f, h, i in cells]
+ax.legend(handles=handles, ncols=4, frameon=False, loc="lower center", bbox_to_anchor=(0.5, 1.0))
+plt.tight_layout()
+plt.show()
+```
 
 ## Three hospitals (cont.)
 
@@ -327,8 +429,6 @@ In the hospital where resistance is rare:
 . . .
 
 A PPV or accuracy reported by another hospital tells you about their isolates as well as their panel.
-
-# The rule has one setting
 
 ## Trading one mistake for the other
 
