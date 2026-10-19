@@ -71,8 +71,18 @@
   unit: unit-09
   date: "Fri Nov 6 · Mon Nov 9 · Wed Nov 11"
   title: "Logistic regression, linear regression and penalties"
+- id: unit-10
+  path: "unit-10.ipynb"
+  unit: unit-10
+  date: "Fri Nov 13 · Mon Nov 16 · Wed Nov 18"
+  title: "Poisson regression, the negative binomial and many tests"
 - id: unit-11
   path: "unit-11.ipynb"
   unit: unit-11
   date: "Fri Nov 20 · Mon Nov 23 · Mon Nov 30"
   title: "Principal component analysis"
+- id: unit-12
+  path: "unit-12.ipynb"
+  unit: unit-12
+  date: "Wed Dec 2 · Fri Dec 4 · Mon Dec 7"
+  title: "Clustering"
