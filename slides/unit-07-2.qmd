@@ -1,0 +1,303 @@
+---
+# Unit 7, session 2 (Mon Oct 26): k-fold cross-validation, and choosing the number of genes with
+# it. Same 40 isolates and 500 genes as session 1. Cross-validation at each gene count peaks at
+# genes 1-5, as next month's isolates do, while training accuracy keeps rising; the number of
+# genes is a hyperparameter, chosen by CV, and the final classifier is retrained on all 40. The
+# best CV score is a little optimistic, which session 3 picks up. Lab part 2 builds the fold
+# loop. Redrafted by the assistant on 19 Oct 2026 after the instructor's review: cross-
+# validation gets the whole session; feature selection and leakage moved to session 3. For the
+# instructor to revise.
+#
+# Every number on the slides is printed from the setup chunk.
+title: "Cross-Validation"
+subtitle: "BF550 · Unit 7 · Session 2 — Mon Oct 26"
+---
+
+```{python}
+#| echo: false
+# Session 1's data: 40 isolates (20 resistant, seed 7128), 500 genes, genes 1-5 related to
+# resistance; next month's 200 isolates (seed 7001).
+import numpy as np
+import matplotlib
+import matplotlib.pyplot as plt
+from sklearn.naive_bayes import BernoulliNB
+from sklearn.model_selection import KFold, cross_val_score
+plt.rcParams.update({"font.size": 14})
+
+n_genes = 500
+real_r = np.array([0.55, 0.50, 0.50, 0.45, 0.45])
+real_s = np.full(5, 0.20)
+other_rates = np.random.default_rng(700).uniform(0.05, 0.95, size=n_genes - 5)
+true_r = np.concatenate([real_r, other_rates])
+true_s = np.concatenate([real_s, other_rates])
+
+def draw_isolates(n, rng, balanced=True):
+    if balanced:
+        y = np.zeros(n, dtype=bool)
+        y[: n // 2] = True
+        y = rng.permutation(y)
+    else:
+        y = rng.random(n) < 0.5
+    X = rng.random((n, n_genes)) < np.where(y[:, None], true_r, true_s)
+    return X, y
+
+X, y = draw_isolates(40, np.random.default_rng(7128))
+X_next, y_next = draw_isolates(200, np.random.default_rng(7001), balanced=False)
+
+def f2(x):
+    return f"{x:.2f}"
+
+folds = KFold(n_splits=5, shuffle=True, random_state=0)
+
+# One pass per fold at 5 genes.
+fold_rows = []
+for j, (train_rows, test_rows) in enumerate(folds.split(X)):
+    m = BernoulliNB().fit(X[train_rows][:, :5], y[train_rows])
+    fold_rows.append({"j": j, "n_train": len(train_rows), "n_test": len(test_rows),
+                      "res": int(y[test_rows].sum()),
+                      "acc": m.score(X[test_rows][:, :5], y[test_rows])})
+fold_acc = np.array([r["acc"] for r in fold_rows])
+cv5 = fold_acc.mean()
+assert np.isclose(cv5, cross_val_score(BernoulliNB(), X[:, :5], y, cv=folds).mean())
+
+# The dial: training accuracy, 5-fold CV and next month's isolates at each gene count.
+ks = [1, 2, 3, 4, 5, 10, 20, 50, 100, 200, 500]
+train_acc, cv_acc, next_acc = [], [], []
+for k in ks:
+    m = BernoulliNB().fit(X[:, :k], y)
+    train_acc.append(m.score(X[:, :k], y))
+    cv_acc.append(cross_val_score(BernoulliNB(), X[:, :k], y, cv=folds).mean())
+    next_acc.append(m.score(X_next[:, :k], y_next))
+train_acc, cv_acc, next_acc = map(np.array, (train_acc, cv_acc, next_acc))
+best = int(cv_acc.argmax())
+best_k = ks[best]
+assert best_k == 5 and next_acc.argmax() == best
+
+final = BernoulliNB().fit(X[:, :best_k], y)
+final_next = final.score(X_next[:, :best_k], y_next)
+
+def col(k):
+    return ks.index(k)
+```
+
+# Where we left off
+
+## Last time: training and overfitting
+
+- **Training** estimates the prior and the tables from one set of labeled isolates
+- Given more and more genes, naive Bayes **overfits**:
+    - training accuracy rose to 1.00
+    - next month's isolates rose over genes 1 to 5, then fell toward a coin flip
+- A **test set** held out before training shows this, but 10 isolates is a noisy sample
+
+. . .
+
+Today: use every isolate as a test isolate once, and use that to decide how many genes to give naive Bayes.
+
+# Cross-validation
+
+## $k$-fold cross-validation
+
+1. Shuffle the isolates and deal them into $k$ folds
+2. For each fold:
+    - training set: every other fold
+    - train the classifier on the training set
+    - score it on this fold → one test accuracy
+3. Report the mean of the $k$ test accuracies, and how much they vary
+
+## $k$-fold cross-validation (cont.)
+
+```{python}
+#| echo: false
+# One row per pass, one block per fold; the test fold is orange, the training folds grey.
+fig, ax = plt.subplots(figsize=(9, 3.6))
+for k in range(5):
+    for j in range(5):
+        test = (j == k)
+        ax.add_patch(matplotlib.patches.Rectangle((j, 4 - k), 0.94, 0.8,
+                     color="#eb6834" if test else "#d9d8d2"))
+        ax.text(j + 0.47, 4 - k + 0.4, "test" if test else "train", ha="center", va="center",
+                color="white" if test else "#52514e", fontsize=12)
+    ax.text(-0.15, 4 - k + 0.4, f"fold {k} held out", ha="right", va="center", fontsize=12)
+ax.set_xlim(-1.9, 5)
+ax.set_ylim(-0.1, 5)
+ax.axis("off")
+plt.tight_layout()
+plt.show()
+```
+
+- Each isolate is in the test set exactly once
+- Each pass estimates new tables from its own training set
+
+## Cross-validation with 5 genes
+
+5 folds of `{python} fold_rows[0]["n_test"]` isolates; each pass trains on `{python} fold_rows[0]["n_train"]`:
+
+| Fold held out | 0 | 1 | 2 | 3 | 4 |
+|---|:-:|:-:|:-:|:-:|:-:|
+| resistant in the fold | `{python} fold_rows[0]["res"]` | `{python} fold_rows[1]["res"]` | `{python} fold_rows[2]["res"]` | `{python} fold_rows[3]["res"]` | `{python} fold_rows[4]["res"]` |
+| test accuracy | `{python} f2(fold_acc[0])` | `{python} f2(fold_acc[1])` | `{python} f2(fold_acc[2])` | `{python} f2(fold_acc[3])` | `{python} f2(fold_acc[4])` |
+
+. . .
+
+- The fold accuracies range from `{python} f2(fold_acc.min())` to `{python} f2(fold_acc.max())`: each is a sample of 8 isolates
+- Their mean uses all 40 isolates as test isolates
+
+## New notation: the cross-validation estimate
+
+With $k$ folds and test accuracy $a_j$ on fold $j$:
+
+$$\text{CV accuracy} = \frac{1}{k} \sum_{j=1}^{k} a_j$$
+
+. . .
+
+```{python}
+#| echo: false
+#| output: asis
+terms = " + ".join(f2(a) for a in fold_acc)
+print(rf"$$\text{{5 genes}}: \quad \frac{{1}}{{5}} \left( {terms} \right) = {f2(cv5)}$$")
+```
+
+. . .
+
+- Next month's 200 isolates scored `{python} f2(next_acc[col(5)])` with 5 genes
+- Cross-validation came close using only the 40 isolates we had
+
+## Choosing $k$
+
+- $k = 5$ and $k = 10$ are the usual choices
+- Larger $k$:
+    - more isolates in each training set, closer to training on all of them
+    - more passes, so more training runs
+- $k$ = number of instances is **leave-one-out** cross-validation
+
+## The same steps in Python {.smaller}
+
+```{python}
+#| echo: true
+from sklearn.model_selection import KFold, cross_val_score
+from sklearn.naive_bayes import BernoulliNB
+
+# X: 40 isolates x 500 genes (True = present); y: True = resistant
+folds = KFold(n_splits=5, shuffle=True, random_state=0)            # shuffle, then deal into 5 folds
+scores = cross_val_score(BernoulliNB(), X[:, :5], y, cv=folds)     # train and score once per fold
+
+print("test accuracy per fold:", scores.round(2))
+print("CV accuracy:", scores.mean().round(2))
+```
+
+# Choosing the number of genes
+
+## How many genes should naive Bayes use?
+
+- Last time, the right number was clear only because we had next month's isolates
+- Training accuracy can't choose: it always prefers more genes
+- Cross-validation scores every gene count on held-out isolates, using only the 40 we have
+
+## Cross-validation at every gene count
+
+| Genes | 1 | 2 | 3 | 4 | 5 | 10 | 20 | 50 | 100 | 200 | 500 |
+|---|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|
+| training | `{python} f2(train_acc[0])` | `{python} f2(train_acc[1])` | `{python} f2(train_acc[2])` | `{python} f2(train_acc[3])` | `{python} f2(train_acc[4])` | `{python} f2(train_acc[5])` | `{python} f2(train_acc[6])` | `{python} f2(train_acc[7])` | `{python} f2(train_acc[8])` | `{python} f2(train_acc[9])` | `{python} f2(train_acc[10])` |
+| CV | `{python} f2(cv_acc[0])` | `{python} f2(cv_acc[1])` | `{python} f2(cv_acc[2])` | `{python} f2(cv_acc[3])` | **`{python} f2(cv_acc[4])`** | `{python} f2(cv_acc[5])` | `{python} f2(cv_acc[6])` | `{python} f2(cv_acc[7])` | `{python} f2(cv_acc[8])` | `{python} f2(cv_acc[9])` | `{python} f2(cv_acc[10])` |
+
+: {.smaller}
+
+. . .
+
+- Training accuracy rises the whole way
+- CV accuracy is highest at **`{python} best_k` genes**, then falls
+
+## Cross-validation at every gene count (cont.)
+
+```{python}
+#| echo: false
+fig, ax = plt.subplots(figsize=(9, 4.2))
+ax.plot(ks, train_acc, "o-", color="#8a8984", lw=2, label="training accuracy")
+ax.plot(ks, cv_acc, "o-", color="#eb6834", lw=2, label="5-fold CV accuracy (the 40 isolates)")
+ax.plot(ks, next_acc, "--", color="#2a78d6", lw=2, label="next month's 200 isolates")
+ax.axhline(0.5, color="#c3c2b7", lw=1, ls=":")
+ax.axvline(5, color="#c3c2b7", lw=1)
+ax.set_xscale("log")
+ax.set_xticks(ks, [str(k) for k in ks], fontsize=12)
+ax.set_ylim(0.38, 1.03)
+ax.set_xlabel("number of genes given to naive Bayes")
+ax.set_ylabel("accuracy")
+ax.legend(frameon=False, loc="upper left", fontsize=12)
+ax.spines[["top", "right"]].set_visible(False)
+plt.tight_layout()
+plt.show()
+```
+
+- Cross-validation follows next month's isolates, without needing them
+
+## Why does cross-validation fall?
+
+Discuss with a neighbor:
+
+- With 200 genes, training accuracy is `{python} f2(train_acc[col(200)])`. Why is the CV accuracy only `{python} f2(cv_acc[col(200)])`?
+- In each pass, which isolates are the tables estimated from, and which isolates are scored?
+
+## Why does cross-validation fall? (cont.)
+
+- Each pass estimates its tables from 32 isolates, and its chance differences come from those 32
+- The 8 held-out isolates don't share those chance differences
+- So each fold's score behaves like next month's isolates, not like the training set
+
+. . .
+
+- Cross-validation measures overfitting with the data we already have
+
+## New terminology: hyperparameter
+
+- **Parameters**: numbers estimated by training
+    - the prior and the tables
+- **Hyperparameter**: a setting chosen before training, which training can't estimate
+    - the number of genes naive Bayes uses
+    - $k$, the number of folds, is a setting of the evaluation, not of the classifier
+- Hyperparameters are chosen by cross-validation, never by training accuracy
+
+## Choosing a hyperparameter with cross-validation
+
+1. For each setting (1, 2, 3, ... 500 genes), compute its CV accuracy
+2. Choose the setting with the highest CV accuracy: **`{python} best_k` genes**
+3. Train the final classifier on **all 40 isolates** with that setting
+
+. . .
+
+- The final classifier, `{python} best_k` genes trained on all 40, scores `{python} f2(final_next)` on next month's isolates
+
+## The same steps in Python {.smaller}
+
+```{python}
+#| echo: true
+folds = KFold(n_splits=5, shuffle=True, random_state=0)
+
+cv_accuracy = {}
+for n_genes in (1, 2, 3, 4, 5, 10, 20, 50, 100, 200, 500):
+    scores = cross_val_score(BernoulliNB(), X[:, :n_genes], y, cv=folds)
+    cv_accuracy[n_genes] = scores.mean()
+
+chosen = max(cv_accuracy, key=cv_accuracy.get)        # the gene count with the highest CV accuracy
+final_model = BernoulliNB().fit(X[:, :chosen], y)      # retrain on all 40 isolates
+print("chosen:", chosen, "genes, CV accuracy", round(cv_accuracy[chosen], 2))
+```
+
+## A caution about the best score
+
+- We tried 11 gene counts and kept the best CV accuracy, `{python} f2(cv_acc.max())`
+- Each CV accuracy is itself a noisy estimate from 40 isolates
+- The best of 11 noisy estimates tends to be a little too high
+
+. . .
+
+- To report how well the final classifier does, it needs isolates that played no part in choosing it
+- More on this next time
+
+## Next time
+
+- $k$-fold cross-validation gives every isolate one turn in the test set, and averages the $k$ test accuracies
+- It follows accuracy on new isolates, and it chooses hyperparameters such as the number of genes
+- The best CV score is a little optimistic
+
+Next time: how a score can look good when nothing is there, and how to check whether it is real.

@@ -1,0 +1,449 @@
+---
+# Unit 7, session 3 (Wed Oct 28): is the number real? Data leakage through choosing genes from
+# all the isolates (minimal feature selection: rank genes by the gap, keep the top 5), the
+# permutation test as unit 2's null chain with shuffled labels (it catches the leak), the
+# smallest p-value a number of shuffles can report, batches, and reusing the test set. Same
+# 40 isolates and 500 genes as sessions 1 and 2; the leak is shown on genes 6-500, none related
+# to resistance. Lab part 3 builds rng.permutation, the null list, the p-value floor and the
+# leaking line. Redrafted by the assistant on 19 Oct 2026 after the instructor's review: leakage
+# moved here from session 2, on the unit's one data set. For the instructor to revise.
+#
+# Every number on the slides is printed from the setup chunk.
+title: "Leakage and Permutation Tests"
+subtitle: "BF550 · Unit 7 · Session 3 — Wed Oct 28"
+---
+
+```{python}
+#| echo: false
+# Sessions 1 and 2's data: 40 isolates (20 resistant, seed 7128), 500 genes, genes 1-5 related
+# to resistance; next month's 200 isolates (seed 7001).
+import numpy as np
+import matplotlib
+import matplotlib.pyplot as plt
+from sklearn.naive_bayes import BernoulliNB
+from sklearn.feature_selection import SelectKBest
+from sklearn.pipeline import make_pipeline
+from sklearn.model_selection import KFold, cross_val_score, permutation_test_score, train_test_split
+plt.rcParams.update({"font.size": 14})
+
+n_genes = 500
+real_r = np.array([0.55, 0.50, 0.50, 0.45, 0.45])
+real_s = np.full(5, 0.20)
+other_rates = np.random.default_rng(700).uniform(0.05, 0.95, size=n_genes - 5)
+true_r = np.concatenate([real_r, other_rates])
+true_s = np.concatenate([real_s, other_rates])
+
+def draw_isolates(n, rng, balanced=True):
+    if balanced:
+        y = np.zeros(n, dtype=bool)
+        y[: n // 2] = True
+        y = rng.permutation(y)
+    else:
+        y = rng.random(n) < 0.5
+    X = rng.random((n, n_genes)) < np.where(y[:, None], true_r, true_s)
+    return X, y
+
+X, y = draw_isolates(40, np.random.default_rng(7128))
+X_next, y_next = draw_isolates(200, np.random.default_rng(7001), balanced=False)
+folds = KFold(n_splits=5, shuffle=True, random_state=0)
+
+def f2(x):
+    return f"{x:.2f}"
+
+def f3(x):
+    return f"{x:.3f}"
+
+def gap_score(X, y):
+    """One gap per gene: |share of resistant isolates with it - share of susceptible with it|."""
+    X = np.asarray(X, dtype=bool)
+    y = np.asarray(y, dtype=bool)
+    return np.abs(X[y].mean(axis=0) - X[~y].mean(axis=0))
+
+# Hand example for the gap: 8 isolates, 4 genes.
+hand_y = np.array([True] * 4 + [False] * 4)
+hand_X = np.array([[1, 1, 1, 0], [1, 0, 1, 0], [1, 1, 1, 1], [0, 0, 1, 0],
+                   [1, 1, 0, 1], [0, 1, 1, 1], [0, 0, 0, 0], [0, 0, 0, 0]], dtype=bool)
+hand_r, hand_s = hand_X[hand_y].sum(axis=0), hand_X[~hand_y].sum(axis=0)
+hand_gap = gap_score(hand_X, hand_y)
+assert list(hand_gap) == [0.5, 0.0, 0.75, 0.25]
+
+# The leak, on genes 6-500 only: choose the 5 largest gaps from all 40 isolates, then CV.
+X_unrel = X[:, 5:]
+
+def leaky_pipeline(X, y):
+    chosen = np.argsort(gap_score(X, y))[-5:]
+    return cross_val_score(BernoulliNB(), X[:, chosen], y, cv=folds).mean()
+
+chosen = np.argsort(gap_score(X_unrel, y))[-5:]
+chosen_gaps = gap_score(X_unrel, y)[chosen]
+before = cross_val_score(BernoulliNB(), X_unrel[:, chosen], y, cv=folds)
+pipeline = make_pipeline(SelectKBest(gap_score, k=5), BernoulliNB())
+inside = cross_val_score(pipeline, X_unrel, y, cv=folds)
+assert before.mean() >= 0.75 and inside.mean() <= 0.6
+
+# Permutation tests: the leaky pipeline, and naive Bayes on genes 1-5.
+n_shuffles = 199
+perm_rng = np.random.default_rng(73)
+leaky_obs = leaky_pipeline(X_unrel, y)
+leaky_null = np.array([leaky_pipeline(X_unrel, perm_rng.permutation(y)) for _ in range(n_shuffles)])
+leaky_reach = int((leaky_null >= leaky_obs).sum())
+leaky_p = (leaky_reach + 1) / (n_shuffles + 1)
+real_obs, real_null, real_p = permutation_test_score(
+    BernoulliNB(), X[:, :5], y, cv=folds, n_permutations=n_shuffles, random_state=73)
+real_reach = int((real_null >= real_obs).sum())
+assert leaky_p > 0.2 and real_reach == 0
+
+# Hand shuffle: six isolates' labels, one permutation.
+hand6 = np.array([True, True, True, False, False, False])
+hand6_shuffled = np.random.default_rng(5).permutation(hand6)
+
+def lab(r):
+    return "`resistant`{.pos}" if r else "`susceptible`{.neg}"
+
+# Reusing one test set: 30 isolates train, 10 test (split 0). Twenty classifiers, each on a
+# random choice of 5 unrelated genes, all scored on the same 10 test isolates; next month's 200
+# isolates show what the best one really does.
+X_tr, X_te, y_tr, y_te = train_test_split(X, y, test_size=10, random_state=0)
+pick_rng = np.random.default_rng(900)
+tries = []
+for _ in range(20):
+    genes = 5 + pick_rng.choice(n_genes - 5, 5, replace=False)
+    m = BernoulliNB().fit(X_tr[:, genes], y_tr)
+    tries.append((m.score(X_te[:, genes], y_te), m.score(X_next[:, genes], y_next)))
+tries = np.array(tries)
+best = int(tries[:, 0].argmax())
+assert tries[best, 0] >= 0.7 and tries[best, 1] < 0.6
+```
+
+# Where we left off
+
+## Last time: cross-validation
+
+- **$k$-fold cross-validation**: each fold takes one turn as the test set, and the $k$ test accuracies are averaged
+- It chose the number of genes, a **hyperparameter**: 5, where it scored `{python} f2(real_obs)`
+- The best of many CV scores is a little optimistic
+
+. . .
+
+Today: how a reported score can look good when nothing is there, and how to check whether a score is real.
+
+# Choosing genes by the data
+
+## Choosing the genes that differ most
+
+- Last time, the genes came in a fixed order, genes 1 to 5 first
+- In practice, nobody knows which genes matter. A common step is to keep the genes that differ most between the classes
+- This is **feature selection**
+- One simple measure, for each gene, is the **gap**:
+
+$$\text{gap} = \left| \text{share of resistant isolates with the gene} - \text{share of susceptible isolates with the gene} \right|$$
+
+## Choosing genes: an example
+
+Eight isolates, four of each class, four genes:
+
+```{python}
+#| echo: false
+#| output: asis
+print("| Isolate | gene A | gene B | gene C | gene D | Growth test |")
+print("|---|:-:|:-:|:-:|:-:|---|")
+for i in range(8):
+    marks = " | ".join("+" if v else "–" for v in hand_X[i])
+    print(f"| EC-{i + 1:03d} | {marks} | {lab(hand_y[i])} |")
+print("\n: {.striped}")
+```
+
+## Choosing genes: an example (cont.)
+
+| | gene A | gene B | gene C | gene D |
+|---|:-:|:-:|:-:|:-:|
+| share of resistant | `{python} int(hand_r[0])`/4 | `{python} int(hand_r[1])`/4 | `{python} int(hand_r[2])`/4 | `{python} int(hand_r[3])`/4 |
+| share of susceptible | `{python} int(hand_s[0])`/4 | `{python} int(hand_s[1])`/4 | `{python} int(hand_s[2])`/4 | `{python} int(hand_s[3])`/4 |
+| gap | `{python} f2(hand_gap[0])` | `{python} f2(hand_gap[1])` | `{python} f2(hand_gap[2])` | `{python} f2(hand_gap[3])` |
+
+. . .
+
+- Ranked by gap: gene C, gene A, gene D, gene B
+- To keep two genes, keep gene C and gene A
+
+# Data leakage
+
+## Choosing genes, then cross-validating
+
+To see the problem clearly, use only **genes 6 to 500**: none is related to resistance, so an honest score should be near 0.50.
+
+1. Compute every gene's gap on all 40 isolates
+2. Keep the 5 genes with the largest gaps
+3. Run 5-fold cross-validation of naive Bayes on those 5 genes
+
+. . .
+
+| Fold held out | 0 | 1 | 2 | 3 | 4 | CV accuracy |
+|---|:-:|:-:|:-:|:-:|:-:|:-:|
+| test accuracy | `{python} f2(before[0])` | `{python} f2(before[1])` | `{python} f2(before[2])` | `{python} f2(before[3])` | `{python} f2(before[4])` | **`{python} f2(before.mean())`** |
+
+. . .
+
+No gene is related to resistance. Where did `{python} f2(before.mean())` come from?
+
+## Where did the accuracy come from?
+
+Discuss with a neighbor:
+
+- Which isolates' labels did step 1 use?
+- When fold 0 is the test set, did its isolates help choose the genes?
+
+## Where did the accuracy come from? (cont.)
+
+- Step 1 used every isolate's label, including the isolates in each test fold
+- Among 495 unrelated genes, some differ between the classes by chance
+    - the 5 chosen genes have gaps from `{python} f2(chosen_gaps.min())` to `{python} f2(chosen_gaps.max())`
+- Those genes were chosen *because* they fit the test isolates' labels
+- The test isolates were no longer new to the classifier
+
+## New terminology: data leakage
+
+- **Data leakage**: information from the test set reaches the training of the classifier
+- A score with leakage is too optimistic, because the test isolates were not really held out
+- Here the leak was **feature selection** done before the split
+
+## Choosing genes inside each fold
+
+For each fold:
+
+1. Compute the gaps on **that pass's training isolates only**
+2. Keep the 5 genes with the largest gaps
+3. Train on the training isolates, score the held-out fold
+
+. . .
+
+| Fold held out | 0 | 1 | 2 | 3 | 4 | CV accuracy |
+|---|:-:|:-:|:-:|:-:|:-:|:-:|
+| choose before the split | `{python} f2(before[0])` | `{python} f2(before[1])` | `{python} f2(before[2])` | `{python} f2(before[3])` | `{python} f2(before[4])` | `{python} f2(before.mean())` |
+| choose inside each fold | `{python} f2(inside[0])` | `{python} f2(inside[1])` | `{python} f2(inside[2])` | `{python} f2(inside[3])` | `{python} f2(inside[4])` | **`{python} f2(inside.mean())`** |
+
+. . .
+
+- The same isolates and classifier; only the step that chooses genes moved
+- Every step that learns from the labels goes inside the folds: the tables, which genes, how many
+
+## The same steps in Python {.smaller}
+
+`make_pipeline` joins the steps, so `cross_val_score` repeats all of them on every pass:
+
+```{python}
+#| echo: true
+from sklearn.feature_selection import SelectKBest
+from sklearn.pipeline import make_pipeline
+
+def gap_score(X, y):
+    """One gap per gene: |share of resistant with the gene - share of susceptible with it|."""
+    X, y = np.asarray(X, dtype=bool), np.asarray(y, dtype=bool)
+    return np.abs(X[y].mean(axis=0) - X[~y].mean(axis=0))
+
+pipeline = make_pipeline(SelectKBest(gap_score, k=5),   # step 1: keep the 5 largest gaps
+                         BernoulliNB())                 # step 2: naive Bayes on those genes
+scores = cross_val_score(pipeline, X_unrel, y, cv=folds)
+print("CV accuracy, genes chosen inside each fold:", scores.mean().round(2))
+```
+
+# Is the score better than chance?
+
+## What does the pipeline score when nothing is there?
+
+- A paper reports a CV accuracy of `{python} f2(leaky_obs)`. Is that evidence the genes predict resistance?
+- It depends on what the same pipeline scores when the genes carry **no** information about the labels
+
+. . .
+
+- In unit 2, a p-value compared an observed statistic with a **null distribution**:
+    1. compute the statistic on the observed data
+    2. compute it again on many datasets made under the null hypothesis
+    3. count how many null runs reach the observed value
+
+## The null hypothesis: labels are exchangeable
+
+- Null hypothesis: the genes are unrelated to resistance
+- Then the labels carry no information about which isolate got which label
+    - any assignment of the same labels to the isolates is equally likely
+    - the labels are **exchangeable**
+- So shuffling the labels gives a dataset made under the null
+
+## Shuffling the labels
+
+```{python}
+#| echo: false
+#| output: asis
+print("| Isolate | Genes | Growth test | Shuffled label |")
+print("|---|:-:|---|---|")
+for i in range(6):
+    print(f"| EC-{i + 1:03d} | unchanged | {lab(hand6[i])} | {lab(hand6_shuffled[i])} |")
+print("\n: {.striped}")
+```
+
+. . .
+
+- The genes stay with their isolates; only the labels move
+- The shuffled labels have the same number of resistant isolates: `{python} int(hand6_shuffled.sum())`
+- Any link between genes and labels is broken
+
+## The permutation test
+
+1. Run the whole pipeline on the real labels → the observed score
+2. Repeat many times:
+    - shuffle the labels
+    - run the **whole** pipeline again, including choosing the genes
+    - record the score
+3. p-value, as in unit 2:
+
+$$p = \frac{\text{shuffles scoring at least the observed score} + 1}{\text{shuffles} + 1}$$
+
+. . .
+
+The procedure is a **permutation test**, and the shuffled scores are its null distribution.
+
+## The leaky pipeline on shuffled labels
+
+```{python}
+#| echo: false
+fig, ax = plt.subplots(figsize=(9, 3.8))
+ax.hist(leaky_null, bins=np.arange(0.4, 1.01, 0.025), color="#c3c2b7", edgecolor="white")
+ax.axvline(leaky_obs, color="#eb6834", lw=2.5)
+ax.text(leaky_obs + 0.01, ax.get_ylim()[1] * 0.9, f"real labels: {leaky_obs:.2f}", color="#eb6834",
+        fontsize=13, va="top")
+ax.set_xlabel(f"CV accuracy of the leaky pipeline, {n_shuffles} label shuffles")
+ax.set_ylabel("shuffles")
+ax.spines[["top", "right"]].set_visible(False)
+plt.tight_layout()
+plt.show()
+```
+
+- On shuffled labels the leaky pipeline scores `{python} f2(leaky_null.mean())` on average
+
+## The leaky pipeline on shuffled labels (cont.)
+
+- `{python} leaky_reach` of the `{python} n_shuffles` shuffles scored at least `{python} f2(leaky_obs)`
+
+```{python}
+#| echo: false
+#| output: asis
+print(rf"$$p = \frac{{{leaky_reach} + 1}}{{{n_shuffles} + 1}} = {f2(leaky_p)}$$")
+```
+
+. . .
+
+- The pipeline scores about `{python} f2(leaky_obs)` on any labels, so its `{python} f2(leaky_obs)` is no evidence of anything
+- The permutation test finds the leak without knowing where it is, because each shuffle runs the leaky step too
+
+## A classifier that works
+
+Naive Bayes on genes 1 to 5, 5-fold cross-validation, the same 40 isolates:
+
+- Real labels: CV accuracy `{python} f2(real_obs)`
+- `{python} n_shuffles` shuffles: mean `{python} f2(real_null.mean())`, highest `{python} f2(real_null.max())`
+
+. . .
+
+- `{python} real_reach` shuffles reached `{python} f2(real_obs)`, so p = 1 / `{python} n_shuffles + 1` = `{python} f3(real_p)`
+- The shuffled scores sit near 0.50: with equal classes, that is guessing
+
+## The smallest p-value a permutation test can report
+
+- With $N$ shuffles, the smallest p-value is $1 / (N + 1)$, when no shuffle reaches the observed score
+- The `{python} f3(real_p)` above is that floor for `{python} n_shuffles` shuffles
+
+. . .
+
+| Shuffles $N$ | Smallest p-value |
+|:-:|:-:|
+| 19 | 0.05 |
+| 99 | 0.01 |
+| 999 | 0.001 |
+
+. . .
+
+- Each shuffle runs the whole pipeline, including every fold
+- Choose $N$ from the smallest p-value you need to be able to report
+
+## The same steps in Python {.smaller}
+
+```{python}
+#| echo: true
+from sklearn.model_selection import permutation_test_score
+
+# real-label CV score, the CV score on each of 199 label shuffles, and the p-value
+score, null_scores, p = permutation_test_score(
+    BernoulliNB(), X[:, :5], y, cv=folds, n_permutations=199, random_state=73)
+
+print("CV accuracy:", score.round(2))
+print("mean shuffled score:", null_scores.mean().round(2))
+print("p-value:", p.round(3))
+```
+
+- `permutation_test_score` shuffles only `y` and re-runs the CV, so every step to be repeated must be inside the classifier, as a pipeline
+
+## Batches break exchangeability
+
+- A **batch** is a group of samples handled together, such as one sequencing run
+- Suppose isolates come from two hospitals, sequenced in two separate runs, and one hospital has more resistant isolates
+- Then genes differ by hospital, and the hospital relates to resistance
+    - a classifier can score well by recognizing the hospital, not resistance
+- Repair: shuffle labels **within** each hospital, so every null dataset keeps that link
+
+# Reusing the test set
+
+## Trying many classifiers on one test set
+
+Hold out 10 of the 40 isolates. Train 20 classifiers, each on 5 genes picked at random from genes 6 to 500, and score every one on the same 10 test isolates:
+
+```{python}
+#| echo: false
+fig, ax = plt.subplots(figsize=(9, 2.6))
+xs = np.arange(1, 21)
+ax.axhline(0.5, color="#c3c2b7", lw=1.2, ls="--")
+ax.scatter(xs, tries[:, 0], s=45, color="#8a8984")
+ax.scatter([best + 1], [tries[best, 0]], s=80, color="#eb6834", zorder=3)
+ax.set_xticks(xs)
+ax.set_xlabel("classifier")
+ax.set_ylabel("test accuracy")
+ax.set_ylim(0, 1)
+ax.spines[["top", "right"]].set_visible(False)
+plt.tight_layout()
+plt.show()
+```
+
+## Trying many classifiers on one test set (cont.)
+
+| | Accuracy |
+|---|:-:|
+| best of the 20, on the 10 test isolates | `{python} f2(tries[best, 0])` |
+| the same classifier, on next month's 200 isolates | `{python} f2(tries[best, 1])` |
+
+. . .
+
+- The best test score is the largest of 20 scores that vary by chance
+- As in unit 2's multiple testing: test enough things and one looks surprising
+- Choosing by the test set made the test set part of training
+
+## Use the test set once
+
+- Make every choice with the training set only
+    - which genes, how many, which classifier
+    - compare choices with cross-validation **inside** the training set
+- Then score the one final classifier on the test set, once
+
+. . .
+
+- Changing anything after seeing the test score uses the test set up
+
+## Unit 7 so far
+
+- **Training** estimates the tables from one set of isolates; **training accuracy** can't detect **overfitting**
+- A **test set** or **$k$-fold cross-validation** measures accuracy on isolates the classifier was not trained on, and chooses **hyperparameters**
+- Every step that learns from labels goes inside the folds; otherwise there is **data leakage**
+- A **permutation test** shows what the whole pipeline scores on shuffled labels
+- A test set used to choose among classifiers no longer measures them
+
+## Next time
+
+Next unit: classification trees and forests. A tree chooses its own genes as it grows, and its depth is a hyperparameter.

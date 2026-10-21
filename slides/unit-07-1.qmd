@@ -1,0 +1,480 @@
+---
+# Unit 7, session 1 (Fri Oct 23): what naive Bayes's tables are (likelihoods estimated from one
+# set of isolates), and overfitting. One data set for the whole unit: 40 E. coli isolates (20
+# resistant to ciprofloxacin, 20 susceptible) with 500 genes each; genes 1-5 make resistance
+# more likely, the other 495 are unrelated to it. Giving naive Bayes more genes drives training
+# accuracy to 1.00 while next month's isolates from the same lab rise over the five real genes
+# and then fall. Holding out isolates shows the same thing without next month; one split is
+# noisy, which leads to folds (named here, used in session 2). Lab part 1 builds the split, the
+# shuffle and the fold ids. Redrafted by the assistant on 19 Oct 2026 after the instructor's
+# review of the first draft: tables first and plainly, one dial (the number of genes), no
+# pseudocount, balanced classes, next month's isolates from the same lab. For the instructor
+# to revise.
+#
+# Every number on the slides is printed from the setup chunk.
+title: "Training and Overfitting"
+subtitle: "BF550 · Unit 7 · Session 1 — Fri Oct 23"
+---
+
+```{python}
+#| echo: false
+# The unit's data. Genes 1-5 are present in 45-55% of resistant isolates and 20% of
+# susceptible ones; genes 6-500 are present at one rate (drawn between 0.05 and 0.95) in both
+# classes. The lab's study picks 20 resistant and 20 susceptible isolates (collection seed 7128);
+# next month's 200 isolates come from the same lab, about half resistant (seed 7001).
+import numpy as np
+import matplotlib
+import matplotlib.pyplot as plt
+from sklearn.naive_bayes import BernoulliNB
+from sklearn.model_selection import train_test_split
+plt.rcParams.update({"font.size": 14})
+
+n_genes = 500
+real_r = np.array([0.55, 0.50, 0.50, 0.45, 0.45])
+real_s = np.full(5, 0.20)
+other_rates = np.random.default_rng(700).uniform(0.05, 0.95, size=n_genes - 5)
+true_r = np.concatenate([real_r, other_rates])
+true_s = np.concatenate([real_s, other_rates])
+
+def draw_isolates(n, rng, balanced=True):
+    """X: one row per isolate, one column per gene (True = present). y: True = resistant."""
+    if balanced:
+        y = np.zeros(n, dtype=bool)
+        y[: n // 2] = True
+        y = rng.permutation(y)
+    else:
+        y = rng.random(n) < 0.5
+    X = rng.random((n, n_genes)) < np.where(y[:, None], true_r, true_s)
+    return X, y
+
+X, y = draw_isolates(40, np.random.default_rng(7128))
+X_next, y_next = draw_isolates(200, np.random.default_rng(7001), balanced=False)
+X_other, y_other = draw_isolates(40, np.random.default_rng(7129))
+
+def f2(x):
+    return f"{x:.2f}"
+
+# Training estimates the prior and each gene's share in each class. BernoulliNB's default
+# smoothing (alpha=1) keeps every entry off 0 and 1; the slides show the plain shares.
+def shares(X, y):
+    return X[y].mean(axis=0), X[~y].mean(axis=0)
+
+est_r, est_s = shares(X, y)
+oth_r, oth_s = shares(X_other, y_other)
+
+# The dial: naive Bayes given the first k genes.
+ks = [1, 2, 3, 4, 5, 10, 20, 50, 100, 200, 500]
+train_acc, next_acc = [], []
+for k in ks:
+    m = BernoulliNB().fit(X[:, :k], y)
+    train_acc.append(m.score(X[:, :k], y))
+    next_acc.append(m.score(X_next[:, :k], y_next))
+train_acc, next_acc = np.array(train_acc), np.array(next_acc)
+i5 = ks.index(5)
+assert train_acc[-1] == 1.0 and next_acc.argmax() == i5 and next_acc[-1] < next_acc[i5] - 0.15
+
+# Hand example: six isolates, two genes.
+hand = [("EC-001", True,  False, True),
+        ("EC-002", True,  True,  True),
+        ("EC-003", False, False, True),
+        ("EC-004", True,  False, False),
+        ("EC-005", False, True,  False),
+        ("EC-006", False, False, False)]
+hand_X = np.array([[a, b] for _, a, b, _ in hand])
+hand_y = np.array([r for *_, r in hand])
+hand_nr, hand_ns = int(hand_y.sum()), int((~hand_y).sum())
+hand_cr, hand_cs = hand_X[hand_y].sum(axis=0), hand_X[~hand_y].sum(axis=0)
+
+def mark(b):
+    return "+" if b else "–"
+
+def lab(r):
+    return "`resistant`{.pos}" if r else "`susceptible`{.neg}"
+
+# Hand shuffle: eight isolates, one random key each.
+keys = np.round(np.random.default_rng(23).random(8), 2)
+key_order = np.argsort(keys)
+
+# Five different 30/10 splits of the 40 isolates, at 5 genes and at 500 genes.
+splits = []
+for seed in range(5):
+    Xtr, Xte, ytr, yte = train_test_split(X, y, test_size=10, random_state=seed)
+    row = {}
+    for k in (5, 500):
+        m = BernoulliNB().fit(Xtr[:, :k], ytr)
+        row[k] = (m.score(Xtr[:, :k], ytr), m.score(Xte[:, :k], yte))
+    splits.append(row)
+test5 = [s[5][1] for s in splits]
+test500 = [s[500][1] for s in splits]
+
+def dial_plot(show_next):
+    fig, ax = plt.subplots(figsize=(9, 4.2))
+    ax.plot(ks, train_acc, "o-", color="#8a8984", lw=2, label="training accuracy (the 40 isolates)")
+    if show_next:
+        ax.plot(ks, next_acc, "o-", color="#eb6834", lw=2, label="next month's 200 isolates")
+    ax.axhline(0.5, color="#c3c2b7", lw=1, ls=":")
+    ax.axvline(5, color="#c3c2b7", lw=1)
+    ax.text(5.3, 0.42, "genes 1–5", color="#52514e", fontsize=12)
+    ax.set_xscale("log")
+    ax.set_xticks(ks, [str(k) for k in ks], fontsize=12)
+    ax.set_ylim(0.38, 1.03)
+    ax.set_xlabel("number of genes given to naive Bayes")
+    ax.set_ylabel("accuracy")
+    ax.legend(frameon=False, loc="upper left", fontsize=12)
+    ax.spines[["top", "right"]].set_visible(False)
+    plt.tight_layout()
+    plt.show()
+```
+
+# Where we left off
+
+## Where the tables came from
+
+- Last unit, naive Bayes scored each isolate using numbers "measured on last year's isolates":
+    - the share of isolates that are resistant
+    - for each gene, how often it is present in each class
+- We used those numbers without asking where they came from
+
+. . .
+
+Today:
+
+- What exactly are these numbers, and how are they computed?
+- Will a classifier that does well on the isolates it learned from do well on new ones?
+
+# What the tables are
+
+## A new question from the lab
+
+- The same hospital lab now asks about **ciprofloxacin**
+- No single gene decides ciprofloxacin resistance in this lab's isolates
+    - five genes each make resistance more likely; we call them genes 1 to 5
+- The lab chose **40 isolates to study: 20 resistant and 20 susceptible**
+    - for each one, the growth test's result and which genes it carries
+
+. . .
+
+The data are simulated, so we know the true values and can compare them with what we estimate.
+
+## Naive Bayes needs two kinds of numbers
+
+To score an isolate, naive Bayes multiplies:
+
+- the **prior**: $P(\text{resistant})$
+- one **likelihood** per gene, from a table:
+    - $P(\text{gene present} \mid \text{resistant})$
+    - $P(\text{gene present} \mid \text{susceptible})$
+
+. . .
+
+- The tables hold the likelihoods: one row per gene, one column per class
+- Where do these numbers come from?
+
+## The tables are estimated from isolates
+
+Six isolates, two genes:
+
+```{python}
+#| echo: false
+#| output: asis
+print("| Isolate | gene 1 | gene 2 | Growth test |")
+print("|---|:-:|:-:|---|")
+for name, g1, g2, res in hand:
+    print(f"| {name} | {mark(g1)} | {mark(g2)} | {lab(res)} |")
+print("\n: {.striped}")
+```
+
+. . .
+
+- `{python} hand_nr` of the `{python} len(hand)` isolates are resistant
+- Gene 1 is present in `{python} int(hand_cr[0])` of the `{python} hand_nr` resistant isolates and `{python} int(hand_cs[0])` of the `{python} hand_ns` susceptible ones
+
+## The tables are estimated from isolates (cont.)
+
+Each table entry is a share within one class:
+
+$$P(\text{gene present} \mid \text{resistant}) \approx \frac{\text{resistant isolates with the gene}}{\text{resistant isolates}}$$
+
+. . .
+
+| Gene | $P(\text{present} \mid \text{resistant})$ | $P(\text{present} \mid \text{susceptible})$ |
+|---|:-:|:-:|
+| gene 1 | `{python} int(hand_cr[0])` / `{python} hand_nr` = `{python} f2(hand_cr[0] / hand_nr)` | `{python} int(hand_cs[0])` / `{python} hand_ns` = `{python} f2(hand_cs[0] / hand_ns)` |
+| gene 2 | `{python} int(hand_cr[1])` / `{python} hand_nr` = `{python} f2(hand_cr[1] / hand_nr)` | `{python} int(hand_cs[1])` / `{python} hand_ns` = `{python} f2(hand_cs[1] / hand_ns)` |
+
+. . .
+
+- Gene 2 has the same share in both classes, so it says nothing about resistance
+
+## Training terminology
+
+- **Training**: estimating a classifier's numbers from labeled instances
+    - for naive Bayes: the prior and the tables of likelihoods
+- **Training set**: the labeled instances used for training
+- **Training accuracy**: the classifier's accuracy on its own training set
+
+. . .
+
+- The tables are **estimates**: shares computed from one particular set of isolates
+- The numbers we actually want are the shares among *all* isolates like these
+
+## The lab's 40 isolates
+
+The tables estimated from the lab's 40 isolates, beside the true values:
+
+| Gene | Resistant: estimate | Resistant: true | Susceptible: estimate | Susceptible: true |
+|---|:-:|:-:|:-:|:-:|
+| gene 1 | `{python} f2(est_r[0])` | `{python} f2(true_r[0])` | `{python} f2(est_s[0])` | `{python} f2(true_s[0])` |
+| gene 2 | `{python} f2(est_r[1])` | `{python} f2(true_r[1])` | `{python} f2(est_s[1])` | `{python} f2(true_s[1])` |
+| gene 3 | `{python} f2(est_r[2])` | `{python} f2(true_r[2])` | `{python} f2(est_s[2])` | `{python} f2(true_s[2])` |
+| gene 4 | `{python} f2(est_r[3])` | `{python} f2(true_r[3])` | `{python} f2(est_s[3])` | `{python} f2(true_s[3])` |
+| gene 5 | `{python} f2(est_r[4])` | `{python} f2(true_r[4])` | `{python} f2(est_s[4])` | `{python} f2(true_s[4])` |
+
+: {.striped}
+
+. . .
+
+- Each estimate comes from only 20 isolates, so it moves in steps of 0.05
+- Every gene is more common in resistant isolates, but by different amounts than the truth
+
+## A different 40 isolates, different tables
+
+Another 40 isolates from the same lab, 20 of each class:
+
+| Gene | Resistant: first 40 | Resistant: other 40 | Susceptible: first 40 | Susceptible: other 40 |
+|---|:-:|:-:|:-:|:-:|
+| gene 1 | `{python} f2(est_r[0])` | `{python} f2(oth_r[0])` | `{python} f2(est_s[0])` | `{python} f2(oth_s[0])` |
+| gene 2 | `{python} f2(est_r[1])` | `{python} f2(oth_r[1])` | `{python} f2(est_s[1])` | `{python} f2(oth_s[1])` |
+| gene 3 | `{python} f2(est_r[2])` | `{python} f2(oth_r[2])` | `{python} f2(est_s[2])` | `{python} f2(oth_s[2])` |
+| gene 4 | `{python} f2(est_r[3])` | `{python} f2(oth_r[3])` | `{python} f2(est_s[3])` | `{python} f2(oth_s[3])` |
+| gene 5 | `{python} f2(est_r[4])` | `{python} f2(oth_r[4])` | `{python} f2(est_s[4])` | `{python} f2(oth_s[4])` |
+
+: {.striped}
+
+. . .
+
+- As in unit 1, an estimate from a few observations changes from sample to sample
+- A classifier trained on these 40 isolates carries their particular sampling error
+
+# Adding more genes
+
+## Every gene in the genome
+
+- Sequencing an isolate tells us every gene it carries, not just genes 1 to 5
+- The lab has **500 genes** for each of the 40 isolates
+    - genes 1 to 5 make resistance more likely
+    - genes 6 to 500 are unrelated to resistance
+
+. . .
+
+Should naive Bayes use all of them? More genes means more information.
+
+## An unrelated gene's table
+
+For a gene unrelated to resistance, the two true shares are equal. The estimates are not:
+
+| Gene | True share, both classes | Resistant: estimate | Susceptible: estimate |
+|---|:-:|:-:|:-:|
+| gene 6 | `{python} f2(true_r[5])` | `{python} f2(est_r[5])` | `{python} f2(est_s[5])` |
+| gene 7 | `{python} f2(true_r[6])` | `{python} f2(est_r[6])` | `{python} f2(est_s[6])` |
+| gene 8 | `{python} f2(true_r[7])` | `{python} f2(est_r[7])` | `{python} f2(est_s[7])` |
+
+. . .
+
+- Each difference is sampling error from 20 isolates per class
+- Naive Bayes can't tell it from a real difference, so it uses it as evidence
+
+## What happens as we add genes?
+
+Discuss with a neighbor:
+
+- Give naive Bayes the first 5 genes, then 10, 20, ... up to all 500. What happens to its accuracy on the 40 isolates it was trained on?
+- What happens to its accuracy on new isolates from the same lab?
+
+## Training accuracy as genes are added
+
+```{python}
+#| echo: false
+dial_plot(show_next=False)
+```
+
+- Training accuracy keeps rising, and with `{python} ks[train_acc.argmax()]` or more genes it reaches **`{python} f2(train_acc.max())`**
+
+## Next month's isolates
+
+The same lab tests **200 more isolates** next month. None was used for training.
+
+```{python}
+#| echo: false
+dial_plot(show_next=True)
+```
+
+## Next month's isolates (cont.)
+
+| Genes given to naive Bayes | 1 | 5 | 20 | 100 | 500 |
+|---|:-:|:-:|:-:|:-:|:-:|
+| training accuracy | `{python} f2(train_acc[0])` | `{python} f2(train_acc[i5])` | `{python} f2(train_acc[ks.index(20)])` | `{python} f2(train_acc[ks.index(100)])` | `{python} f2(train_acc[-1])` |
+| next month's isolates | `{python} f2(next_acc[0])` | **`{python} f2(next_acc[i5])`** | `{python} f2(next_acc[ks.index(20)])` | `{python} f2(next_acc[ks.index(100)])` | `{python} f2(next_acc[-1])` |
+
+. . .
+
+- **Genes 1 to 5**: real differences, which next month's isolates share → accuracy rises
+- **Genes 6 to 500**: chance differences, which next month's isolates don't share → accuracy falls toward a coin flip
+- Training accuracy rises the whole way, because the chance differences were estimated from these 40 isolates' own labels
+
+## New terminology: overfitting
+
+- **Overfitting**: a classifier fits the sampling error of its training set, which new data don't share
+- **Generalization**: how well a classifier does on new instances from the same source
+- **Generalization gap**: training accuracy minus accuracy on new instances
+
+. . .
+
+| Genes | Training accuracy | Next month | Gap |
+|:-:|:-:|:-:|:-:|
+| 5 | `{python} f2(train_acc[i5])` | `{python} f2(next_acc[i5])` | `{python} f2(train_acc[i5] - next_acc[i5])` |
+| 500 | `{python} f2(train_acc[-1])` | `{python} f2(next_acc[-1])` | `{python} f2(train_acc[-1] - next_acc[-1])` |
+
+## Perfect accuracy is a warning
+
+A classifier that scores 1.00 usually means one of three things:
+
+1. The code is wrong
+2. Something is wrong with the data
+3. The classifier is **overfit**, and it was scored on the isolates it was trained on
+
+. . .
+
+- With many more genes than isolates, some combination of genes almost always matches the training labels exactly
+- Training accuracy can't tell a classifier that works from one that is overfit
+
+# Holding out isolates
+
+## We don't usually have next month's isolates
+
+- Instead, set some of the labeled isolates aside **before training**:
+    - **training set**: used to estimate the tables
+    - **test set**: used only to score the trained classifier
+- **Test accuracy**: accuracy on the test set
+- Common splits: 70–80% training, 20–30% test
+
+. . .
+
+- Rule: nothing about the test isolates may be used in training
+
+## Shuffle before splitting
+
+- Data files are usually sorted: by date, by ward, by the order samples arrived
+- Taking the last rows as the test set could give a test set unlike the training set
+- So shuffle the rows first, then split
+
+. . .
+
+One way to shuffle: give each isolate a random number, its **key**, and sort the isolates by their keys.
+
+## Shuffle before splitting (cont.)
+
+```{python}
+#| echo: false
+#| output: asis
+print("| Isolate | " + " | ".join(f"EC-{i + 1:03d}" for i in range(8)) + " |")
+print("|---|" + ":-:|" * 8)
+print("| key | " + " | ".join(f"{k:.2f}" for k in keys) + " |")
+```
+
+. . .
+
+Sorted by key, smallest first:
+
+```{python}
+#| echo: false
+#| output: asis
+print("| Isolate | " + " | ".join(f"EC-{i + 1:03d}" for i in key_order) + " |")
+print("|---|" + ":-:|" * 8)
+print("| key | " + " | ".join(f"{keys[i]:.2f}" for i in key_order) + " |")
+print("| set | " + " | ".join(["training"] * 6 + ["**test**"] * 2) + " |")
+```
+
+. . .
+
+- The first six in the new order are the training set, and the last two are the test set
+
+## Holding out 10 of the 40 isolates
+
+Shuffle, train on 30, test on 10:
+
+| Genes | Training accuracy | Test accuracy |
+|:-:|:-:|:-:|
+| 5 | `{python} f2(splits[0][5][0])` | `{python} f2(splits[0][5][1])` |
+| 500 | `{python} f2(splits[0][500][0])` | `{python} f2(splits[0][500][1])` |
+
+. . .
+
+- The test set shows the overfitting without waiting for next month
+- With 500 genes, training accuracy is perfect and test accuracy is far below it
+
+## The same steps in Python {.smaller}
+
+```{python}
+#| echo: true
+from sklearn.model_selection import train_test_split
+from sklearn.naive_bayes import BernoulliNB
+
+# X: one row per isolate, one column per gene (True = present); y: True = resistant
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=10, random_state=0)
+
+for n_genes in (5, 500):
+    model = BernoulliNB()                                   # naive Bayes on present/absent genes
+    model.fit(X_train[:, :n_genes], y_train)                # training: estimate the prior and the tables
+    print(n_genes, "genes  training:", round(model.score(X_train[:, :n_genes], y_train), 2),
+          " test:", round(model.score(X_test[:, :n_genes], y_test), 2))
+```
+
+# One split is one draw
+
+## Different shuffles, different test accuracies
+
+The same 40 isolates, shuffled and split five different ways:
+
+| Shuffle | 1 | 2 | 3 | 4 | 5 |
+|---|:-:|:-:|:-:|:-:|:-:|
+| test accuracy, 5 genes | `{python} f2(test5[0])` | `{python} f2(test5[1])` | `{python} f2(test5[2])` | `{python} f2(test5[3])` | `{python} f2(test5[4])` |
+| test accuracy, 500 genes | `{python} f2(test500[0])` | `{python} f2(test500[1])` | `{python} f2(test500[2])` | `{python} f2(test500[3])` | `{python} f2(test500[4])` |
+
+. . .
+
+- With 5 genes, the test accuracy ranges from `{python} f2(min(test5))` to `{python} f2(max(test5))`, depending only on the shuffle
+- A test set of 10 isolates is a small sample: one isolate moves the accuracy by 0.10
+
+## Folds: every isolate held out once
+
+- Instead of one split, divide the shuffled isolates into $k$ groups, called **folds**
+- Each fold takes one turn as the test set, and the other folds are the training set
+- This is **$k$-fold cross-validation**
+
+. . .
+
+To assign folds, deal the shuffled isolates out in turn: 0, 1, 2, 3, 4, 0, 1, ...
+
+| Position after shuffling | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 |
+|---|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|
+| Fold | 0 | 1 | 2 | 3 | 4 | 0 | 1 | 2 | 3 | 4 |
+
+## Folds: every isolate held out once (cont.)
+
+- 10 isolates into 5 folds → 2 isolates per fold
+- 40 isolates into 5 folds → 8 per fold
+- 34 isolates into 4 folds → 9, 9, 8, 8: dealing in turn gives the first folds the extra isolates
+
+. . .
+
+- Fold 2's test set is the isolates with fold 2; its training set is every other isolate
+- Each isolate is in exactly one test set
+
+## Next time
+
+- Training estimates the prior and the tables from one set of isolates, and the estimates carry that set's sampling error
+- With many unrelated genes, naive Bayes fits that error: training accuracy reaches 1.00 while new isolates fall toward a coin flip
+- A held-out test set shows this, but one split is a small, noisy sample
+
+Next time: cross-validation on every fold, and using it to choose how many genes to give naive Bayes.

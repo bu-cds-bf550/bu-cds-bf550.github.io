@@ -92,6 +92,21 @@
   date: "Mon Oct 19"
   title: "Scores, thresholds and calibration"
   file: unit-06-3
+- unit: unit-07
+  session: 1
+  date: "Fri Oct 23"
+  title: "Training and overfitting"
+  file: unit-07-1
+- unit: unit-07
+  session: 2
+  date: "Mon Oct 26"
+  title: "Cross-validation"
+  file: unit-07-2
+- unit: unit-07
+  session: 3
+  date: "Wed Oct 28"
+  title: "Leakage and permutation tests"
+  file: unit-07-3
 - unit: unit-02
   session: 2
   date: "Mon Sep 14"
