@@ -44,13 +44,15 @@ Conventions the decks follow, the first three inherited from the textbook (see i
   is free; renaming a heading, or moving one to another session's deck, means updating that
   unit's run-sheet.
 
-- **A slide carries one whole message.** The headline is that message as one complete sentence,
-  or, on a step of a worked example, the step's subgoal and result; a step the room computes asks
-  a question instead. The body is the evidence (a table, a figure, worked numbers, a labeled
-  equation, a short chunk) with at most two whole sentences around it, and every sentence keeps
-  its *because* and *so*. Reveals fall only at step boundaries. Symbols arrive after the room has
-  computed what they denote, labeled beside themselves. Read in order, a section's headlines tell
-  its argument, and the section opens on its goal or question.
+- **Slides follow the instructor's hand-written decks** (`unit-05-2`, `unit-05-3`, `unit-05-3b`
+  and the unit 6 decks). Titles are short phrases or short claims that name the slide's subject,
+  and never refer to the slide itself. A topic that needs more room continues on a slide with the
+  same title plus *(cont.)*. The body is mostly bullets, about 40 visible words a slide; fragments
+  are fine when the meaning is clear, an arrow (→) marks a consequence, and a key term is bolded
+  where it is defined. Reveals pace the slide. A deck opens on a recap of last time, divides into
+  `# Section` slides, introduces a symbol on a *New notation* slide after the room has computed what
+  it stands for, and closes on *Next time*. Code is hidden unless the code is the point. Decks
+  carry no speaker notes.
 
 ### Shadow decks
 
