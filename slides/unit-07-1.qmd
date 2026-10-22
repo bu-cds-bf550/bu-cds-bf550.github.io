@@ -1,13 +1,15 @@
 ---
 # Unit 7, session 1 (Fri Oct 23): what naive Bayes's tables are (likelihoods estimated from one
 # set of isolates), and overfitting. One data set for the whole unit: 40 E. coli isolates (20
-# resistant to ciprofloxacin, 20 susceptible) with 500 genes each; genes 1-5 make resistance
-# more likely, the other 495 are unrelated to it. Giving naive Bayes more genes drives training
-# accuracy to 1.00 while next month's isolates from the same lab rise over the five real genes
+# resistant to ciprofloxacin, 20 susceptible) with 500 genes each; genes 1-5 are the known
+# resistance genes, and genes 6-500 are candidates the lab can't rule in or out (in the
+# simulation all 495 are unrelated, revealed after the next-month plot; 22 Oct 2026, so that
+# adding them is a reasonable thing to try). Giving naive Bayes more genes drives training
+# accuracy to 1.00 while next month's isolates from the same lab rise over the five known genes
 # and then fall. Holding out isolates shows the same thing without next month; the session ends
 # on that one split (22 Oct 2026: one split is one draw and the folds moved to session 2's
-# opening). Lab part 1 builds the split, the shuffle and the fold ids. Redrafted by the assistant on 19 Oct 2026 after the instructor's
-# review of the first draft: tables first and plainly, one dial (the number of genes), no
+# opening). Lab part 1 builds the split, the shuffle and the fold ids. Redrafted by the
+# assistant on 19 Oct 2026 after the instructor's review of the first draft: tables first and plainly, one dial (the number of genes), no
 # pseudocount, balanced classes, next month's isolates from the same lab. For the instructor
 # to revise.
 #
@@ -143,7 +145,7 @@ Today:
 
 - The same hospital lab now asks about **ciprofloxacin**
 - No single gene decides ciprofloxacin resistance in this lab's isolates
-    - five genes each make resistance more likely; we call them genes 1 to 5
+    - five known genes each make resistance more likely; we call them genes 1 to 5
 - The lab chose **40 isolates to study: 20 resistant and 20 susceptible**
     - for each one, the growth test's result and which genes it carries
 
@@ -257,33 +259,18 @@ Another 40 isolates from the same lab, 20 of each class:
 
 - Sequencing an isolate tells us every gene it carries, not just genes 1 to 5
 - The lab has **500 genes** for each of the 40 isolates
-    - genes 1 to 5 make resistance more likely
-    - genes 6 to 500 are unrelated to resistance
+    - genes 1 to 5: known to make resistance more likely
+    - genes 6 to 500: **candidates**. Some might be related to resistance, but nobody knows which
 
 . . .
 
-Should naive Bayes use all of them? More genes means more information.
-
-## An unrelated gene's table
-
-For a gene unrelated to resistance, the two true shares are equal. The estimates are not:
-
-| Gene | True share, both classes | Resistant: estimate | Susceptible: estimate |
-|---|:-:|:-:|:-:|
-| gene 6 | `{python} f2(true_r[5])` | `{python} f2(est_r[5])` | `{python} f2(est_s[5])` |
-| gene 7 | `{python} f2(true_r[6])` | `{python} f2(est_r[6])` | `{python} f2(est_s[6])` |
-| gene 8 | `{python} f2(true_r[7])` | `{python} f2(est_r[7])` | `{python} f2(est_s[7])` |
-
-. . .
-
-- Each difference is sampling error from 20 isolates per class
-- Naive Bayes can't tell it from a real difference, so it uses it as evidence
+Should naive Bayes use all of them? Any candidate that is related adds information.
 
 ## What happens as we add genes?
 
 Discuss with a neighbor:
 
-- Give naive Bayes the first 5 genes, then 10, 20, ... up to all 500. What happens to its accuracy on the 40 isolates it was trained on?
+- Give naive Bayes genes 1 to 5, then add candidates: 10 genes, 20, ... up to all 500. What happens to its accuracy on the 40 isolates it was trained on?
 - What happens to its accuracy on new isolates from the same lab?
 
 ## Training accuracy as genes are added
@@ -312,6 +299,26 @@ dial_plot(show_next=True)
 | next month's isolates | `{python} f2(next_acc[0])` | **`{python} f2(next_acc[i5])`** | `{python} f2(next_acc[ks.index(20)])` | `{python} f2(next_acc[ks.index(100)])` | `{python} f2(next_acc[-1])` |
 
 . . .
+
+Why does next month's accuracy rise and then fall?
+
+## The candidates were unrelated
+
+The data are simulated, so we know: **none of genes 6 to 500 is related to resistance**. For each one the two true shares are equal, but the estimates are not:
+
+| Gene | True share, both classes | Resistant: estimate | Susceptible: estimate |
+|---|:-:|:-:|:-:|
+| gene 6 | `{python} f2(true_r[5])` | `{python} f2(est_r[5])` | `{python} f2(est_s[5])` |
+| gene 7 | `{python} f2(true_r[6])` | `{python} f2(est_r[6])` | `{python} f2(est_s[6])` |
+| gene 8 | `{python} f2(true_r[7])` | `{python} f2(est_r[7])` | `{python} f2(est_s[7])` |
+
+. . .
+
+- Each difference is sampling error from 20 isolates per class
+- Naive Bayes can't tell it from a real difference, so it uses it as evidence
+- In real data a few candidates might be related; if most are not, the same thing happens
+
+## Why next month's accuracy falls
 
 - **Genes 1 to 5**: real differences, which next month's isolates share → accuracy rises
 - **Genes 6 to 500**: chance differences, which next month's isolates don't share → accuracy falls toward a coin flip
