@@ -4,9 +4,9 @@
 # resistant to ciprofloxacin, 20 susceptible) with 500 genes each; genes 1-5 make resistance
 # more likely, the other 495 are unrelated to it. Giving naive Bayes more genes drives training
 # accuracy to 1.00 while next month's isolates from the same lab rise over the five real genes
-# and then fall. Holding out isolates shows the same thing without next month; one split is
-# noisy, which leads to folds (named here, used in session 2). Lab part 1 builds the split, the
-# shuffle and the fold ids. Redrafted by the assistant on 19 Oct 2026 after the instructor's
+# and then fall. Holding out isolates shows the same thing without next month; the session ends
+# on that one split (22 Oct 2026: one split is one draw and the folds moved to session 2's
+# opening). Lab part 1 builds the split, the shuffle and the fold ids. Redrafted by the assistant on 19 Oct 2026 after the instructor's
 # review of the first draft: tables first and plainly, one dial (the number of genes), no
 # pseudocount, balanced classes, next month's isolates from the same lab. For the instructor
 # to revise.
@@ -95,17 +95,12 @@ def lab(r):
 keys = np.round(np.random.default_rng(23).random(8), 2)
 key_order = np.argsort(keys)
 
-# Five different 30/10 splits of the 40 isolates, at 5 genes and at 500 genes.
-splits = []
-for seed in range(5):
-    Xtr, Xte, ytr, yte = train_test_split(X, y, test_size=10, random_state=seed)
-    row = {}
-    for k in (5, 500):
-        m = BernoulliNB().fit(Xtr[:, :k], ytr)
-        row[k] = (m.score(Xtr[:, :k], ytr), m.score(Xte[:, :k], yte))
-    splits.append(row)
-test5 = [s[5][1] for s in splits]
-test500 = [s[500][1] for s in splits]
+# One 30/10 split of the 40 isolates, at 5 genes and at 500 genes.
+Xtr, Xte, ytr, yte = train_test_split(X, y, test_size=10, random_state=0)
+split = {}
+for k in (5, 500):
+    m = BernoulliNB().fit(Xtr[:, :k], ytr)
+    split[k] = (m.score(Xtr[:, :k], ytr), m.score(Xte[:, :k], yte))
 
 def dial_plot(show_next):
     fig, ax = plt.subplots(figsize=(9, 4.2))
@@ -405,8 +400,8 @@ Shuffle, train on 30, test on 10:
 
 | Genes | Training accuracy | Test accuracy |
 |:-:|:-:|:-:|
-| 5 | `{python} f2(splits[0][5][0])` | `{python} f2(splits[0][5][1])` |
-| 500 | `{python} f2(splits[0][500][0])` | `{python} f2(splits[0][500][1])` |
+| 5 | `{python} f2(split[5][0])` | `{python} f2(split[5][1])` |
+| 500 | `{python} f2(split[500][0])` | `{python} f2(split[500][1])` |
 
 . . .
 
@@ -430,51 +425,10 @@ for n_genes in (5, 500):
           " test:", round(model.score(X_test[:, :n_genes], y_test), 2))
 ```
 
-# One split is one draw
-
-## Different shuffles, different test accuracies
-
-The same 40 isolates, shuffled and split five different ways:
-
-| Shuffle | 1 | 2 | 3 | 4 | 5 |
-|---|:-:|:-:|:-:|:-:|:-:|
-| test accuracy, 5 genes | `{python} f2(test5[0])` | `{python} f2(test5[1])` | `{python} f2(test5[2])` | `{python} f2(test5[3])` | `{python} f2(test5[4])` |
-| test accuracy, 500 genes | `{python} f2(test500[0])` | `{python} f2(test500[1])` | `{python} f2(test500[2])` | `{python} f2(test500[3])` | `{python} f2(test500[4])` |
-
-. . .
-
-- With 5 genes, the test accuracy ranges from `{python} f2(min(test5))` to `{python} f2(max(test5))`, depending only on the shuffle
-- A test set of 10 isolates is a small sample: one isolate moves the accuracy by 0.10
-
-## Folds: every isolate held out once
-
-- Instead of one split, divide the shuffled isolates into $k$ groups, called **folds**
-- Each fold takes one turn as the test set, and the other folds are the training set
-- This is **$k$-fold cross-validation**
-
-. . .
-
-To assign folds, deal the shuffled isolates out in turn: 0, 1, 2, 3, 4, 0, 1, ...
-
-| Position after shuffling | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 |
-|---|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|
-| Fold | 0 | 1 | 2 | 3 | 4 | 0 | 1 | 2 | 3 | 4 |
-
-## Folds: every isolate held out once (cont.)
-
-- 10 isolates into 5 folds → 2 isolates per fold
-- 40 isolates into 5 folds → 8 per fold
-- 34 isolates into 4 folds → 9, 9, 8, 8: dealing in turn gives the first folds the extra isolates
-
-. . .
-
-- Fold 2's test set is the isolates with fold 2; its training set is every other isolate
-- Each isolate is in exactly one test set
-
 ## Next time
 
 - Training estimates the prior and the tables from one set of isolates, and the estimates carry that set's sampling error
 - With many unrelated genes, naive Bayes fits that error: training accuracy reaches 1.00 while new isolates fall toward a coin flip
-- A held-out test set shows this, but one split is a small, noisy sample
+- A test set, held out before training, shows this without waiting for next month
 
-Next time: cross-validation on every fold, and using it to choose how many genes to give naive Bayes.
+Next time: how far one test set can be trusted, cross-validation, and using it to choose how many genes to give naive Bayes.

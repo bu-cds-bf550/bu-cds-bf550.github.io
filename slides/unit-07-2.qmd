@@ -1,6 +1,7 @@
 ---
-# Unit 7, session 2 (Mon Oct 26): k-fold cross-validation, and choosing the number of genes with
-# it. Same 40 isolates and 500 genes as session 1. Cross-validation at each gene count peaks at
+# Unit 7, session 2 (Mon Oct 26): one split is one draw (five shuffles, five test accuracies),
+# folds and k-fold cross-validation, and choosing the number of genes with it. The shuffles and
+# the folds opened here from the end of session 1 on 22 Oct 2026. Same 40 isolates and 500 genes as session 1. Cross-validation at each gene count peaks at
 # genes 1-5, as next month's isolates do, while training accuracy keeps rising; the number of
 # genes is a hyperparameter, chosen by CV, and the final classifier is retrained on all 40. The
 # best CV score is a little optimistic, which session 3 picks up. Lab part 2 builds the fold
@@ -21,7 +22,7 @@ import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
 from sklearn.naive_bayes import BernoulliNB
-from sklearn.model_selection import KFold, cross_val_score
+from sklearn.model_selection import KFold, cross_val_score, train_test_split
 plt.rcParams.update({"font.size": 14})
 
 n_genes = 500
@@ -46,6 +47,14 @@ X_next, y_next = draw_isolates(200, np.random.default_rng(7001), balanced=False)
 
 def f2(x):
     return f"{x:.2f}"
+
+# Five different 30/10 splits of the 40 isolates: test accuracy at 5 genes and at 500 genes.
+# Split 0 is the one session 1 showed.
+test5, test500 = [], []
+for seed in range(5):
+    Xtr, Xte, ytr, yte = train_test_split(X, y, test_size=10, random_state=seed)
+    test5.append(BernoulliNB().fit(Xtr[:, :5], ytr).score(Xte[:, :5], yte))
+    test500.append(BernoulliNB().fit(Xtr, ytr).score(Xte, yte))
 
 folds = KFold(n_splits=5, shuffle=True, random_state=0)
 
@@ -88,13 +97,54 @@ def col(k):
 - Given more and more genes, naive Bayes **overfits**:
     - training accuracy rose to 1.00
     - next month's isolates rose over genes 1 to 5, then fell toward a coin flip
-- A **test set** held out before training shows this, but 10 isolates is a noisy sample
+- A **test set**, held out before training, showed this with 10 of the 40 isolates
 
 . . .
 
-Today: use every isolate as a test isolate once, and use that to decide how many genes to give naive Bayes.
+Today: how much one test set depends on the shuffle, then use every isolate as a test isolate once, and use that to decide how many genes to give naive Bayes.
+
+# One split is one draw
+
+## Different shuffles, different test accuracies
+
+The same 40 isolates, shuffled and split five different ways:
+
+| Shuffle | 1 | 2 | 3 | 4 | 5 |
+|---|:-:|:-:|:-:|:-:|:-:|
+| test accuracy, 5 genes | `{python} f2(test5[0])` | `{python} f2(test5[1])` | `{python} f2(test5[2])` | `{python} f2(test5[3])` | `{python} f2(test5[4])` |
+| test accuracy, 500 genes | `{python} f2(test500[0])` | `{python} f2(test500[1])` | `{python} f2(test500[2])` | `{python} f2(test500[3])` | `{python} f2(test500[4])` |
+
+. . .
+
+- With 5 genes, the test accuracy ranges from `{python} f2(min(test5))` to `{python} f2(max(test5))`, depending only on the shuffle
+- A test set of 10 isolates is a small sample: one isolate moves the accuracy by 0.10
 
 # Cross-validation
+
+## Folds: every isolate held out once
+
+- Instead of one split, divide the shuffled isolates into $k$ groups, called **folds**
+- Each fold takes one turn as the test set, and the other folds are the training set
+- This is **$k$-fold cross-validation**
+
+. . .
+
+To assign folds, deal the shuffled isolates out in turn: 0, 1, 2, 3, 4, 0, 1, ...
+
+| Position after shuffling | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 |
+|---|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|
+| Fold | 0 | 1 | 2 | 3 | 4 | 0 | 1 | 2 | 3 | 4 |
+
+## Folds: every isolate held out once (cont.)
+
+- 10 isolates into 5 folds → 2 isolates per fold
+- 40 isolates into 5 folds → 8 per fold
+- 34 isolates into 4 folds → 9, 9, 8, 8: dealing in turn gives the first folds the extra isolates
+
+. . .
+
+- Fold 2's test set is the isolates with fold 2; its training set is every other isolate
+- Each isolate is in exactly one test set
 
 ## $k$-fold cross-validation
 
