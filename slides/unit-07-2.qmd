@@ -537,23 +537,6 @@ plt.show()
 
 - Cross-validation follows next month's isolates, without needing them
 
-## Why does cross-validation fall?
-
-Discuss with a neighbor:
-
-- With 200 genes, training accuracy is `{python} f2(train_acc[col(200)])`. Why is the CV accuracy only `{python} f2(cv_acc[col(200)])`?
-- In each pass, which isolates are the tables estimated from, and which isolates are scored?
-
-## Why does cross-validation fall? (cont.)
-
-- Each pass estimates its tables from 32 isolates, and its chance differences come from those 32
-- The 8 held-out isolates don't share those chance differences
-- So each fold's score behaves like next month's isolates, not like the training set
-
-. . .
-
-- Cross-validation measures overfitting with the data we already have
-
 ## New terminology: hyperparameter
 
 - **Parameters**: numbers estimated by training
