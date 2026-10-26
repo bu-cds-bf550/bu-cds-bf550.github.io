@@ -14,10 +14,12 @@
 # slide, "Which split should we pick?", carries the room from the spread to the folds. Later
 # the same day: "Choosing k" gains the test-fold side of the trade-off, and a stratification
 # slide follows it, motivated by the deck's own plain shuffle (4, 5, 5, 3, 3 resistant per fold).
-# The fold object stays a plain KFold: with StratifiedKFold at seed 0 the CV peak moves to 3
-# genes and the story breaks, and session 3 shares the fold object. The stratification slide
+# The fold walkthrough uses a plain KFold (seed 0), the shuffle the stratification slides start
+# from; from there on, cross-validation uses StratifiedKFold at seed 7, as session 3 does. Seed 7
+# was chosen (26 Oct 2026, the instructor) because it keeps the CV peak at 5 genes: at most
+# stratified seeds 3 genes edges out 5 by one isolate, which the deck does not discuss. The stratification slide
 # opens with an illustration in the style of the shuffle-and-split picture: the 40 isolates
-# shaded by class (light resistant, dark susceptible), the plain shuffle's five folds, and the
+# coloured by class (orange resistant, blue susceptible), the plain shuffle's five folds, and the
 # stratified shuffle's five folds, with the resistant count under each fold. Later still: the
 # stratification terminology gets its own slides directly after "Choosing k": a discussion
 # slide asks how a random shuffle might fail, its (cont.) gives the answer (a fold with a single
@@ -33,6 +35,7 @@ subtitle: "BF550 · Unit 7 · Session 2 — Mon Oct 26"
 #| echo: false
 # Session 1's data: 40 isolates (20 resistant, seed 7128), 500 genes, genes 1-5 related to
 # resistance; next month's 200 isolates (seed 7001).
+import warnings
 import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
@@ -79,6 +82,8 @@ assert np.isclose(BernoulliNB().fit(X[train_rows0][:, :5], y[train_rows0])
                   .score(X[test_rows0][:, :5], y[test_rows0]), test5[0])
 
 folds = KFold(n_splits=5, shuffle=True, random_state=0)
+# From the stratification slides on, the folds are stratified (seed 7), as the code slides use.
+cv_folds = StratifiedKFold(n_splits=5, shuffle=True, random_state=7)
 
 # One pass per fold at 5 genes.
 fold_rows = []
@@ -92,7 +97,7 @@ cv5 = fold_acc.mean()
 fold_res = ", ".join(str(r["res"]) for r in fold_rows)
 # The same shuffle by class: resistant isolates per fold when each class is shuffled separately.
 strat_folds = [test_rows for _, test_rows in
-               StratifiedKFold(5, shuffle=True, random_state=0).split(X, y)]
+               StratifiedKFold(5, shuffle=True, random_state=7).split(X, y)]
 strat_res = sorted({int(y[test_rows].sum()) for test_rows in strat_folds})
 assert strat_res == [4]
 # The two shuffles as rows of isolates grouped by fold, for the illustration: the plain shuffle is
@@ -114,6 +119,20 @@ one_class = {k: single_class_rate(k) for k in (5, 10)}
 def pct(x):
     return f"{100 * x:.0f}%"
 strat_order = np.concatenate([np.concatenate([t[y[t]], t[~y[t]]]) for t in strat_folds])
+# A rare class for the second illustration: the same 40 isolates with only 3 resistant, fewer than
+# the 5 folds, under the same two shuffles (plain seed 0, stratified seed 7). StratifiedKFold
+# warns that the least populated class has fewer members than n_splits.
+y_rare = np.zeros(40, dtype=bool)
+y_rare[[5, 18, 31]] = True
+plain_folds_rare = [t for _, t in KFold(5, shuffle=True, random_state=0).split(X)]
+with warnings.catch_warnings():
+    warnings.simplefilter("ignore")
+    strat_folds_rare = [t for _, t in StratifiedKFold(5, shuffle=True, random_state=7).split(X, y_rare)]
+plain_order_rare = np.concatenate(plain_folds_rare)
+strat_order_rare = np.concatenate([np.concatenate([t[y_rare[t]], t[~y_rare[t]]]) for t in strat_folds_rare])
+empty_rare = {name: sum(not y_rare[t].any() for t in fs)
+              for name, fs in [("plain", plain_folds_rare), ("strat", strat_folds_rare)]}
+assert all(len(t) == 8 for t in plain_folds_rare + strat_folds_rare) and empty_rare == {"plain": 2, "strat": 2}
 assert np.isclose(cv5, cross_val_score(BernoulliNB(), X[:, :5], y, cv=folds).mean())
 
 # The dial: training accuracy, 5-fold CV and next month's isolates at each gene count.
@@ -122,7 +141,7 @@ train_acc, cv_acc, next_acc = [], [], []
 for k in ks:
     m = BernoulliNB().fit(X[:, :k], y)
     train_acc.append(m.score(X[:, :k], y))
-    cv_acc.append(cross_val_score(BernoulliNB(), X[:, :k], y, cv=folds).mean())
+    cv_acc.append(cross_val_score(BernoulliNB(), X[:, :k], y, cv=cv_folds).mean())
     next_acc.append(m.score(X_next[:, :k], y_next))
 train_acc, cv_acc, next_acc = map(np.array, (train_acc, cv_acc, next_acc))
 best = int(cv_acc.argmax())
@@ -361,25 +380,25 @@ Discuss with a neighbor:
 - **Stratification**: shuffle each class separately, so every fold has the same class mix as the whole data set
     - 20 resistant into 5 folds → `{python} strat_res[0]` per fold; 20 susceptible → `{python} strat_res[0]` per fold
 - Every training set and every test fold then has both classes, in the same proportion
-- Matters most when one class is rare: a plain shuffle can leave a fold with none
+- Matters most when classes are imbalanced
 - The usual default: **stratified** $k$-fold cross-validation, $k = 5$ or $10$
 
 ## Shuffling by class
 
 ```{python}
 #| echo: false
-# The 40 isolates shaded by class, then the plain shuffle (KFold, seed 0) and the stratified shuffle
-# (StratifiedKFold, seed 0), each grouped into its five folds with the resistant count below.
+# The 40 isolates coloured by class, then the plain shuffle (KFold, seed 0) and the stratified shuffle
+# (StratifiedKFold, seed 7), each grouped into its five folds with the resistant count below.
 fig, ax = plt.subplots(figsize=(10, 5))
-light, dark = "#d9d8d2", "#52514e"
+dark, res_col, sus_col = "#52514e", "#eb6834", "#2a78d6"
 w = 0.9
 
 def draw_row(y0, ids):
     for pos, i in enumerate(ids):
         res = bool(y[i])
-        ax.add_patch(matplotlib.patches.Rectangle((pos, y0), w, w, color=light if res else dark))
+        ax.add_patch(matplotlib.patches.Rectangle((pos, y0), w, w, color=res_col if res else sus_col))
         ax.text(pos + w / 2, y0 + w / 2, str(i + 1), ha="center", va="center",
-                color=dark if res else "white", fontsize=9)
+                color="white", fontsize=9)
 
 draw_row(4.6, np.arange(40))
 ax.text(-0.3, 4.6 + w / 2, "the 40 isolates", ha="right", va="center", fontsize=12)
@@ -393,7 +412,7 @@ for y0, order, label in [(2.5, plain_order, "plain shuffle"), (0.4, strat_order,
                 [y0 - 0.15, y0 - 0.35, y0 - 0.35, y0 - 0.15], color=dark, lw=1.5)
         ax.text((x0 + x1) / 2 - 0.05, y0 - 0.45, f"fold {j}: {n_res} resistant", ha="center",
                 va="top", fontsize=10, color=dark)
-for x0, fill, ink, label in [(0, light, dark, "resistant"), (7, dark, "white", "susceptible")]:
+for x0, fill, label in [(0, res_col, "resistant"), (7, sus_col, "susceptible")]:
     ax.add_patch(matplotlib.patches.Rectangle((x0, 6.1), w, w, color=fill))
     ax.text(x0 + w + 0.3, 6.1 + w / 2, label, ha="left", va="center", fontsize=12, color=dark)
 ax.set_xlim(-6.5, 40.2)
@@ -405,17 +424,69 @@ plt.show()
 
 - The plain shuffle ignores the labels and held `{python} fold_res` resistant per fold; the stratified shuffle holds `{python} strat_res[0]` in every fold
 
+## Shuffling by class: a rare class
+
+```{python}
+#| echo: false
+# The same picture with only 3 resistant isolates (6, 19, 32): fewer than the 5 folds, so both
+# shuffles leave two folds with no resistant isolate.
+fig, ax = plt.subplots(figsize=(10, 5))
+
+def draw_row_rare(y0, ids):
+    for pos, i in enumerate(ids):
+        res = bool(y_rare[i])
+        ax.add_patch(matplotlib.patches.Rectangle((pos, y0), w, w, color=res_col if res else sus_col))
+        ax.text(pos + w / 2, y0 + w / 2, str(i + 1), ha="center", va="center",
+                color="white", fontsize=9)
+
+draw_row_rare(4.6, np.arange(40))
+ax.text(-0.3, 4.6 + w / 2, "the 40 isolates", ha="right", va="center", fontsize=12)
+for y0, order, label in [(2.5, plain_order_rare, "plain shuffle"), (0.4, strat_order_rare, "stratified shuffle")]:
+    draw_row_rare(y0, order)
+    ax.text(-0.3, y0 + w / 2, label, ha="right", va="center", fontsize=12)
+    for j in range(5):
+        x0, x1 = 8 * j, 8 * j + 8
+        n_res = int(y_rare[order[x0:x1]].sum())
+        ax.plot([x0 + 0.05, x0 + 0.05, x1 - 0.15, x1 - 0.15],
+                [y0 - 0.15, y0 - 0.35, y0 - 0.35, y0 - 0.15], color=dark, lw=1.5)
+        ax.text((x0 + x1) / 2 - 0.05, y0 - 0.45, f"fold {j}: {n_res} resistant", ha="center",
+                va="top", fontsize=10, color=dark)
+for x0, fill, label in [(0, res_col, "resistant"), (7, sus_col, "susceptible")]:
+    ax.add_patch(matplotlib.patches.Rectangle((x0, 6.1), w, w, color=fill))
+    ax.text(x0 + w + 0.3, 6.1 + w / 2, label, ha="left", va="center", fontsize=12, color=dark)
+ax.set_xlim(-6.5, 40.2)
+ax.set_ylim(-0.6, 7.2)
+ax.axis("off")
+plt.tight_layout()
+plt.show()
+```
+
+- 3 resistant isolates, 5 folds: `{python} empty_rare["strat"]` folds get none, however we shuffle
+- Fewer of a class than $k$: choose a smaller $k$
+
+## When to stratify
+
+- Both plain $k$-fold and stratified $k$-fold are valid strategies appropriate for different situations
+- For a classifier, stratifying is always appropriate
+- Plain shuffling with $k$-fold is appropriate:
+    - When the number of instances per fold is large enough to randomly produce balanced folds
+    - For methods that predict continuous values (covered later in the course)
+
 ## The same steps in Python {.smaller}
 
 ```{python}
 #| echo: true
-from sklearn.model_selection import KFold, cross_val_score
+from sklearn.model_selection import KFold, StratifiedKFold, cross_val_score
 from sklearn.naive_bayes import BernoulliNB
 
 # X: 40 isolates x 500 genes (True = present); y: True = resistant
-folds = KFold(n_splits=5, shuffle=True, random_state=0)            # shuffle, then divide into 5 folds
-# StratifiedKFold(n_splits=5, shuffle=True, random_state=0) takes the same arguments and shuffles each class separately
-scores = cross_val_score(BernoulliNB(), X[:, :5], y, cv=folds)     # train and score once per fold
+# plain k-fold: shuffle, then divide into 5 folds
+folds = KFold(n_splits=5, shuffle=True, random_state=0)
+# stratified k-fold: takes the same arguments and shuffles each class separately
+folds = StratifiedKFold(n_splits=5, shuffle=True, random_state=7) 
+
+# train and score once per fold
+scores = cross_val_score(BernoulliNB(), X[:, :5], y, cv=folds)     
 
 print("test accuracy per fold:", scores.round(2))
 print("CV accuracy:", scores.mean().round(2))
@@ -488,7 +559,7 @@ Discuss with a neighbor:
 - **Parameters**: numbers estimated by training
     - the prior and the tables
 - **Hyperparameter**: a setting chosen before training, which training can't estimate
-    - the number of genes naive Bayes uses
+    - how many genes to give naive Bayes: a setting of the step before the classifier
     - $k$, the number of folds, is a setting of the evaluation, not of the classifier
 - Hyperparameters are chosen by cross-validation, never by training accuracy
 
@@ -506,16 +577,20 @@ Discuss with a neighbor:
 
 ```{python}
 #| echo: true
-folds = KFold(n_splits=5, shuffle=True, random_state=0)
+folds = StratifiedKFold(n_splits=5, shuffle=True, random_state=7)
 
-cv_accuracy = {}
-for n_genes in (1, 2, 3, 4, 5, 10, 20, 50, 100, 200, 500):
+gene_counts = [1, 2, 3, 4, 5, 10, 20, 50, 100, 200, 500]
+cv_accuracy = []
+for n_genes in gene_counts:
     scores = cross_val_score(BernoulliNB(), X[:, :n_genes], y, cv=folds)
-    cv_accuracy[n_genes] = scores.mean()
+    cv_accuracy.append(scores.mean())
 
-chosen = max(cv_accuracy, key=cv_accuracy.get)        # the gene count with the highest CV accuracy
-final_model = BernoulliNB().fit(X[:, :chosen], y)      # retrain on all 40 isolates
-print("chosen:", chosen, "genes, CV accuracy", round(cv_accuracy[chosen], 2))
+# the position of the highest CV accuracy, and its gene count
+best = np.argmax(cv_accuracy)
+chosen = gene_counts[best]
+# retrain on all 40 isolates
+final_model = BernoulliNB().fit(X[:, :chosen], y)
+print("chosen:", chosen, "genes, CV accuracy", round(cv_accuracy[best], 2))
 ```
 
 ## A caution about the best score
