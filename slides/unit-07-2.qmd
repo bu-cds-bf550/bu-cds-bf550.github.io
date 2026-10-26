@@ -458,15 +458,15 @@ plt.show()
 ```
 
 - 3 resistant isolates, 5 folds: `{python} empty_rare["strat"]` folds get none, however we shuffle
-- Fewer of a class than $k$: choose a smaller $k$ (`StratifiedKFold` warns when this happens)
+- Fewer of a class than $k$: choose a smaller $k$
 
 ## When to stratify
 
-- Count the rarer class per test fold: rarer count ÷ $k$
-    - ours: 20 ÷ 5 = 4 resistant per fold; the rare case: 3 ÷ 5 = 0.6
-- A few per fold: stratify, or a plain shuffle can give a fold none, or a skewed mix
-- Many per fold: a plain shuffle is fine, every fold lands near the overall mix by chance
-- For a classifier, stratifying costs nothing, so make it the default
+- Both plain $k$-fold and stratified $k$-fold are valid strategies appropriate for different situations
+- For a classifier, stratifying is always appropriate
+- Plain shuffling with $k$-fold is appropriate:
+    - When the number of instances per fold is large enough to randomly produce balanced folds
+    - For methods that predict continuous values (covered later in the course)
 
 ## The same steps in Python {.smaller}
 
@@ -476,9 +476,13 @@ from sklearn.model_selection import KFold, cross_val_score
 from sklearn.naive_bayes import BernoulliNB
 
 # X: 40 isolates x 500 genes (True = present); y: True = resistant
-folds = KFold(n_splits=5, shuffle=True, random_state=0)            # shuffle, then divide into 5 folds
-# StratifiedKFold(n_splits=5, shuffle=True, random_state=0) takes the same arguments and shuffles each class separately
-scores = cross_val_score(BernoulliNB(), X[:, :5], y, cv=folds)     # train and score once per fold
+# plain k-fold: shuffle, then divide into 5 folds
+folds = KFold(n_splits=5, shuffle=True, random_state=0)
+# stratified k-fold: takes the same arguments and shuffles each class separately
+folds = StratifiedKFold(n_splits=5, shuffle=True, random_state=0) 
+
+# train and score once per fold
+scores = cross_val_score(BernoulliNB(), X[:, :5], y, cv=folds)     
 
 print("test accuracy per fold:", scores.round(2))
 print("CV accuracy:", scores.mean().round(2))
@@ -569,16 +573,20 @@ Discuss with a neighbor:
 
 ```{python}
 #| echo: true
-folds = KFold(n_splits=5, shuffle=True, random_state=0)
+folds = StratifiedKFold(n_splits=5, shuffle=True, random_state=0)
 
-cv_accuracy = {}
-for n_genes in (1, 2, 3, 4, 5, 10, 20, 50, 100, 200, 500):
+gene_counts = [1, 2, 3, 4, 5, 10, 20, 50, 100, 200, 500]
+cv_accuracy = []
+for n_genes in gene_counts:
     scores = cross_val_score(BernoulliNB(), X[:, :n_genes], y, cv=folds)
-    cv_accuracy[n_genes] = scores.mean()
+    cv_accuracy.append(scores.mean())
 
-chosen = max(cv_accuracy, key=cv_accuracy.get)        # the gene count with the highest CV accuracy
-final_model = BernoulliNB().fit(X[:, :chosen], y)      # retrain on all 40 isolates
-print("chosen:", chosen, "genes, CV accuracy", round(cv_accuracy[chosen], 2))
+# the position of the highest CV accuracy, and its gene count
+best = np.argmax(cv_accuracy)
+chosen = gene_counts[best]
+# retrain on all 40 isolates
+final_model = BernoulliNB().fit(X[:, :chosen], y)
+print("chosen:", chosen, "genes, CV accuracy", round(cv_accuracy[best], 2))
 ```
 
 ## A caution about the best score
