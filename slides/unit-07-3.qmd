@@ -6,7 +6,9 @@
 # 40 isolates and 500 genes as sessions 1 and 2; the leak is shown on genes 6-500, none related
 # to resistance. Lab part 3 builds rng.permutation, the null list, the p-value floor and the
 # leaking line. Redrafted by the assistant on 19 Oct 2026 after the instructor's review: leakage
-# moved here from session 2, on the unit's one data set. For the instructor to revise.
+# moved here from session 2, on the unit's one data set. For the instructor to revise. 26 Oct
+# 2026, at the instructor's request: the recap repeats session 2's workflow diagram (the CV
+# loop inside the loop over gene counts) on its own slide, which now carries the "Today" line.
 #
 # Every number on the slides is printed from the setup chunk.
 title: "Leakage and Permutation Tests"
@@ -46,6 +48,15 @@ def draw_isolates(n, rng, balanced=True):
 X, y = draw_isolates(40, np.random.default_rng(7128))
 X_next, y_next = draw_isolates(200, np.random.default_rng(7001), balanced=False)
 folds = StratifiedKFold(n_splits=5, shuffle=True, random_state=7)   # as in session 2
+
+# Session 2's search, for the recap diagram: CV accuracy at each gene count, the best count, and
+# the final classifier (trained on all 40) on next month's isolates.
+gene_counts = [1, 2, 3, 4, 5, 10, 20, 50, 100, 200, 500]
+cv_by_count = np.array([cross_val_score(BernoulliNB(), X[:, :k], y, cv=folds).mean()
+                        for k in gene_counts])
+best_count = gene_counts[int(cv_by_count.argmax())]
+final_next = BernoulliNB().fit(X[:, :best_count], y).score(X_next[:, :best_count], y_next)
+assert best_count == 5
 
 def f2(x):
     return f"{x:.2f}"
@@ -122,6 +133,59 @@ assert tries[best, 0] >= 0.7 and tries[best, 1] < 0.6
 - **$k$-fold cross-validation**: each fold takes one turn as the test set, and the $k$ test accuracies are averaged
 - It chose the number of genes, a **hyperparameter**: 5, where it scored `{python} f2(real_obs)`
 - The best of many CV scores is a little optimistic
+
+## Last time: choosing the number of genes
+
+```{python}
+#| echo: false
+# Session 2's search as a workflow: a loop over gene counts with a full 5-fold cross-validation
+# inside each one, then the choice, one last training on all 40, and next month's isolates.
+from matplotlib.patches import FancyBboxPatch
+fig, ax = plt.subplots(figsize=(13, 4.6))
+
+def box(x, y, w, h, text, ec="#8a8984", bold=False):
+    ax.add_patch(FancyBboxPatch((x, y), w, h, boxstyle="round,pad=0.02,rounding_size=0.12",
+                                fc="white", ec=ec, lw=1.5))
+    ax.text(x + w / 2, y + h / 2, text, ha="center", va="center", fontsize=13, color="#2b2a27",
+            fontweight="bold" if bold else "normal", linespacing=1.3)
+
+def loop(x, y, w, h, label, times, color, ls):
+    ax.add_patch(FancyBboxPatch((x, y), w, h, boxstyle="round,pad=0.02,rounding_size=0.2",
+                                fill=False, ec=color, lw=2, ls=ls))
+    ax.text(x + 0.15, y + h - 0.12, label, ha="left", va="top", fontsize=13, color=color)
+    ax.text(x + w - 0.12, y + h - 0.12, times, ha="right", va="top", fontsize=13, color=color,
+            fontweight="bold")
+
+def arrow(x0, y0, x1, y1):
+    ax.annotate("", xy=(x1, y1), xytext=(x0, y0),
+                arrowprops=dict(arrowstyle="-|>", color="#52514e", lw=1.5, mutation_scale=16))
+
+mid = 2.0
+box(0.0, mid - 0.5, 1.3, 1.0, "40\nisolates")
+loop(1.7, 0.0, 7.1, 4.3, f"for each gene count: {', '.join(map(str, gene_counts[:6]))}, … {gene_counts[-1]}",
+     f"× {len(gene_counts)}", "#eb6834", "-")
+box(2.0, mid - 0.5, 1.5, 1.0, "keep the\nfirst n genes")
+loop(3.9, 0.35, 2.75, 3.25, "for each of 5 folds", "× 5", "#2a78d6", "--")
+box(4.15, 1.75, 2.25, 0.85, "train on the\nother 4 folds")
+box(4.15, 0.6, 2.25, 0.85, "score the\nheld-out fold")
+box(7.0, mid - 0.5, 1.55, 1.0, "CV accuracy:\nmean of 5")
+box(9.3, mid - 0.6, 1.6, 1.2, f"keep the\nhighest:\n{best_count} genes", ec="#eb6834", bold=True)
+box(11.35, mid - 0.6, 1.55, 1.2, f"train on\nall 40 with\n{best_count} genes")
+box(13.35, mid - 0.6, 1.75, 1.2, f"score on\nnext month's\nisolates: {final_next:.2f}")
+arrow(1.3, mid, 2.0, mid)
+arrow(3.5, mid, 3.9, mid)
+arrow(5.275, 1.75, 5.275, 1.45)
+arrow(6.65, mid, 7.0, mid)
+arrow(8.8, mid, 9.3, mid)
+arrow(10.9, mid, 11.35, mid)
+arrow(12.9, mid, 13.35, mid)
+ax.set_xlim(-0.1, 15.2)
+ax.set_ylim(-0.1, 4.4)
+ax.set_aspect("equal")
+ax.axis("off")
+plt.tight_layout()
+plt.show()
+```
 
 . . .
 
