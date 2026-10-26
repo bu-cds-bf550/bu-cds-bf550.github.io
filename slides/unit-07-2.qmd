@@ -17,7 +17,7 @@
 # The fold object stays a plain KFold: with StratifiedKFold at seed 0 the CV peak moves to 3
 # genes and the story breaks, and session 3 shares the fold object. The stratification slide
 # opens with an illustration in the style of the shuffle-and-split picture: the 40 isolates
-# shaded by class (light resistant, dark susceptible), the plain shuffle's five folds, and the
+# coloured by class (orange resistant, blue susceptible), the plain shuffle's five folds, and the
 # stratified shuffle's five folds, with the resistant count under each fold. Later still: the
 # stratification terminology gets its own slides directly after "Choosing k": a discussion
 # slide asks how a random shuffle might fail, its (cont.) gives the answer (a fold with a single
@@ -383,18 +383,18 @@ Discuss with a neighbor:
 
 ```{python}
 #| echo: false
-# The 40 isolates shaded by class, then the plain shuffle (KFold, seed 0) and the stratified shuffle
+# The 40 isolates coloured by class, then the plain shuffle (KFold, seed 0) and the stratified shuffle
 # (StratifiedKFold, seed 0), each grouped into its five folds with the resistant count below.
 fig, ax = plt.subplots(figsize=(10, 5))
-light, dark = "#d9d8d2", "#52514e"
+dark, res_col, sus_col = "#52514e", "#eb6834", "#2a78d6"
 w = 0.9
 
 def draw_row(y0, ids):
     for pos, i in enumerate(ids):
         res = bool(y[i])
-        ax.add_patch(matplotlib.patches.Rectangle((pos, y0), w, w, color=light if res else dark))
+        ax.add_patch(matplotlib.patches.Rectangle((pos, y0), w, w, color=res_col if res else sus_col))
         ax.text(pos + w / 2, y0 + w / 2, str(i + 1), ha="center", va="center",
-                color=dark if res else "white", fontsize=9)
+                color="white", fontsize=9)
 
 draw_row(4.6, np.arange(40))
 ax.text(-0.3, 4.6 + w / 2, "the 40 isolates", ha="right", va="center", fontsize=12)
@@ -408,7 +408,7 @@ for y0, order, label in [(2.5, plain_order, "plain shuffle"), (0.4, strat_order,
                 [y0 - 0.15, y0 - 0.35, y0 - 0.35, y0 - 0.15], color=dark, lw=1.5)
         ax.text((x0 + x1) / 2 - 0.05, y0 - 0.45, f"fold {j}: {n_res} resistant", ha="center",
                 va="top", fontsize=10, color=dark)
-for x0, fill, ink, label in [(0, light, dark, "resistant"), (7, dark, "white", "susceptible")]:
+for x0, fill, label in [(0, res_col, "resistant"), (7, sus_col, "susceptible")]:
     ax.add_patch(matplotlib.patches.Rectangle((x0, 6.1), w, w, color=fill))
     ax.text(x0 + w + 0.3, 6.1 + w / 2, label, ha="left", va="center", fontsize=12, color=dark)
 ax.set_xlim(-6.5, 40.2)
@@ -431,9 +431,9 @@ fig, ax = plt.subplots(figsize=(10, 5))
 def draw_row_rare(y0, ids):
     for pos, i in enumerate(ids):
         res = bool(y_rare[i])
-        ax.add_patch(matplotlib.patches.Rectangle((pos, y0), w, w, color=light if res else dark))
+        ax.add_patch(matplotlib.patches.Rectangle((pos, y0), w, w, color=res_col if res else sus_col))
         ax.text(pos + w / 2, y0 + w / 2, str(i + 1), ha="center", va="center",
-                color=dark if res else "white", fontsize=9)
+                color="white", fontsize=9)
 
 draw_row_rare(4.6, np.arange(40))
 ax.text(-0.3, 4.6 + w / 2, "the 40 isolates", ha="right", va="center", fontsize=12)
@@ -447,7 +447,7 @@ for y0, order, label in [(2.5, plain_order_rare, "plain shuffle"), (0.4, strat_o
                 [y0 - 0.15, y0 - 0.35, y0 - 0.35, y0 - 0.15], color=dark, lw=1.5)
         ax.text((x0 + x1) / 2 - 0.05, y0 - 0.45, f"fold {j}: {n_res} resistant", ha="center",
                 va="top", fontsize=10, color=dark)
-for x0, fill, ink, label in [(0, light, dark, "resistant"), (7, dark, "white", "susceptible")]:
+for x0, fill, label in [(0, res_col, "resistant"), (7, sus_col, "susceptible")]:
     ax.add_patch(matplotlib.patches.Rectangle((x0, 6.1), w, w, color=fill))
     ax.text(x0 + w + 0.3, 6.1 + w / 2, label, ha="left", va="center", fontsize=12, color=dark)
 ax.set_xlim(-6.5, 40.2)
