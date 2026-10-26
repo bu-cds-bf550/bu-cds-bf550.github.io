@@ -376,7 +376,7 @@ Discuss with a neighbor:
 - **Stratification**: shuffle each class separately, so every fold has the same class mix as the whole data set
     - 20 resistant into 5 folds → `{python} strat_res[0]` per fold; 20 susceptible → `{python} strat_res[0]` per fold
 - Every training set and every test fold then has both classes, in the same proportion
-- Matters most when one class is rare: a plain shuffle can leave a fold with none
+- Matters most when classes are imbalanced
 - The usual default: **stratified** $k$-fold cross-validation, $k = 5$ or $10$
 
 ## Shuffling by class
@@ -459,6 +459,14 @@ plt.show()
 
 - 3 resistant isolates, 5 folds: `{python} empty_rare["strat"]` folds get none, however we shuffle
 - Fewer of a class than $k$: choose a smaller $k$ (`StratifiedKFold` warns when this happens)
+
+## When to stratify
+
+- Count the rarer class per test fold: rarer count ÷ $k$
+    - ours: 20 ÷ 5 = 4 resistant per fold; the rare case: 3 ÷ 5 = 0.6
+- A few per fold: stratify, or a plain shuffle can give a fold none, or a skewed mix
+- Many per fold: a plain shuffle is fine, every fold lands near the overall mix by chance
+- For a classifier, stratifying costs nothing, so make it the default
 
 ## The same steps in Python {.smaller}
 
