@@ -7,7 +7,10 @@
 # best CV score is a little optimistic, which session 3 picks up. Lab part 2 builds the fold
 # loop. Redrafted by the assistant on 19 Oct 2026 after the instructor's review: cross-
 # validation gets the whole session; feature selection and leakage moved to session 3. For the
-# instructor to revise.
+# instructor to revise. 26 Oct 2026, at the instructor's request: an illustration of one
+# shuffle and one split (shuffle 1, drawn from the setup chunk) opens the section, and the five
+# shuffles are shown as two panels of test accuracies, 5 genes beside 500, around next month's
+# accuracy, so the spread reads as sampling error before cross-validation is introduced.
 #
 # Every number on the slides is printed from the setup chunk.
 title: "Cross-Validation"
@@ -55,6 +58,13 @@ for seed in range(5):
     Xtr, Xte, ytr, yte = train_test_split(X, y, test_size=10, random_state=seed)
     test5.append(BernoulliNB().fit(Xtr[:, :5], ytr).score(Xte[:, :5], yte))
     test500.append(BernoulliNB().fit(Xtr, ytr).score(Xte, yte))
+
+# The rows of shuffle 1 (the split session 1 showed), training rows first, for the picture of
+# one shuffle and one split.
+train_rows0, test_rows0 = train_test_split(np.arange(40), test_size=10, random_state=0)
+shuffled_order = np.concatenate([train_rows0, test_rows0])
+assert np.isclose(BernoulliNB().fit(X[train_rows0][:, :5], y[train_rows0])
+                  .score(X[test_rows0][:, :5], y[test_rows0]), test5[0])
 
 folds = KFold(n_splits=5, shuffle=True, random_state=0)
 
@@ -105,19 +115,74 @@ Today: how much one test set depends on the shuffle, then use every isolate as a
 
 # One split is one draw
 
+## One shuffle, one split
+
+```{python}
+#| echo: false
+# The 40 isolates in their original order, then in shuffled order (shuffle 1 from the setup
+# chunk) with the last 10 marked as the test set. Grey and orange as in the fold diagram below.
+fig, ax = plt.subplots(figsize=(10, 3.4))
+grey, dark, orange = "#d9d8d2", "#52514e", "#eb6834"
+w = 0.9
+
+def draw_row(y0, ids, fills, inks):
+    for pos, (i, fill, ink) in enumerate(zip(ids, fills, inks)):
+        ax.add_patch(matplotlib.patches.Rectangle((pos, y0), w, w, color=fill))
+        ax.text(pos + w / 2, y0 + w / 2, str(i + 1), ha="center", va="center", color=ink,
+                fontsize=9)
+
+draw_row(3.2, np.arange(40), [grey] * 40, [dark] * 40)
+draw_row(0.8, shuffled_order, [grey] * 30 + [orange] * 10, [dark] * 30 + ["white"] * 10)
+ax.text(-0.3, 3.2 + w / 2, "the 40 isolates", ha="right", va="center", fontsize=12)
+ax.text(-0.3, 0.8 + w / 2, "after shuffling", ha="right", va="center", fontsize=12)
+ax.annotate("", xy=(20, 0.8 + w + 0.12), xytext=(20, 3.2 - 0.12),
+            arrowprops=dict(arrowstyle="-|>", color=dark, lw=1.5))
+ax.text(20.6, 2.5, "shuffle", ha="left", va="center", fontsize=12, color=dark)
+for x0, x1, label, c in [(0, 30, "training set: 30 isolates", dark),
+                         (30, 40, "test set: 10", orange)]:
+    ax.plot([x0 + 0.05, x0 + 0.05, x1 - 0.15, x1 - 0.15], [0.55, 0.35, 0.35, 0.55], color=c,
+            lw=1.5)
+    ax.text((x0 + x1) / 2, 0.1, label, ha="center", va="top", fontsize=12, color=c)
+ax.set_xlim(-6.5, 40.2)
+ax.set_ylim(-0.6, 4.3)
+ax.axis("off")
+plt.tight_layout()
+plt.show()
+```
+
+- After shuffling, the first 30 isolates are the training set and the last 10 are the test set
+- Which 10 isolates are scored depends on the shuffle: one split is one random draw of a test set
+
 ## Different shuffles, different test accuracies
 
 The same 40 isolates, shuffled and split five different ways:
 
-| Shuffle | 1 | 2 | 3 | 4 | 5 |
-|---|:-:|:-:|:-:|:-:|:-:|
-| test accuracy, 5 genes | `{python} f2(test5[0])` | `{python} f2(test5[1])` | `{python} f2(test5[2])` | `{python} f2(test5[3])` | `{python} f2(test5[4])` |
-| test accuracy, 500 genes | `{python} f2(test500[0])` | `{python} f2(test500[1])` | `{python} f2(test500[2])` | `{python} f2(test500[3])` | `{python} f2(test500[4])` |
+```{python}
+#| echo: false
+# One dot per shuffle: test accuracy on its 10 held-out isolates, at 5 genes and at 500 genes.
+# The dashed line is the same classifier's accuracy on next month's 200 isolates.
+fig, axes = plt.subplots(1, 2, figsize=(9, 3.8), sharey=True)
+for ax, accs, k in zip(axes, (test5, test500), (5, 500)):
+    ax.axhline(0.5, color="#c3c2b7", lw=1, ls=":")
+    ax.axhline(next_acc[col(k)], color="#2a78d6", lw=2, ls="--",
+               label="next month's 200 isolates")
+    ax.plot(range(1, 6), accs, "o", color="#eb6834", ms=11, label="test set of 10 isolates")
+    ax.set_title(f"{k} genes", fontsize=14)
+    ax.set_xticks(range(1, 6))
+    ax.set_xlim(0.5, 5.5)
+    ax.set_xlabel("shuffle")
+    ax.spines[["top", "right"]].set_visible(False)
+axes[0].set_ylim(0.12, 1.03)
+axes[0].set_ylabel("test accuracy")
+axes[0].legend(frameon=False, loc="lower left", fontsize=11)
+plt.tight_layout()
+plt.show()
+```
 
 . . .
 
 - With 5 genes, the test accuracy ranges from `{python} f2(min(test5))` to `{python} f2(max(test5))`, depending only on the shuffle
-- A test set of 10 isolates is a small sample: one isolate moves the accuracy by 0.10
+- Each test set of 10 is a small sample: one isolate moves the accuracy by 0.10, and the five scatter around next month's `{python} f2(next_acc[col(5)])`
 
 # Cross-validation
 
