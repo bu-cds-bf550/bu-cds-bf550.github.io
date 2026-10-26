@@ -33,6 +33,7 @@ subtitle: "BF550 · Unit 7 · Session 2 — Mon Oct 26"
 #| echo: false
 # Session 1's data: 40 isolates (20 resistant, seed 7128), 500 genes, genes 1-5 related to
 # resistance; next month's 200 isolates (seed 7001).
+import warnings
 import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
@@ -114,6 +115,20 @@ one_class = {k: single_class_rate(k) for k in (5, 10)}
 def pct(x):
     return f"{100 * x:.0f}%"
 strat_order = np.concatenate([np.concatenate([t[y[t]], t[~y[t]]]) for t in strat_folds])
+# A rare class for the second illustration: the same 40 isolates with only 3 resistant, fewer than
+# the 5 folds, under the same two shuffles (seed 0). StratifiedKFold warns that the least populated
+# class has fewer members than n_splits.
+y_rare = np.zeros(40, dtype=bool)
+y_rare[[5, 18, 31]] = True
+plain_folds_rare = [t for _, t in KFold(5, shuffle=True, random_state=0).split(X)]
+with warnings.catch_warnings():
+    warnings.simplefilter("ignore")
+    strat_folds_rare = [t for _, t in StratifiedKFold(5, shuffle=True, random_state=0).split(X, y_rare)]
+plain_order_rare = np.concatenate(plain_folds_rare)
+strat_order_rare = np.concatenate([np.concatenate([t[y_rare[t]], t[~y_rare[t]]]) for t in strat_folds_rare])
+empty_rare = {name: sum(not y_rare[t].any() for t in fs)
+              for name, fs in [("plain", plain_folds_rare), ("strat", strat_folds_rare)]}
+assert all(len(t) == 8 for t in plain_folds_rare + strat_folds_rare) and empty_rare == {"plain": 2, "strat": 2}
 assert np.isclose(cv5, cross_val_score(BernoulliNB(), X[:, :5], y, cv=folds).mean())
 
 # The dial: training accuracy, 5-fold CV and next month's isolates at each gene count.
@@ -404,6 +419,46 @@ plt.show()
 ```
 
 - The plain shuffle ignores the labels and held `{python} fold_res` resistant per fold; the stratified shuffle holds `{python} strat_res[0]` in every fold
+
+## Shuffling by class: a rare class
+
+```{python}
+#| echo: false
+# The same picture with only 3 resistant isolates (6, 19, 32): fewer than the 5 folds, so both
+# shuffles leave two folds with no resistant isolate.
+fig, ax = plt.subplots(figsize=(10, 5))
+
+def draw_row_rare(y0, ids):
+    for pos, i in enumerate(ids):
+        res = bool(y_rare[i])
+        ax.add_patch(matplotlib.patches.Rectangle((pos, y0), w, w, color=light if res else dark))
+        ax.text(pos + w / 2, y0 + w / 2, str(i + 1), ha="center", va="center",
+                color=dark if res else "white", fontsize=9)
+
+draw_row_rare(4.6, np.arange(40))
+ax.text(-0.3, 4.6 + w / 2, "the 40 isolates", ha="right", va="center", fontsize=12)
+for y0, order, label in [(2.5, plain_order_rare, "plain shuffle"), (0.4, strat_order_rare, "stratified shuffle")]:
+    draw_row_rare(y0, order)
+    ax.text(-0.3, y0 + w / 2, label, ha="right", va="center", fontsize=12)
+    for j in range(5):
+        x0, x1 = 8 * j, 8 * j + 8
+        n_res = int(y_rare[order[x0:x1]].sum())
+        ax.plot([x0 + 0.05, x0 + 0.05, x1 - 0.15, x1 - 0.15],
+                [y0 - 0.15, y0 - 0.35, y0 - 0.35, y0 - 0.15], color=dark, lw=1.5)
+        ax.text((x0 + x1) / 2 - 0.05, y0 - 0.45, f"fold {j}: {n_res} resistant", ha="center",
+                va="top", fontsize=10, color=dark)
+for x0, fill, ink, label in [(0, light, dark, "resistant"), (7, dark, "white", "susceptible")]:
+    ax.add_patch(matplotlib.patches.Rectangle((x0, 6.1), w, w, color=fill))
+    ax.text(x0 + w + 0.3, 6.1 + w / 2, label, ha="left", va="center", fontsize=12, color=dark)
+ax.set_xlim(-6.5, 40.2)
+ax.set_ylim(-0.6, 7.2)
+ax.axis("off")
+plt.tight_layout()
+plt.show()
+```
+
+- 3 resistant isolates, 5 folds: `{python} empty_rare["strat"]` folds get none, however we shuffle
+- Fewer of a class than $k$: choose a smaller $k$ (`StratifiedKFold` warns when this happens)
 
 ## The same steps in Python {.smaller}
 
