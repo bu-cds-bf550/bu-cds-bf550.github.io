@@ -10,7 +10,8 @@
 # instructor to revise. 26 Oct 2026, at the instructor's request: an illustration of one
 # shuffle and one split (shuffle 1, drawn from the setup chunk) opens the section, and the five
 # shuffles are shown as two panels of test accuracies, 5 genes beside 500, around next month's
-# accuracy, so the spread reads as sampling error before cross-validation is introduced.
+# accuracy, so the spread reads as sampling error before cross-validation is introduced. A bridge
+# slide, "Which split should we pick?", carries the room from the spread to the folds.
 #
 # Every number on the slides is printed from the setup chunk.
 title: "Cross-Validation"
@@ -183,6 +184,21 @@ plt.show()
 
 - With 5 genes, the test accuracy ranges from `{python} f2(min(test5))` to `{python} f2(max(test5))`, depending only on the shuffle
 - Each test set of 10 is a small sample: one isolate moves the accuracy by 0.10, and the five scatter around next month's `{python} f2(next_acc[col(5)])`
+
+## Which split should we pick?
+
+- Five shuffles, five test accuracies, same 40 isolates, same 5 genes: `{python} f2(min(test5))` to `{python} f2(max(test5))`
+- No one of them is the right answer: each is one random draw of 10 test isolates
+
+. . .
+
+- Keeping the highest reports the luckiest test set
+- Keeping any one throws away the other four
+
+. . .
+
+- Better: average several test accuracies, so the chance in each partly cancels
+- Best: every isolate is a test isolate exactly once
 
 # Cross-validation
 
