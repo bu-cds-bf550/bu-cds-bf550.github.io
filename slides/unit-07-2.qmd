@@ -11,7 +11,11 @@
 # shuffle and one split (shuffle 1, drawn from the setup chunk) opens the section, and the five
 # shuffles are shown as two panels of test accuracies, 5 genes beside 500, around next month's
 # accuracy, so the spread reads as sampling error before cross-validation is introduced. A bridge
-# slide, "Which split should we pick?", carries the room from the spread to the folds.
+# slide, "Which split should we pick?", carries the room from the spread to the folds. Later
+# the same day: "Choosing k" gains the test-fold side of the trade-off, and a stratification
+# slide follows it, motivated by the deck's own plain deal (4, 5, 5, 3, 3 resistant per fold).
+# The fold object stays a plain KFold: with StratifiedKFold at seed 0 the CV peak moves to 3
+# genes and the story breaks, and session 3 shares the fold object.
 #
 # Every number on the slides is printed from the setup chunk.
 title: "Cross-Validation"
@@ -26,7 +30,7 @@ import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
 from sklearn.naive_bayes import BernoulliNB
-from sklearn.model_selection import KFold, cross_val_score, train_test_split
+from sklearn.model_selection import KFold, StratifiedKFold, cross_val_score, train_test_split
 plt.rcParams.update({"font.size": 14})
 
 n_genes = 500
@@ -78,6 +82,11 @@ for j, (train_rows, test_rows) in enumerate(folds.split(X)):
                       "acc": m.score(X[test_rows][:, :5], y[test_rows])})
 fold_acc = np.array([r["acc"] for r in fold_rows])
 cv5 = fold_acc.mean()
+fold_res = ", ".join(str(r["res"]) for r in fold_rows)
+# The same deal by class: resistant isolates per fold when each class is dealt separately.
+strat_res = sorted({int(y[test_rows].sum())
+                    for _, test_rows in StratifiedKFold(5, shuffle=True, random_state=0).split(X, y)})
+assert strat_res == [4]
 assert np.isclose(cv5, cross_val_score(BernoulliNB(), X[:, :5], y, cv=folds).mean())
 
 # The dial: training accuracy, 5-fold CV and next month's isolates at each gene count.
@@ -299,8 +308,16 @@ print(rf"$$\text{{5 genes}}: \quad \frac{{1}}{{5}} \left( {terms} \right) = {f2(
 - $k = 5$ and $k = 10$ are the usual choices
 - Larger $k$:
     - more isolates in each training set, closer to training on all of them
+    - fewer in each test fold: at $k = 10$, 4 isolates, so a fold's accuracy moves in steps of 0.25
     - more passes, so more training runs
 - $k$ = number of instances is **leave-one-out** cross-validation
+
+## Dealing the folds by class
+
+- A plain deal ignores the labels: our folds held `{python} fold_res` resistant isolates out of 8
+- **Stratified** folds deal each class separately: 20 resistant into 5 folds → `{python} strat_res[0]` per fold, and the same for susceptible
+- Matters most when one class is rare: a plain deal can leave a fold with none
+- The usual default: stratified folds, $k = 5$ or $10$
 
 ## The same steps in Python {.smaller}
 
@@ -311,6 +328,7 @@ from sklearn.naive_bayes import BernoulliNB
 
 # X: 40 isolates x 500 genes (True = present); y: True = resistant
 folds = KFold(n_splits=5, shuffle=True, random_state=0)            # shuffle, then deal into 5 folds
+# StratifiedKFold(n_splits=5, shuffle=True, random_state=0) takes the same arguments and deals by class
 scores = cross_val_score(BernoulliNB(), X[:, :5], y, cv=folds)     # train and score once per fold
 
 print("test accuracy per fold:", scores.round(2))
