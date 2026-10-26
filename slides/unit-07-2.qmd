@@ -18,7 +18,11 @@
 # genes and the story breaks, and session 3 shares the fold object. The stratification slide
 # opens with an illustration in the style of the shuffle-and-split picture: the 40 isolates
 # shaded by class (light resistant, dark susceptible), the plain deal's five folds, and the
-# stratified deal's five folds, with the resistant count under each fold.
+# stratified deal's five folds, with the resistant count under each fold. Later still: the
+# stratification terminology gets its own slides directly after "Choosing k": a discussion
+# slide asks how a random deal might fail, its (cont.) gives the answer (a fold with a single
+# class, and the mix varying fold to fold), then "New terminology: stratification" defines the
+# term, and the illustration follows.
 #
 # Every number on the slides is printed from the setup chunk.
 title: "Cross-Validation"
@@ -95,6 +99,20 @@ assert strat_res == [4]
 # KFold's shuffled order cut into five blocks of 8; the stratified deal lists each fold's
 # resistant isolates first.
 plain_order = np.concatenate([test_rows for _, test_rows in folds.split(X)])
+
+# How often a plain deal of these 40 isolates leaves some fold with a single class, at k = 5
+# and k = 10, over 2000 shuffles.
+_rng = np.random.default_rng(0)
+def single_class_rate(k, n_shuffles=2000):
+    hits = 0
+    for _ in range(n_shuffles):
+        order = _rng.permutation(40)
+        hits += any(y[f].all() or not y[f].any() for f in np.array_split(order, k))
+    return hits / n_shuffles
+one_class = {k: single_class_rate(k) for k in (5, 10)}
+
+def pct(x):
+    return f"{100 * x:.0f}%"
 strat_order = np.concatenate([np.concatenate([t[y[t]], t[~y[t]]]) for t in strat_folds])
 assert np.isclose(cv5, cross_val_score(BernoulliNB(), X[:, :5], y, cv=folds).mean())
 
@@ -321,6 +339,31 @@ print(rf"$$\text{{5 genes}}: \quad \frac{{1}}{{5}} \left( {terms} \right) = {f2(
     - more passes, so more training runs
 - $k$ = number of instances is **leave-one-out** cross-validation
 
+## How might a random deal fail?
+
+Discuss with a neighbor:
+
+- How might randomly shuffling and dividing the isolates into folds fail?
+- Hint: what does the classifier need the training set to have? What does accuracy need the test fold to have?
+
+## How might a random deal fail? (cont.)
+
+- Training needs both classes: with none of a class, there is no prior and no tables for it
+- Accuracy needs both classes in the test fold: a fold of only susceptible isolates can't show a missed resistant one
+- A plain deal can do this: some fold has a single class in `{python} pct(one_class[10])` of 10-fold deals of our 40 isolates, `{python} pct(one_class[5])` of 5-fold deals
+
+. . .
+
+- Even with both classes in every fold, the mix varies: ours held `{python} fold_res` resistant out of 8
+
+## New terminology: stratification
+
+- **Stratification**: shuffle and deal each class separately, so every fold has the same class mix as the whole data set
+    - 20 resistant into 5 folds → `{python} strat_res[0]` per fold; 20 susceptible → `{python} strat_res[0]` per fold
+- Every training set and every test fold then has both classes, in the same proportion
+- Matters most when one class is rare: a plain deal can leave a fold with none
+- The usual default: **stratified** $k$-fold cross-validation, $k = 5$ or $10$
+
 ## Dealing the folds by class
 
 ```{python}
@@ -360,13 +403,7 @@ plt.tight_layout()
 plt.show()
 ```
 
-- A plain deal ignores the labels; a **stratified** deal shuffles and deals each class separately
-
-## Dealing the folds by class (cont.)
-
-- Our plain deal held `{python} fold_res` resistant isolates out of 8 per fold; the stratified deal holds `{python} strat_res[0]` in every fold
-- Stratifying matters most when one class is rare: a plain deal can leave a fold with none
-- The usual default: stratified folds, $k = 5$ or $10$
+- The plain deal ignores the labels and held `{python} fold_res` resistant per fold; the stratified deal holds `{python} strat_res[0]` in every fold
 
 ## The same steps in Python {.smaller}
 
