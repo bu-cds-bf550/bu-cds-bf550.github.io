@@ -23,7 +23,7 @@ import matplotlib.pyplot as plt
 from sklearn.naive_bayes import BernoulliNB
 from sklearn.feature_selection import SelectKBest
 from sklearn.pipeline import make_pipeline
-from sklearn.model_selection import KFold, cross_val_score, permutation_test_score, train_test_split
+from sklearn.model_selection import StratifiedKFold, cross_val_score, permutation_test_score, train_test_split
 plt.rcParams.update({"font.size": 14})
 
 n_genes = 500
@@ -45,7 +45,7 @@ def draw_isolates(n, rng, balanced=True):
 
 X, y = draw_isolates(40, np.random.default_rng(7128))
 X_next, y_next = draw_isolates(200, np.random.default_rng(7001), balanced=False)
-folds = KFold(n_splits=5, shuffle=True, random_state=0)
+folds = StratifiedKFold(n_splits=5, shuffle=True, random_state=7)   # as in session 2
 
 def f2(x):
     return f"{x:.2f}"
