@@ -559,7 +559,7 @@ Discuss with a neighbor:
 - **Parameters**: numbers estimated by training
     - the prior and the tables
 - **Hyperparameter**: a setting chosen before training, which training can't estimate
-    - the number of genes naive Bayes uses
+    - how many genes to give naive Bayes: a setting of the step before the classifier
     - $k$, the number of folds, is a setting of the evaluation, not of the classifier
 - Hyperparameters are chosen by cross-validation, never by training accuracy
 
