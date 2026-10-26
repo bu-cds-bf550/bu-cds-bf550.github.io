@@ -15,7 +15,10 @@
 # the same day: "Choosing k" gains the test-fold side of the trade-off, and a stratification
 # slide follows it, motivated by the deck's own plain deal (4, 5, 5, 3, 3 resistant per fold).
 # The fold object stays a plain KFold: with StratifiedKFold at seed 0 the CV peak moves to 3
-# genes and the story breaks, and session 3 shares the fold object.
+# genes and the story breaks, and session 3 shares the fold object. The stratification slide
+# opens with an illustration in the style of the shuffle-and-split picture: the 40 isolates
+# shaded by class (light resistant, dark susceptible), the plain deal's five folds, and the
+# stratified deal's five folds, with the resistant count under each fold.
 #
 # Every number on the slides is printed from the setup chunk.
 title: "Cross-Validation"
@@ -84,9 +87,15 @@ fold_acc = np.array([r["acc"] for r in fold_rows])
 cv5 = fold_acc.mean()
 fold_res = ", ".join(str(r["res"]) for r in fold_rows)
 # The same deal by class: resistant isolates per fold when each class is dealt separately.
-strat_res = sorted({int(y[test_rows].sum())
-                    for _, test_rows in StratifiedKFold(5, shuffle=True, random_state=0).split(X, y)})
+strat_folds = [test_rows for _, test_rows in
+               StratifiedKFold(5, shuffle=True, random_state=0).split(X, y)]
+strat_res = sorted({int(y[test_rows].sum()) for test_rows in strat_folds})
 assert strat_res == [4]
+# The two deals as rows of isolates grouped by fold, for the illustration: the plain deal is
+# KFold's shuffled order cut into five blocks of 8; the stratified deal lists each fold's
+# resistant isolates first.
+plain_order = np.concatenate([test_rows for _, test_rows in folds.split(X)])
+strat_order = np.concatenate([np.concatenate([t[y[t]], t[~y[t]]]) for t in strat_folds])
 assert np.isclose(cv5, cross_val_score(BernoulliNB(), X[:, :5], y, cv=folds).mean())
 
 # The dial: training accuracy, 5-fold CV and next month's isolates at each gene count.
@@ -314,9 +323,49 @@ print(rf"$$\text{{5 genes}}: \quad \frac{{1}}{{5}} \left( {terms} \right) = {f2(
 
 ## Dealing the folds by class
 
-- A plain deal ignores the labels: our folds held `{python} fold_res` resistant isolates out of 8
-- **Stratified** folds deal each class separately: 20 resistant into 5 folds → `{python} strat_res[0]` per fold, and the same for susceptible
-- Matters most when one class is rare: a plain deal can leave a fold with none
+```{python}
+#| echo: false
+# The 40 isolates shaded by class, then the plain deal (KFold, seed 0) and the stratified deal
+# (StratifiedKFold, seed 0), each grouped into its five folds with the resistant count below.
+fig, ax = plt.subplots(figsize=(10, 5))
+light, dark = "#d9d8d2", "#52514e"
+w = 0.9
+
+def draw_row(y0, ids):
+    for pos, i in enumerate(ids):
+        res = bool(y[i])
+        ax.add_patch(matplotlib.patches.Rectangle((pos, y0), w, w, color=light if res else dark))
+        ax.text(pos + w / 2, y0 + w / 2, str(i + 1), ha="center", va="center",
+                color=dark if res else "white", fontsize=9)
+
+draw_row(4.6, np.arange(40))
+ax.text(-0.3, 4.6 + w / 2, "the 40 isolates", ha="right", va="center", fontsize=12)
+for y0, order, label in [(2.5, plain_order, "plain deal"), (0.4, strat_order, "stratified deal")]:
+    draw_row(y0, order)
+    ax.text(-0.3, y0 + w / 2, label, ha="right", va="center", fontsize=12)
+    for j in range(5):
+        x0, x1 = 8 * j, 8 * j + 8
+        n_res = int(y[order[x0:x1]].sum())
+        ax.plot([x0 + 0.05, x0 + 0.05, x1 - 0.15, x1 - 0.15],
+                [y0 - 0.15, y0 - 0.35, y0 - 0.35, y0 - 0.15], color=dark, lw=1.5)
+        ax.text((x0 + x1) / 2 - 0.05, y0 - 0.45, f"fold {j}: {n_res} resistant", ha="center",
+                va="top", fontsize=10, color=dark)
+for x0, fill, ink, label in [(0, light, dark, "resistant"), (7, dark, "white", "susceptible")]:
+    ax.add_patch(matplotlib.patches.Rectangle((x0, 6.1), w, w, color=fill))
+    ax.text(x0 + w + 0.3, 6.1 + w / 2, label, ha="left", va="center", fontsize=12, color=dark)
+ax.set_xlim(-6.5, 40.2)
+ax.set_ylim(-0.6, 7.2)
+ax.axis("off")
+plt.tight_layout()
+plt.show()
+```
+
+- A plain deal ignores the labels; a **stratified** deal shuffles and deals each class separately
+
+## Dealing the folds by class (cont.)
+
+- Our plain deal held `{python} fold_res` resistant isolates out of 8 per fold; the stratified deal holds `{python} strat_res[0]` in every fold
+- Stratifying matters most when one class is rare: a plain deal can leave a fold with none
 - The usual default: stratified folds, $k = 5$ or $10$
 
 ## The same steps in Python {.smaller}
