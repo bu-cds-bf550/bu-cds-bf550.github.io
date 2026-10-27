@@ -12,7 +12,10 @@
 # 27 Oct 2026, at the instructor's request: a (cont.) slide after "Choosing genes inside each
 # fold" redraws that workflow with the gap box outside and inside the fold loop; the batches slide and the "Reusing the test set"
 # section (twenty classifiers scored on one test set) are cut, and the closing slide becomes a
-# two-slide summary of the whole unit.
+# two-slide summary of the whole unit. Later on 27 Oct: feature selection gets its own
+# terminology slide, the gap is written in session 1's P(present | class) notation, and two
+# "Our classifier is a pipeline" slides (the pipeline alone, then inside the fold loop) come
+# before the Python slide; X_unrel is renamed X_unrelated.
 #
 # Every number on the slides is printed from the setup chunk.
 title: "Leakage and Permutation Tests"
@@ -83,24 +86,24 @@ hand_gap = gap_score(hand_X, hand_y)
 assert list(hand_gap) == [0.5, 0.0, 0.75, 0.25]
 
 # The leak, on genes 6-500 only: choose the 5 largest gaps from all 40 isolates, then CV.
-X_unrel = X[:, 5:]
+X_unrelated = X[:, 5:]
 
 def leaky_pipeline(X, y):
     chosen = np.argsort(gap_score(X, y))[-5:]
     return cross_val_score(BernoulliNB(), X[:, chosen], y, cv=folds).mean()
 
-chosen = np.argsort(gap_score(X_unrel, y))[-5:]
-chosen_gaps = gap_score(X_unrel, y)[chosen]
-before = cross_val_score(BernoulliNB(), X_unrel[:, chosen], y, cv=folds)
+chosen = np.argsort(gap_score(X_unrelated, y))[-5:]
+chosen_gaps = gap_score(X_unrelated, y)[chosen]
+before = cross_val_score(BernoulliNB(), X_unrelated[:, chosen], y, cv=folds)
 pipeline = make_pipeline(SelectKBest(gap_score, k=5), BernoulliNB())
-inside = cross_val_score(pipeline, X_unrel, y, cv=folds)
+inside = cross_val_score(pipeline, X_unrelated, y, cv=folds)
 assert before.mean() >= 0.75 and inside.mean() <= 0.6
 
 # Permutation tests: the leaky pipeline, and naive Bayes on genes 1-5.
 n_shuffles = 199
 perm_rng = np.random.default_rng(73)
-leaky_obs = leaky_pipeline(X_unrel, y)
-leaky_null = np.array([leaky_pipeline(X_unrel, perm_rng.permutation(y)) for _ in range(n_shuffles)])
+leaky_obs = leaky_pipeline(X_unrelated, y)
+leaky_null = np.array([leaky_pipeline(X_unrelated, perm_rng.permutation(y)) for _ in range(n_shuffles)])
 leaky_reach = int((leaky_null >= leaky_obs).sum())
 leaky_p = (leaky_reach + 1) / (n_shuffles + 1)
 real_obs, real_null, real_p = permutation_test_score(
@@ -187,10 +190,15 @@ Today: how a reported score can look good when nothing is there, and how to chec
 
 - Last time, the genes came in a fixed order, genes 1 to 5 first
 - In practice, nobody knows which genes matter. A common step is to keep the genes that differ most between the classes
-- This is **feature selection**
-- One simple measure, for each gene, is the **gap**:
+- One simple measure, for each gene, is the **gap** between its two naive Bayes table entries:
 
-$$\text{gap} = \left| \text{share of resistant isolates with the gene} - \text{share of susceptible isolates with the gene} \right|$$
+$$\text{gap} = \left| P(\text{present} \mid \text{resistant}) - P(\text{present} \mid \text{susceptible}) \right|$$
+
+## New terminology: feature selection
+
+- **Feature selection**: choosing the feature space from the data, by keeping only some of the features
+    - here: rank the genes by their gap, keep the top few
+- The gap compares the two classes, so feature selection uses the labels
 
 ## Choosing genes: an example
 
@@ -238,22 +246,16 @@ To see the problem clearly, use only **genes 6 to 500**: none is related to resi
 
 . . .
 
-No gene is related to resistance. Where did `{python} f2(before.mean())` come from?
+No gene is related to resistance. Why do we get a CV accuracy of `{python} f2(before.mean())`?
 
-## Where did the accuracy come from?
-
-Discuss with a neighbor:
-
-- Which isolates' labels did step 1 use?
-- When fold 0 is the test set, did its isolates help choose the genes?
-
-## Where did the accuracy come from? (cont.)
+## High CV accuracy with no true signal
 
 - Step 1 used every isolate's label, including the isolates in each test fold
 - Among 495 unrelated genes, some differ between the classes by chance
     - the 5 chosen genes have gaps from `{python} f2(chosen_gaps.min())` to `{python} f2(chosen_gaps.max())`
 - Those genes were chosen *because* they fit the test isolates' labels
 - The test isolates were no longer new to the classifier
+- Information from the test isolates "leaked" into the training procedure
 
 ## New terminology: data leakage
 
@@ -261,7 +263,7 @@ Discuss with a neighbor:
 - A score with leakage is too optimistic, because the test isolates were not really held out
 - Here the leak was **feature selection** done before the split
 
-## Choosing genes inside each fold
+## Choosing genes inside each fold {.smaller}
 
 For each fold:
 
@@ -311,8 +313,8 @@ def flow(y0, title, inside, acc):
     arrow(6.3, mid, 6.6, mid)
     arrow(8.9, mid, 9.3, mid)
 
-flow(3.1, "Choose before the split", False, before.mean())
-flow(0.3, "Choose inside each fold", True, inside.mean())
+flow(3.1, "Choose before the split → test set leaks into training → overestimated CV accuracy", False, before.mean())
+flow(0.3, "Choose inside each fold → no test set leak → expected CV accuracy", True, inside.mean())
 ax.set_xlim(-0.1, 11.1)
 ax.set_ylim(-0.2, 5.6)
 ax.set_aspect("equal")
@@ -320,6 +322,73 @@ ax.axis("off")
 plt.tight_layout()
 plt.show()
 ```
+
+## Our classifier is a pipeline
+
+- A **pipeline** is the chain of steps that turns training isolates into a classifier
+- Ours has two steps, and both learn from the labels
+- Cross-validation and the permutation test rerun the whole pipeline on every pass
+
+```{python}
+#| echo: false
+# The pipeline as one unit: feature selection then naive Bayes training, inside a frame, between
+# the training isolates and the classifier it produces. Reuses the recap chunk's box, loop and
+# arrow helpers, which draw on the global ax.
+fig, ax = plt.subplots(figsize=(13, 3.1))
+mid = 1.2
+box(0.0, mid - 0.6, 1.8, 1.2, "training\nisolates:\ngenes + labels")
+loop(2.3, 0.0, 6.0, 2.75, "pipeline", "", "#52514e", "-")
+box(2.6, mid - 0.6, 2.4, 1.2, "1. feature selection:\nrank genes by gap,\nkeep 5", ec="#eb6834")
+box(5.6, mid - 0.6, 2.4, 1.2, "2. train naive Bayes:\nprior and tables")
+for x in (2.6, 5.6):
+    ax.text(x + 1.2, 0.3, "learns from the labels", ha="center", va="center", fontsize=11,
+            color="#52514e", style="italic")
+box(8.8, mid - 0.6, 1.8, 1.2, "classifier:\n5 genes,\nprior, tables", bold=True)
+box(11.1, mid - 0.6, 1.9, 1.2, "predicted label\nfor a new\nisolate")
+arrow(1.8, mid, 2.6, mid)
+arrow(5.0, mid, 5.6, mid)
+arrow(8.0, mid, 8.8, mid)
+arrow(10.6, mid, 11.1, mid)
+ax.set_xlim(-0.1, 13.1)
+ax.set_ylim(-0.1, 2.85)
+ax.set_aspect("equal")
+ax.axis("off")
+plt.tight_layout()
+plt.show()
+```
+
+## Our classifier is a pipeline (cont.)
+
+```{python}
+#| echo: false
+# Where the pipeline sits in cross-validation: the whole pipeline frame inside the fold loop,
+# trained on each pass's 4 training folds, its classifier scoring the held-out fold. Reuses the
+# recap chunk's box, loop and arrow helpers, which draw on the global ax.
+fig, ax = plt.subplots(figsize=(13, 3.6))
+mid = 1.3
+box(0.0, mid - 0.5, 1.3, 1.0, "40\nisolates")
+loop(1.7, 0.0, 9.15, 3.0, "for each of 5 folds", "× 5", "#2a78d6", "--")
+loop(2.0, 0.3, 4.95, 2.15, "pipeline, on the 4 training folds", "", "#52514e", "-")
+box(2.25, mid - 0.55, 2.3, 1.1, "1. feature selection:\nrank genes by gap,\nkeep 5", ec="#eb6834")
+box(4.85, mid - 0.55, 1.8, 1.1, "2. train\nnaive Bayes")
+box(7.3, mid - 0.55, 1.3, 1.1, "classifier", bold=True)
+box(8.95, mid - 0.55, 1.6, 1.1, "score the\nheld-out fold")
+box(11.25, mid - 0.55, 1.7, 1.1, f"CV accuracy:\n{inside.mean():.2f}", bold=True)
+arrow(1.3, mid, 2.25, mid)
+arrow(4.55, mid, 4.85, mid)
+arrow(6.65, mid, 7.3, mid)
+arrow(8.6, mid, 8.95, mid)
+arrow(10.55, mid, 11.25, mid)
+ax.set_xlim(-0.1, 13.05)
+ax.set_ylim(-0.1, 3.1)
+ax.set_aspect("equal")
+ax.axis("off")
+plt.tight_layout()
+plt.show()
+```
+
+- Each pass reruns the whole pipeline on that pass's training folds
+- The held-out fold is used only for scoring
 
 ## The same steps in Python {.smaller}
 
@@ -337,8 +406,8 @@ def gap_score(X, y):
 
 pipeline = make_pipeline(SelectKBest(gap_score, k=5),   # step 1: keep the 5 largest gaps
                          BernoulliNB())                 # step 2: naive Bayes on those genes
-X_unrel = X[:, 5:]                                      # genes 6 to 500
-scores = cross_val_score(pipeline, X_unrel, y, cv=folds)
+X_unrelated = X[:, 5:]                                  # genes 6 to 500
+scores = cross_val_score(pipeline, X_unrelated, y, cv=folds)
 print("CV accuracy, genes chosen inside each fold:", scores.mean().round(2))
 ```
 
