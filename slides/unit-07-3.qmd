@@ -296,6 +296,7 @@ def gap_score(X, y):
 
 pipeline = make_pipeline(SelectKBest(gap_score, k=5),   # step 1: keep the 5 largest gaps
                          BernoulliNB())                 # step 2: naive Bayes on those genes
+X_unrel = X[:, 5:]                                      # genes 6 to 500
 scores = cross_val_score(pipeline, X_unrel, y, cv=folds)
 print("CV accuracy, genes chosen inside each fold:", scores.mean().round(2))
 ```
@@ -317,7 +318,7 @@ print("CV accuracy, genes chosen inside each fold:", scores.mean().round(2))
 ## The null hypothesis: labels are exchangeable
 
 - Null hypothesis: the genes are unrelated to resistance
-- Then the labels carry no information about which isolate got which label
+- Then the genes carry no information about which isolate got which label
     - any assignment of the same labels to the isolates is equally likely
     - the labels are **exchangeable**
 - So shuffling the labels gives a dataset made under the null
