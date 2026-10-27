@@ -2,13 +2,16 @@
 # Unit 7, session 3 (Wed Oct 28): is the number real? Data leakage through choosing genes from
 # all the isolates (minimal feature selection: rank genes by the gap, keep the top 5), the
 # permutation test as unit 2's null chain with shuffled labels (it catches the leak), the
-# smallest p-value a number of shuffles can report, batches, and reusing the test set. Same
+# smallest p-value a number of shuffles can report, and a two-slide summary of the unit. Same
 # 40 isolates and 500 genes as sessions 1 and 2; the leak is shown on genes 6-500, none related
 # to resistance. Lab part 3 builds rng.permutation, the null list, the p-value floor and the
 # leaking line. Redrafted by the assistant on 19 Oct 2026 after the instructor's review: leakage
 # moved here from session 2, on the unit's one data set. For the instructor to revise. 26 Oct
 # 2026, at the instructor's request: the recap repeats session 2's workflow diagram (the CV
 # loop inside the loop over gene counts) on its own slide, which now carries the "Today" line.
+# 27 Oct 2026, at the instructor's request: the batches slide and the "Reusing the test set"
+# section (twenty classifiers scored on one test set) are cut, and the closing slide becomes a
+# two-slide summary of the whole unit.
 #
 # Every number on the slides is printed from the setup chunk.
 title: "Leakage and Permutation Tests"
@@ -25,7 +28,7 @@ import matplotlib.pyplot as plt
 from sklearn.naive_bayes import BernoulliNB
 from sklearn.feature_selection import SelectKBest
 from sklearn.pipeline import make_pipeline
-from sklearn.model_selection import StratifiedKFold, cross_val_score, permutation_test_score, train_test_split
+from sklearn.model_selection import StratifiedKFold, cross_val_score, permutation_test_score
 plt.rcParams.update({"font.size": 14})
 
 n_genes = 500
@@ -110,20 +113,6 @@ hand6_shuffled = np.random.default_rng(5).permutation(hand6)
 
 def lab(r):
     return "`resistant`{.pos}" if r else "`susceptible`{.neg}"
-
-# Reusing one test set: 30 isolates train, 10 test (split 0). Twenty classifiers, each on a
-# random choice of 5 unrelated genes, all scored on the same 10 test isolates; next month's 200
-# isolates show what the best one really does.
-X_tr, X_te, y_tr, y_te = train_test_split(X, y, test_size=10, random_state=0)
-pick_rng = np.random.default_rng(900)
-tries = []
-for _ in range(20):
-    genes = 5 + pick_rng.choice(n_genes - 5, 5, replace=False)
-    m = BernoulliNB().fit(X_tr[:, genes], y_tr)
-    tries.append((m.score(X_te[:, genes], y_te), m.score(X_next[:, genes], y_next)))
-tries = np.array(tries)
-best = int(tries[:, 0].argmax())
-assert tries[best, 0] >= 0.7 and tries[best, 1] < 0.6
 ```
 
 # Where we left off
@@ -446,67 +435,20 @@ print("p-value:", p.round(3))
 
 - `permutation_test_score` shuffles only `y` and re-runs the CV, so every step to be repeated must be inside the classifier, as a pipeline
 
-## Batches break exchangeability
+## Unit 7 summary
 
-- A **batch** is a group of samples handled together, such as one sequencing run
-- Suppose isolates come from two hospitals, sequenced in two separate runs, and one hospital has more resistant isolates
-- Then genes differ by hospital, and the hospital relates to resistance
-    - a classifier can score well by recognizing the hospital, not resistance
-- Repair: shuffle labels **within** each hospital, so every null dataset keeps that link
+- **Training** estimates the prior and the tables from one set of isolates, sampling error included
+- **Overfitting**: with many unrelated genes, training accuracy reaches 1.00 while new isolates fall toward a coin flip
+- A **test set** is held out before training and scored once
+- **$k$-fold cross-validation**: every isolate is held out once, and the $k$ test accuracies are averaged
+    - **stratified** folds keep the class mix in every fold
 
-# Reusing the test set
+## Unit 7 summary (cont.)
 
-## Trying many classifiers on one test set
-
-Hold out 10 of the 40 isolates. Train 20 classifiers, each on 5 genes picked at random from genes 6 to 500, and score every one on the same 10 test isolates:
-
-```{python}
-#| echo: false
-fig, ax = plt.subplots(figsize=(9, 2.6))
-xs = np.arange(1, 21)
-ax.axhline(0.5, color="#c3c2b7", lw=1.2, ls="--")
-ax.scatter(xs, tries[:, 0], s=45, color="#8a8984")
-ax.scatter([best + 1], [tries[best, 0]], s=80, color="#eb6834", zorder=3)
-ax.set_xticks(xs)
-ax.set_xlabel("classifier")
-ax.set_ylabel("test accuracy")
-ax.set_ylim(0, 1)
-ax.spines[["top", "right"]].set_visible(False)
-plt.tight_layout()
-plt.show()
-```
-
-## Trying many classifiers on one test set (cont.)
-
-| | Accuracy |
-|---|:-:|
-| best of the 20, on the 10 test isolates | `{python} f2(tries[best, 0])` |
-| the same classifier, on next month's 200 isolates | `{python} f2(tries[best, 1])` |
-
-. . .
-
-- The best test score is the largest of 20 scores that vary by chance
-- As in unit 2's multiple testing: test enough things and one looks surprising
-- Choosing by the test set made the test set part of training
-
-## Use the test set once
-
-- Make every choice with the training set only
-    - which genes, how many, which classifier
-    - compare choices with cross-validation **inside** the training set
-- Then score the one final classifier on the test set, once
-
-. . .
-
-- Changing anything after seeing the test score uses the test set up
-
-## Unit 7 so far
-
-- **Training** estimates the tables from one set of isolates; **training accuracy** can't detect **overfitting**
-- A **test set** or **$k$-fold cross-validation** measures accuracy on isolates the classifier was not trained on, and chooses **hyperparameters**
-- Every step that learns from labels goes inside the folds; otherwise there is **data leakage**
-- A **permutation test** shows what the whole pipeline scores on shuffled labels
-- A test set used to choose among classifiers no longer measures them
+- **Hyperparameters**, such as how many genes, are chosen by cross-validation, never by training accuracy
+- **Feature selection** learns from the labels, so it goes inside the folds, like every such step
+- **Data leakage**: test-set information reaches training, and the score is too optimistic
+- A **permutation test** reruns the whole pipeline on shuffled labels; the smallest p-value is $1 / (N + 1)$
 
 ## Next time
 
