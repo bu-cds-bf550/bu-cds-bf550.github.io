@@ -10,7 +10,8 @@
 # _data/tutorials.yml, not _data/slides.yml (moved here from the instructor repository on
 # 28 Oct 2026, when the site grew its Tutorials section). 28 Oct 2026: the instructor's
 # headings for the opening section, the objects section and the model section; the X and y
-# conventions slide filled in from the instructor's TODO.
+# conventions slide filled in from the instructor's TODO, and a slide on where the models and
+# their settings are documented, before the closing slide.
 title: "A Model Is an Object"
 subtitle: "BF550 · scikit-learn tutorial — Wed Oct 28"
 ---
@@ -227,6 +228,18 @@ make_pipeline(SelectKBest(gap_score, k=5), BernoulliNB())
 ```
 
 An object with `fit` and `score` of its own, so it goes wherever a model goes.
+
+## Where the models and their settings are documented
+
+- **API reference**, [scikit-learn.org/stable/api](https://scikit-learn.org/stable/api/index.html): every model, grouped by module. `sklearn.naive_bayes` lists `BernoulliNB` beside its siblings; `sklearn.tree` holds next unit's `DecisionTreeClassifier`
+- A model's page has three lists. **Parameters**: the keyword arguments to `BernoulliNB(...)`. **Attributes**: the `_` names `.fit` stores. **Methods**: `.fit`, `.predict`, `.score` and the rest
+- **User guide**, [scikit-learn.org/stable/user_guide](https://scikit-learn.org/stable/user_guide.html): the method behind each model, with the math. Section 1.9 is naive Bayes
+- The page's text is the class's docstring, so `BernoulliNB?` in Jupyter shows it without leaving the notebook
+
+```{python}
+#| echo: true
+print(BernoulliNB.__doc__.splitlines()[0])
+```
 
 ## Now the notebook
 
