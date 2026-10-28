@@ -24,10 +24,13 @@ listed in `_data/tutorials.yml`; everything below applies to them too.
    spells it), `title`, `file`. That entry makes the unit page show *view · PDF · PowerPoint*
    links against the right meeting and adds the row on `/slides/`.
 3. Push. CI renders the deck, exports the PDF and the PowerPoint, gates the site, and deploys.
-   The PDF and PowerPoint of a deck whose source, images, theme, and tooling have not changed
-   are reused from a cache (`.deck-export-cache/`, persisted between CI runs), so a push that
-   touches one deck, or an image only that deck shows, re-exports one deck. A deck's images
-   are the `img/` paths written in its source. `make clean` empties the cache locally.
+   Only the decks that changed cost anything: Quarto re-runs a deck's Python only when its
+   source differs from the frozen results in `_freeze/` (`freeze: auto`), and the PDF and
+   PowerPoint of a deck whose source, images, theme, and tooling have not changed are reused
+   from a cache (`.deck-export-cache/`). Both directories are persisted between CI runs, so a
+   push that touches one deck, or an image only that deck shows, executes and re-exports one
+   deck. A deck's images are the `img/` paths written in its source. `make clean` empties
+   both caches locally.
 
 Conventions the decks follow, the first three inherited from the textbook (see its `CONVENTIONS.md`):
 

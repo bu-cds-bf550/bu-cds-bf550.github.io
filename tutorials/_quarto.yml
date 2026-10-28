@@ -31,6 +31,7 @@ format:
 keep-notes: false
 
 execute:
-  freeze: auto                    # re-execute a deck only when its source changes
+  freeze: auto                    # re-execute a deck only when its source changes; the results
+                                  # live in _freeze/, kept between CI runs by actions/cache
   echo: false                     # code is hidden unless a chunk says `#| echo: true`
   warning: false

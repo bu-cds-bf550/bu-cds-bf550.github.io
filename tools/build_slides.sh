@@ -11,6 +11,14 @@
 # points at slides/theme and slides/strip-notes.lua), rendered one after the other; a deck's
 # file name must be unique across both, because the export cache below keys on it.
 #
+# Two caches make a build cost what changed rather than what exists. Quarto's own freeze
+# (`freeze: auto` in each project's _quarto.yml) keeps every deck's executed Python under
+# <project>/_freeze/ and re-runs a deck only when its source differs from the frozen copy;
+# CI persists those directories between runs (actions/cache in .github/workflows/jekyll.yml)
+# and locally they simply stay on disk. Pandoc still renders every deck, at well under a second
+# each. The export cache further down does the same for the PDF and .pptx, which decktape
+# would otherwise re-print at about three seconds a slide.
+#
 # The .pptx is not a Pandoc export: it is the PDF's slides as pictures, one per slide, made from
 # the screenshots decktape takes on the same pass that prints the PDF and assembled by
 # tools/pptx_from_screenshots.py. Same rendering as the web deck; the text is not editable.
@@ -25,13 +33,27 @@ cd "$(dirname "$0")/.."
 
 projects=(slides tutorials)
 
+# Render a project, first dropping frozen results for decks it no longer has: a renamed or
+# deleted deck, or the staged copy tools/export_deck.sh renders and removes. Quarto never reads
+# them again, and the pruning keeps the cached directory to one entry per deck.
+render() {
+  local project="$1"; shift
+  local entry name
+  for entry in "$project"/_freeze/*/; do
+    [[ -d "$entry" ]] || continue
+    name="$(basename "$entry")"
+    [[ -f "$project/$name.qmd" ]] || rm -rf "$entry"
+  done
+  quarto render "$project" "$@"
+}
+
 mode="${1:-html}"
 case "$mode" in
-  html|--html) for project in "${projects[@]}"; do quarto render "$project"; done ;;
-  --instructor) for project in "${projects[@]}"; do quarto render "$project" --profile instructor; done
+  html|--html) for project in "${projects[@]}"; do render "$project"; done ;;
+  --instructor) for project in "${projects[@]}"; do render "$project" --profile instructor; done
                 echo "instructor decks (with notes) in _instructor-slides/ -- not for publication" ;;
   --pdf)
-    for project in "${projects[@]}"; do quarto render "$project"; done
+    for project in "${projects[@]}"; do render "$project"; done
     chrome="${CHROME_PATH:-}"
     if [[ -z "$chrome" ]]; then
       for candidate in google-chrome google-chrome-stable chromium chromium-browser; do
