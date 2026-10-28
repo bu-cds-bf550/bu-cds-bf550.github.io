@@ -15,7 +15,9 @@
 # two-slide summary of the whole unit. Later on 27 Oct: feature selection gets its own
 # terminology slide, the gap is written in session 1's P(present | class) notation, and two
 # "Our classifier is a pipeline" slides (the pipeline alone, then inside the fold loop) come
-# before the Python slide; X_unrel is renamed X_unrelated.
+# before the Python slide; X_unrel is renamed X_unrelated. 28 Oct 2026, at the instructor's
+# request: a "supervised learning" terminology slide after the feature selection one, naming
+# the labeled data set that training needs; the unit summary carries the term.
 #
 # Every number on the slides is printed from the setup chunk.
 title: "Leakage and Permutation Tests"
@@ -199,6 +201,13 @@ $$\text{gap} = \left| P(\text{present} \mid \text{resistant}) - P(\text{present}
 - **Feature selection**: choosing the feature space from the data, by keeping only some of the features
     - here: rank the genes by their gap, keep the top few
 - The gap compares the two classes, so feature selection uses the labels
+
+## New terminology: supervised learning
+
+- **Supervised learning**: training a classifier from instances whose right answer is already known
+    - here: the growth test result, the label, for each of the 40 isolates
+- Every step that learns from the labels is part of the training: estimating the tables, and now choosing the genes
+- Without labeled isolates there is nothing to train on, and nothing to score a test fold against
 
 ## Choosing genes: an example
 
@@ -548,6 +557,7 @@ print("p-value:", p.round(3))
 
 ## Unit 7 summary
 
+- **Supervised learning**: training from instances whose right answer, the label, is known
 - **Training** estimates the prior and the tables from one set of isolates, sampling error included
 - **Overfitting**: with many unrelated genes, training accuracy reaches 1.00 while new isolates fall toward a coin flip
 - A **test set** is held out before training and scored once
