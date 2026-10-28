@@ -9,7 +9,8 @@
 # unit structure, so the deck lives in tutorials/ rather than slides/ and is listed in
 # _data/tutorials.yml, not _data/slides.yml (moved here from the instructor repository on
 # 28 Oct 2026, when the site grew its Tutorials section). 28 Oct 2026: the instructor's
-# headings for the opening section, the objects section and the model section.
+# headings for the opening section, the objects section and the model section; the X and y
+# conventions slide filled in from the instructor's TODO.
 title: "A Model Is an Object"
 subtitle: "BF550 · scikit-learn tutorial — Wed Oct 28"
 ---
@@ -36,7 +37,7 @@ X = np.array([[True,  True, True,  True ],
 y = np.array([True, False, True, False, True, False, True, False, True, False])
 ```
 
-# `sklearn`
+# The scikit-learn package
 
 ## The scikit-learn package
 
@@ -93,6 +94,21 @@ print(model.get_params())
 - `BernoulliNB()` makes a model the way `np.random.default_rng(7)` makes a generator
 - Settings are keyword arguments; `alpha` is the pseudocount, default 1
 - A freshly made model holds its settings and nothing else
+
+## `X` and `y` conventions
+
+```{python}
+#| echo: true
+print(X.shape, y.shape)                    # ten rows, four columns; ten labels
+print(X[0], y[0])                          # isolate 0's genes, and its growth result
+genes, resistant = X, y                    # the names are ours, not scikit-learn's
+print(BernoulliNB().fit(genes, resistant).score(genes, resistant))
+```
+
+- `X` is the data: one row per sample, one column per feature. Capital, because it is a table
+- `y` is the labels: one value per row of `X`, in the same row order
+- Every method takes them in that order: `.fit(X, y)`, `.predict(X)`, `.score(X, y)`
+- `X` and `y` are convention only. `fit` reads shapes and positions, never the variable names
 
 ## `.fit` stores what it learned inside the object
 
@@ -179,9 +195,7 @@ print(cross_val_score(BernoulliNB(), X, y, cv=folds))
 - Section 2.2's loop, with the splitter supplying the rows and the model the score
 - One call takes the model, the table, the labels and the splitter, and fits a fresh copy in every fold
 
-# Any model
-
-## Any model fits the same slot
+## All sklearn models follow the same usage pattern
 
 ```{python}
 #| echo: true
@@ -195,7 +209,7 @@ print(cross_val_score(baseline, X, y, cv=folds))
 - `cross_val_score` calls only `fit` and `score`, so it runs on anything that has them
 - Next unit's `DecisionTreeClassifier` and unit 9's `LogisticRegression`: the same three calls, other settings, other `_` attributes
 
-## Reading a line from the slides
+## Cross validation example
 
 ```python
 cross_val_score(BernoulliNB(), X[:, :5], y, cv=folds)
