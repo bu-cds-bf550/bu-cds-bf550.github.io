@@ -30,6 +30,11 @@ jobs:
   # Build job
   build:
     runs-on: ubuntu-latest
+    # The versions the Dockerfile replicates. Named once so the setup steps and the execution
+    # cache key below cannot disagree.
+    env:
+      QUARTO_VERSION: 1.10.18
+      PYTHON_VERSION: "3.12"
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -47,18 +52,35 @@ jobs:
         id: pages
         uses: actions/configure-pages@v5
       # Lecture decks: Quarto executes slides/*.qmd, decktape prints each deck to PDF with the
-      # runner's Chrome. Versions here are what the Dockerfile replicates.
+      # runner's Chrome.
       - name: Setup Python for the slide decks
         uses: actions/setup-python@v5
         with:
-          python-version: "3.12"
+          python-version: ${{ env.PYTHON_VERSION }}
           cache: pip
       - name: Install slide dependencies
         run: pip install -r slides/requirements.txt
       - name: Setup Quarto
         uses: quarto-dev/quarto-actions/setup@v2
         with:
-          version: 1.10.18
+          version: ${{ env.QUARTO_VERSION }}
+      # The decks' execution results. `freeze: auto` in each project's _quarto.yml makes Quarto
+      # re-run a deck's Python only when the deck's source has changed, reading and writing the
+      # results under slides/_freeze/ and tutorials/_freeze/. Those directories are gitignored,
+      # so without this step every run starts empty and executes every deck: about two minutes
+      # for the slides against ten seconds of Pandoc when the results are present. The key names
+      # the Python requirements and the Quarto and Python versions, because a frozen result is
+      # only as good as the environment that produced it; the run id makes it unique so the post
+      # step always saves, and restore-keys picks up the latest run with the same environment.
+      - name: Restore the deck execution cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            slides/_freeze
+            tutorials/_freeze
+          key: deck-freeze-${{ hashFiles('slides/requirements.txt') }}-quarto${{ env.QUARTO_VERSION }}-py${{ env.PYTHON_VERSION }}-${{ github.run_id }}
+          restore-keys: |
+            deck-freeze-${{ hashFiles('slides/requirements.txt') }}-quarto${{ env.QUARTO_VERSION }}-py${{ env.PYTHON_VERSION }}-
       # The PDF and .pptx of every deck, keyed on the deck's source and the shared theme and
       # tooling (tools/build_slides.sh --pdf). A unique key each run means the post step always
       # saves the updated directory; restore-keys picks up the most recent one. Without this,
