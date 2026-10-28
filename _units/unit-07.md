@@ -20,6 +20,7 @@ they are the cheapest way to find out whether the reading landed.
 
 {% include slide-links.html unit="unit-07" %}
 {% include lab-links.html unit="unit-07" %}
+{% include tutorial-links.html unit="unit-07" %}
 
 The topic opens in the first meeting. The rest of the unit is working sessions on the problem set,
 with instructors and TAs in the room.

@@ -8,7 +8,9 @@ carrying its `session` and its `date`. Rendered decks are
 published at `https://bu-cds-bf550.github.io/slides/<name>.html` with a PDF and a PowerPoint
 file beside each one;
 the unit pages and [`/slides/`](https://bu-cds-bf550.github.io/slides/) link to them from
-[`_data/slides.yml`](../_data/slides.yml).
+[`_data/slides.yml`](../_data/slides.yml). The standalone tutorials' decks are a second Quarto
+project of the same shape, [`tutorials/`](../tutorials/), published under `/tutorials/` and
+listed in `_data/tutorials.yml`; everything below applies to them too.
 
 ## Authoring
 

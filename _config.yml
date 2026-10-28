@@ -72,9 +72,11 @@ defaults:
 timezone: America/New_York
 
 # Lecture decks are rendered by Quarto (see `slides/` and `tools/build_slides.sh`) into
-# `_site/slides/`. Jekyll must not delete them when it rebuilds.
+# `_site/slides/`, and the tutorial decks (see `tutorials/`) into `_site/tutorials/`. Jekyll
+# must not delete them when it rebuilds.
 keep_files:
   - slides
+  - tutorials
 
 # Exclude from processing
 exclude:
@@ -94,5 +96,7 @@ exclude:
   # literals would otherwise match themselves in the built output.
   - lectures/
   - tools/
-  # Quarto sources for the lecture decks; the rendered output lands in _site/slides/ directly.
+  # Quarto sources for the lecture decks and the tutorial decks; the rendered output lands in
+  # _site/slides/ and _site/tutorials/ directly.
   - slides/
+  - tutorials/

@@ -1,0 +1,19 @@
+# Published tutorials: standalone sessions on a tool the problem sets need that no unit
+# introduces. One entry per tutorial; /tutorials/ and the unit pages read this list, so adding
+# a tutorial means adding a line here and, on the page of the unit whose session it takes, an
+# `{% include tutorial-links.html unit="unit-NN" %}` line under "In class" if the page has none.
+#
+#   id        the tutorial's slug. Its notebook lives in the public template repository
+#             bf550-<id>-tutorial under site.labs_org, which students accept through
+#             Classroom50 under the same name.
+#   notebook  the notebook's path inside that repository
+#   unit      the unit in whose session it is taught, matching _units/<unit>.md
+#   date      that meeting, spelled as course/docs/schedule.md spells it
+#   title     the tutorial's subject
+#   file      tutorials/<file>.qmd -> /tutorials/<file>.html, .pdf and .pptx
+- id: scikit-learn
+  notebook: scikit-learn-tutorial.ipynb
+  unit: unit-07
+  date: "Wed Oct 28"
+  title: "A model is an object: scikit-learn's `.fit`, `.predict` and `.score`"
+  file: scikit-learn

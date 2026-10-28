@@ -1,0 +1,8 @@
+# Instructor build: `quarto render tutorials --profile instructor` (or `tools/build_slides.sh --instructor`).
+# Same decks, speaker notes kept, written outside `_site/` so nothing here can be published.
+project:
+  output-dir: ../_instructor-slides/tutorials
+format:
+  revealjs:
+    footer: "BF550 · instructor build with speaker notes"
+keep-notes: true

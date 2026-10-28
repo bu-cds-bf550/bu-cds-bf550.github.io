@@ -1,0 +1,224 @@
+---
+# The scikit-learn tutorial deck (Wed Oct 28, unit 7's third session): a model is an object,
+# .fit stores what it learned, .predict and .score, the same calls on a split, a splitter's
+# .split and cross_val_score as the lab's fold loop, any model in the same slot. Same ten
+# isolates and four genes as the unit 7 lab's setup cell and the tutorial notebook
+# (tutorials/scikit-learn/scikit-learn-tutorial.ipynb). Every number on the slides is printed
+# by its chunk. Drafted by the assistant on 27 Oct 2026 at the instructor's request, in the
+# hand-written style, for the instructor to revise. Standalone: the tutorial sits outside the
+# unit structure, so the deck lives in tutorials/ rather than slides/ and is listed in
+# _data/tutorials.yml, not _data/slides.yml (moved here from the instructor repository on
+# 28 Oct 2026, when the site grew its Tutorials section).
+title: "A Model Is an Object"
+subtitle: "BF550 · scikit-learn tutorial — Wed Oct 28"
+---
+
+```{python}
+#| echo: false
+import numpy as np
+from sklearn.naive_bayes import BernoulliNB
+from sklearn.dummy import DummyClassifier
+from sklearn.model_selection import StratifiedKFold, cross_val_score
+
+# the unit 7 lab's ten isolates (rows) and four genes (columns); True = carries the gene
+X = np.array([[True,  True, True,  True ],
+              [False, True, False, False],
+              [False, True, True,  True ],
+              [False, True, False, True ],
+              [True,  True, True,  True ],
+              [True,  True, False, False],
+              [False, True, True,  False],
+              [False, True, False, False],
+              [False, True, True,  True ],
+              [False, True, False, False]])
+# the growth test; True = resistant, and the two classes take turns
+y = np.array([True, False, True, False, True, False, True, False, True, False])
+```
+
+# Where this sits
+
+## The slides and PS8 call scikit-learn
+
+- Session 1 wrote `BernoulliNB().fit(X, y)`, session 2 `cross_val_score(...)`, session 3 `make_pipeline(...)`
+- PS8 asks you to write those calls yourself
+- Nothing so far has said what the pieces are
+
+. . .
+
+Today: a model is an object, and three calls do everything: `.fit`, `.predict`, `.score`.
+
+Same ten isolates and four genes as the unit 7 lab's `X` and `y`.
+
+# Objects
+
+## You have been using objects all along
+
+- Every value in Python is an **object**, a value that carries its own functions and stored values
+- A function that belongs to an object is a **method**, called with a dot. `rng.random()`, `scores.append(0.5)`, `X.mean(axis=0)`
+- A stored value that belongs to an object is an **attribute**, read with a dot and no parentheses. `X.shape`
+
+```{python}
+#| echo: true
+rng = np.random.default_rng(7)
+print(type(rng).__name__, type(X).__name__, type([]).__name__)
+```
+
+## A method acts on its own object only
+
+```{python}
+#| echo: true
+rng = np.random.default_rng(7)
+other = np.random.default_rng(7)
+print(rng.random(3).round(3))
+print(other.random(3).round(3))      # a separate object, started at the same seed
+print(rng.random(3).round(3))        # rng continues its own sequence
+```
+
+- Two generators with one seed are two objects, each keeping its own position
+- The lab's `shuffled_copy(values, rng)` received the object and drew from it
+
+# A model
+
+## A model is made by a call, with its settings inside
+
+```{python}
+#| echo: true
+model = BernoulliNB()
+print(model)
+print(BernoulliNB(alpha=0.5))
+print(model.get_params())
+```
+
+- `BernoulliNB()` makes a model the way `np.random.default_rng(7)` makes a generator
+- Settings are keyword arguments; `alpha` is the pseudocount, default 1
+- A freshly made model holds its settings and nothing else
+
+## `.fit` stores what it learned inside the object
+
+```{python}
+#| echo: true
+fitted = model.fit(X, y)
+print(fitted is model)                     # the same object
+print(model.classes_, model.class_count_)
+print(model.feature_count_)
+```
+
+- Learned values are attributes whose names end in `_`
+- Rows follow `classes_`: first susceptible, then resistant
+- `[2 5 5 4]` of the 5 resistant isolates carry each gene
+
+## `.fit` stores what it learned (cont.)
+
+```{python}
+#| echo: true
+# section 1.1's shares, then the smoothed prediction table
+print(model.feature_count_[1] / model.class_count_[1])
+print(np.exp(model.feature_log_prob_).round(3))
+```
+
+- Count over class count is the share the lab computed by hand, `[0.4 1. 1. 0.8]`
+- The prediction table adds `alpha` to each count and `2·alpha` to each class count. 2 / 7 = 0.286
+- `BernoulliNB().fit(X, y)` on the slides is make, then fit, in one line
+
+## `.predict` calls rows, `.score` counts matches
+
+```{python}
+#| echo: true
+print(model.predict(X[:3]))
+print(model.predict_proba(X[:3]).round(3))
+print(model.score(X, y))
+print(model.score(X, y) == (model.predict(X) == y).mean())
+```
+
+- `predict` takes a table, even for one isolate. `X[[0]]`, never `X[0]`
+- `predict_proba` is unit 5's posterior, one column per class in `classes_` order
+- `score` is unit 6's accuracy. 1.0 here is a training score
+
+# Splits and folds
+
+## The same calls on a split
+
+```{python}
+#| echo: true
+model = BernoulliNB().fit(X[:6], y[:6])    # train on the first six
+print(model.predict(X[6:]))
+print(y[6:])
+print(model.score(X[6:], y[6:]))           # score on the held-out four
+```
+
+- No new method: fit on one slice, score on the other
+- `fit` reads only the six rows it is given, so the held-out labels never enter
+- Isolate 6 lacks genes 0 and 3, which the training rows tie to resistance
+
+## A splitter is an object too
+
+```{python}
+#| echo: true
+folds = StratifiedKFold(n_splits=5)
+for train_rows, test_rows in folds.split(X, y):
+    print("train", train_rows, "test", test_rows)
+```
+
+- `StratifiedKFold(n_splits=5)` stores settings; `.split(X, y)` produces the folds
+- Each fold is a pair: positions of the training rows, positions of the test rows
+- The slides add `shuffle=True, random_state=7`; the lab's section 1.2 did the same with random keys
+
+## `cross_val_score` is the lab's fold loop
+
+```{python}
+#| echo: true
+scores = []
+for train_rows, test_rows in folds.split(X, y):
+    model = BernoulliNB().fit(X[train_rows], y[train_rows])
+    scores.append(model.score(X[test_rows], y[test_rows]))
+print(np.array(scores), np.mean(scores))
+print(cross_val_score(BernoulliNB(), X, y, cv=folds))
+```
+
+- Section 2.2's loop, with the splitter supplying the rows and the model the score
+- One call takes the model, the table, the labels and the splitter, and fits a fresh copy in every fold
+
+# Any model
+
+## Any model fits the same slot
+
+```{python}
+#| echo: true
+baseline = DummyClassifier(strategy="most_frequent")
+baseline.fit(X[:6], y[:6])
+print(baseline.predict(X[6:]), baseline.score(X[6:], y[6:]))
+print(cross_val_score(baseline, X, y, cv=folds))
+```
+
+- `DummyClassifier` is unit 6's all-one-class baseline as an object
+- `cross_val_score` calls only `fit` and `score`, so it runs on anything that has them
+- Next unit's `DecisionTreeClassifier` and unit 9's `LogisticRegression`: the same three calls, other settings, other `_` attributes
+
+## Reading a line from the slides
+
+```python
+cross_val_score(BernoulliNB(), X[:, :5], y, cv=folds)
+```
+
+- `BernoulliNB()`: a model object, unfitted, made on the spot
+- `X[:, :5]`: every row, the first five columns
+- `cv=folds`: a splitter object; `.split` is called for you
+- The result: one test score per fold, as section 2.2's list
+
+. . .
+
+```python
+make_pipeline(SelectKBest(gap_score, k=5), BernoulliNB())
+```
+
+An object with `fit` and `score` of its own, so it goes wherever a model goes.
+
+## Now the notebook
+
+- Seven sections, predict before you run, three tasks with self-checks
+- `holdout_score`, `fold_scores_with`, `gene3_cv`
+- Stuck: wave someone over. `ModuleNotFoundError` means the install has not happened:
+
+```bash
+conda install -n bf550 -c conda-forge scikit-learn
+```

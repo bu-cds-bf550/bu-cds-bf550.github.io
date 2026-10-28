@@ -1,0 +1,16 @@
+{%- comment -%}
+Tutorial links for a unit page: {% include tutorial-links.html unit="unit-07" %}
+Lists every tutorial in _data/tutorials.yml taught in one of that unit's sessions, as bullets
+that join the slide-links and lab-links lists above them. Mirrors lab-links.html, and like it
+emits no trailing newline -- a blank line here would make the whole list loose and wrap every
+bullet in its own paragraph. A unit with no tutorial gets nothing at all, so the include sits
+only on the unit pages that have one.
+The notebook links into the tutorial's own template repo (site.labs_org/bf550-<id>-tutorial);
+the deck is rendered from tutorials/<file>.qmd into /tutorials/.
+{%- endcomment -%}
+{%- assign tutorials = site.data.tutorials | where: "unit", include.unit -%}
+{%- for tutorial in tutorials -%}
+{%- unless forloop.first %}
+{% endunless -%}
+- **Tutorial · {{ tutorial.date }}:** *{{ tutorial.title }}* — [notebook]({{ site.labs_org }}/bf550-{{ tutorial.id }}-tutorial/blob/main/{{ tutorial.notebook }}) · [slides]({{ site.baseurl }}/tutorials/{{ tutorial.file }}.html) · [PDF]({{ site.baseurl }}/tutorials/{{ tutorial.file }}.pdf) · [PowerPoint]({{ site.baseurl }}/tutorials/{{ tutorial.file }}.pptx)
+{%- endfor -%}

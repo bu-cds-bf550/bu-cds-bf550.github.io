@@ -1,11 +1,15 @@
 #!/usr/bin/env bash
-# Render the lecture decks (slides/*.qmd) into _site/slides/, and optionally export each one
-# to PDF and PowerPoint. One script for both the laptop and CI, so what deploys is what was
-# previewed.
+# Render the lecture decks (slides/*.qmd) into _site/slides/ and the tutorial decks
+# (tutorials/*.qmd) into _site/tutorials/, and optionally export each one to PDF and
+# PowerPoint. One script for both the laptop and CI, so what deploys is what was previewed.
 #
 #   tools/build_slides.sh                # HTML decks only
 #   tools/build_slides.sh --pdf          # HTML + a PDF and a .pptx beside each deck
 #   tools/build_slides.sh --instructor   # HTML with speaker notes kept, into _instructor-slides/
+#
+# The two deck directories are separate Quarto projects of the same shape (tutorials/_quarto.yml
+# points at slides/theme and slides/strip-notes.lua), rendered one after the other; a deck's
+# file name must be unique across both, because the export cache below keys on it.
 #
 # The .pptx is not a Pandoc export: it is the PDF's slides as pictures, one per slide, made from
 # the screenshots decktape takes on the same pass that prints the PDF and assembled by
@@ -19,13 +23,15 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
+projects=(slides tutorials)
+
 mode="${1:-html}"
 case "$mode" in
-  html|--html) quarto render slides ;;
-  --instructor) quarto render slides --profile instructor
+  html|--html) for project in "${projects[@]}"; do quarto render "$project"; done ;;
+  --instructor) for project in "${projects[@]}"; do quarto render "$project" --profile instructor; done
                 echo "instructor decks (with notes) in _instructor-slides/ -- not for publication" ;;
   --pdf)
-    quarto render slides
+    for project in "${projects[@]}"; do quarto render "$project"; done
     chrome="${CHROME_PATH:-}"
     if [[ -z "$chrome" ]]; then
       for candidate in google-chrome google-chrome-stable chromium chromium-browser; do
@@ -56,39 +62,44 @@ case "$mode" in
     cache="${DECK_EXPORT_CACHE:-.deck-export-cache}"
     mkdir -p "$cache"
     tool_versions="$(quarto --version 2>/dev/null; "${decktape[@]}" version 2>/dev/null)"
-    shared_inputs=(slides/_quarto.yml slides/strip-notes.lua tools/pptx_from_screenshots.py)
+    # The theme and the filter are shared by both projects; each project's own _quarto.yml is
+    # added to its decks' keys below.
+    shared_inputs=(slides/strip-notes.lua tools/pptx_from_screenshots.py)
     while IFS= read -r f; do shared_inputs+=("$f"); done < <(find slides/theme -type f 2>/dev/null | sort)
     keep=()
     exported=0; reused=0
-    for html in _site/slides/*.html; do
-      [[ "$(basename "$html")" == "index.html" ]] && continue   # the Jekyll index page, not a deck
-      name="$(basename "${html%.html}")"
-      # The images this deck names (img/... paths in its source), each one only if it is a file.
-      deck_images=()
-      while IFS= read -r ref; do
-        if [[ -f "slides/$ref" ]]; then deck_images+=("slides/$ref"); fi
-      done < <(grep -oE 'img/[A-Za-z0-9_./-]+' "slides/$name.qmd" | sort -u)
-      key="$( { printf '%s\n' "$tool_versions" "${deck_images[@]}"; cat "slides/$name.qmd" "${shared_inputs[@]}" "${deck_images[@]}"; } | sha256sum | cut -c1-16)"
-      entry="$cache/$name-$key"
-      keep+=("$name-$key")
-      if [[ -f "$entry.pdf" && -f "$entry.pptx" ]]; then
-        cp "$entry.pdf" "${html%.html}.pdf"
-        cp "$entry.pptx" "${html%.html}.pptx"
-        reused=$((reused + 1))
-        continue
-      fi
-      # One pass through the deck prints the PDF and screenshots every slide; the screenshots
-      # become the .pptx. decktape joins --screenshots-directory with the PDF's full path and
-      # does not create that subtree, so make it -- the assembler searches $shots recursively.
-      mkdir -p "$shots/$(dirname "$html")"
-      "${decktape[@]}" reveal --chrome-path "$chrome" \
-          --chrome-arg=--no-sandbox --chrome-arg=--disable-gpu \
-          --screenshots --screenshots-directory "$shots" --screenshots-size 1920x1080 \
-          "$html" "${html%.html}.pdf"
-      python3 tools/pptx_from_screenshots.py "$shots" "$name" "${html%.html}.pptx"
-      cp "${html%.html}.pdf" "$entry.pdf"
-      cp "${html%.html}.pptx" "$entry.pptx"
-      exported=$((exported + 1))
+    for project in "${projects[@]}"; do
+      for html in _site/"$project"/*.html; do
+        [[ -e "$html" ]] || continue                               # a project with no decks yet
+        [[ "$(basename "$html")" == "index.html" ]] && continue   # the Jekyll index page, not a deck
+        name="$(basename "${html%.html}")"
+        # The images this deck names (img/... paths in its source), each one only if it is a file.
+        deck_images=()
+        while IFS= read -r ref; do
+          if [[ -f "$project/$ref" ]]; then deck_images+=("$project/$ref"); fi
+        done < <(grep -oE 'img/[A-Za-z0-9_./-]+' "$project/$name.qmd" | sort -u)
+        key="$( { printf '%s\n' "$tool_versions" "${deck_images[@]}"; cat "$project/$name.qmd" "$project/_quarto.yml" "${shared_inputs[@]}" "${deck_images[@]}"; } | sha256sum | cut -c1-16)"
+        entry="$cache/$name-$key"
+        keep+=("$name-$key")
+        if [[ -f "$entry.pdf" && -f "$entry.pptx" ]]; then
+          cp "$entry.pdf" "${html%.html}.pdf"
+          cp "$entry.pptx" "${html%.html}.pptx"
+          reused=$((reused + 1))
+          continue
+        fi
+        # One pass through the deck prints the PDF and screenshots every slide; the screenshots
+        # become the .pptx. decktape joins --screenshots-directory with the PDF's full path and
+        # does not create that subtree, so make it -- the assembler searches $shots recursively.
+        mkdir -p "$shots/$(dirname "$html")"
+        "${decktape[@]}" reveal --chrome-path "$chrome" \
+            --chrome-arg=--no-sandbox --chrome-arg=--disable-gpu \
+            --screenshots --screenshots-directory "$shots" --screenshots-size 1920x1080 \
+            "$html" "${html%.html}.pdf"
+        python3 tools/pptx_from_screenshots.py "$shots" "$name" "${html%.html}.pptx"
+        cp "${html%.html}.pdf" "$entry.pdf"
+        cp "${html%.html}.pptx" "$entry.pptx"
+        exported=$((exported + 1))
+      done
     done
     # Keep only the entries this build used, so the cache holds one PDF and one .pptx per deck.
     for f in "$cache"/*.pdf "$cache"/*.pptx; do

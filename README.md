@@ -10,7 +10,8 @@ agents. The course makes a deliberate bet: the primary coding learning objective
 > **Layout.** This repo holds the course site (published via GitHub Pages) plus internal
 > planning docs. Student-facing pages live in `docs/` and `_lectures/` and render on the site;
 > lecture decks are Quarto sources in [`slides/`](slides/), rendered and PDF/PowerPoint-exported by CI into
-> the same site (see [`slides/README.md`](slides/README.md));
+> the same site (see [`slides/README.md`](slides/README.md)), and the standalone tutorials' decks
+> are the same in [`tutorials/`](tutorials/) (see [`tutorials/README.md`](tutorials/README.md));
 > instructor-only rationale and open decisions live in [`internal/`](internal/), excluded from
 > the site — see [`internal/open-decisions.md`](internal/open-decisions.md) and the
 > [discussion issues](https://github.com/bu-cds-bf550/bu-cds-bf550.github.io/issues).
