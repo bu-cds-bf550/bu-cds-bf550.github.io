@@ -8,7 +8,8 @@
 # hand-written style, for the instructor to revise. Standalone: the tutorial sits outside the
 # unit structure, so the deck lives in tutorials/ rather than slides/ and is listed in
 # _data/tutorials.yml, not _data/slides.yml (moved here from the instructor repository on
-# 28 Oct 2026, when the site grew its Tutorials section).
+# 28 Oct 2026, when the site grew its Tutorials section). 28 Oct 2026: the instructor's
+# headings for the opening section, the objects section and the model section.
 title: "A Model Is an Object"
 subtitle: "BF550 · scikit-learn tutorial — Wed Oct 28"
 ---
@@ -35,13 +36,13 @@ X = np.array([[True,  True, True,  True ],
 y = np.array([True, False, True, False, True, False, True, False, True, False])
 ```
 
-# Where this sits
+# `sklearn`
 
-## The slides and PS8 call scikit-learn
+## The scikit-learn package
 
-- Session 1 wrote `BernoulliNB().fit(X, y)`, session 2 `cross_val_score(...)`, session 3 `make_pipeline(...)`
+- scikit-learn package provides machine learning methods in python
+- From Unit 7 - `BernoulliNB().fit(X, y)`, `cross_val_score(...)`, `make_pipeline(...)`...
 - PS8 asks you to write those calls yourself
-- Nothing so far has said what the pieces are
 
 . . .
 
@@ -51,7 +52,7 @@ Same ten isolates and four genes as the unit 7 lab's `X` and `y`.
 
 # Objects
 
-## You have been using objects all along
+## Object-oriented programming
 
 - Every value in Python is an **object**, a value that carries its own functions and stored values
 - A function that belongs to an object is a **method**, called with a dot. `rng.random()`, `scores.append(0.5)`, `X.mean(axis=0)`
@@ -77,9 +78,9 @@ print(rng.random(3).round(3))        # rng continues its own sequence
 - Two generators with one seed are two objects, each keeping its own position
 - The lab's `shuffled_copy(values, rng)` received the object and drew from it
 
-# A model
+# Machine learning models in scikit-learn
 
-## A model is made by a call, with its settings inside
+## scikit-learn models are objects
 
 ```{python}
 #| echo: true
