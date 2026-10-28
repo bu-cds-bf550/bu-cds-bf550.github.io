@@ -26,12 +26,11 @@ not repeat one in `slides/`: the PDF export cache keys both sets by file name.
 
 ## Rendering locally
 
-`make site` runs the whole production build, tutorials included. For a live preview of a deck
-you are editing, from the repository root inside the container (`make shell`) or on a host with
-Quarto installed:
+`make dev` serves the site at `http://localhost:4000` with the tutorial decks under
+`/tutorials/`, and re-renders a tutorial deck as you edit it at `http://localhost:4201/<slug>.html`
+(the lecture decks are at :4200). `make site` runs the whole production build, tutorials
+included. Without Docker, from the repository root with Quarto installed:
 
 ```bash
-quarto preview tutorials --no-browser --host 0.0.0.0 --port 4201
+quarto preview tutorials --no-browser --port 4201
 ```
-
-and open `http://localhost:4201/<slug>.html`. (`make dev` watches `slides/` only.)

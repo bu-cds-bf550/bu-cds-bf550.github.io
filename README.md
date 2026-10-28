@@ -18,11 +18,13 @@ agents. The course makes a deliberate bet: the primary coding learning objective
 > `tools/lint_no_instructor_content.py` gates the built site against instructor material
 > reaching production, and CI runs it on every push and pull request.
 >
-> **Working locally.** `make dev` runs the site (live reload, <http://localhost:4000>) and the
-> slide decks (live reload, <http://localhost:4200/unit-01.html>) in a Docker replica of the CI
+> **Working locally.** `make dev` runs the site (live reload, <http://localhost:4000>), the
+> slide decks (live reload, <http://localhost:4200/unit-01.html>) and the tutorial decks
+> (<http://localhost:4201/scikit-learn.html>) in a Docker replica of the CI
 > job; `make site` runs the exact production build. Browse the site at :4000, which serves
-> everything including the decks at `/slides/`; :4200 re-renders a deck as you edit it and is
-> rooted at the deck directory, so open a deck there by name rather than its index. See the
+> everything including the decks at `/slides/` and `/tutorials/`; :4200 and :4201 re-render a
+> deck as you edit it and are rooted at the deck directory, so open a deck there by name rather
+> than its index. See the
 > [`Makefile`](Makefile) and [`Dockerfile`](Dockerfile).
 >
 > **AI use:** how these materials were built is documented in

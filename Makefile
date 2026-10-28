@@ -1,8 +1,10 @@
 # Local development, in a replica of the CI environment. Requires Docker (with Compose v2).
 #
 #   make dev        live site at http://localhost:4000 + live decks at http://localhost:4200
-#                   Browse the site at :4000 (decks included, under /slides/). :4200 is for a
-#                   deck you are editing -- open it directly, http://localhost:4200/unit-01.html.
+#                   + live tutorial decks at http://localhost:4201
+#                   Browse the site at :4000 (decks included, under /slides/ and /tutorials/).
+#                   :4200 and :4201 are for a deck you are editing -- open it directly,
+#                   http://localhost:4200/unit-01.html or http://localhost:4201/scikit-learn.html.
 #   make site       the production build into _site/ (Jekyll, decks, PDFs, content gate)
 #   make pdf        re-render decks and PDFs only
 #   make instructor decks with speaker notes -> _instructor-slides/ (never published)
@@ -38,4 +40,4 @@ image:
 	$(COMPOSE) build
 
 clean:
-	rm -rf _site _instructor-slides .jekyll-cache .jekyll-metadata slides/_freeze slides/.quarto .deck-export-cache
+	rm -rf _site _instructor-slides .jekyll-cache .jekyll-metadata slides/_freeze slides/.quarto tutorials/_freeze tutorials/.quarto .deck-export-cache

@@ -1,13 +1,15 @@
 # Development environment: the CI image (Dockerfile) with the repository bind-mounted, so edits
 # on the host are rebuilt live inside the container. Drive it through the Makefile:
 #
-#   make dev     Jekyll with live reload at http://localhost:4000 and the slide decks with live
-#                reload at http://localhost:4200 -- one command, both watchers. Browse :4000;
-#                open a deck you are editing directly, http://localhost:4200/unit-01.html.
+#   make dev     Jekyll with live reload at http://localhost:4000, the lecture decks with live
+#                reload at http://localhost:4200 and the tutorial decks at http://localhost:4201
+#                -- one command, all three watchers. Browse :4000; open a deck you are editing
+#                directly, http://localhost:4200/unit-01.html or :4201/scikit-learn.html.
 #   make site    the exact CI build: Jekyll -> decks -> PDFs -> content gate, into _site/
 #
-# Two services share one image and one mount. Files they write (_site/, .jekyll-cache/,
-# slides/_freeze/) are owned by your host user because the Makefile passes UID/GID through.
+# Three services share one image and one mount. Files they write (_site/, .jekyll-cache/,
+# slides/_freeze/, tutorials/_freeze/) are owned by your host user because the Makefile passes
+# UID/GID through.
 x-common: &common
   image: bf550-site
   user: "${UID:-1000}:${GID:-1000}"
@@ -32,3 +34,9 @@ services:
     command: tools/dev.sh slides
     ports:
       - "4200:4200"                  # a deck, with Quarto's own live reload: /unit-01.html
+
+  tutorials:
+    <<: *common
+    command: tools/dev.sh tutorials
+    ports:
+      - "4201:4201"                  # a tutorial deck, the same way: /scikit-learn.html
