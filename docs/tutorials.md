@@ -5,7 +5,7 @@ permalink: /tutorials/
 
 A tutorial covers a tool the problem sets need that no unit introduces, in one lab block, with
 instructors and TAs in the room. Each tutorial is a notebook in its own public repository, with
-self-checks that report and never grade, and a slide deck for the session it is taught in.
+self-checks that report and never grade, and usually a slide deck for the session it is taught in.
 Nothing in a tutorial is submitted or graded; the problem sets and the units after it use what
 it shows.
 
@@ -27,7 +27,7 @@ editable).
 | Meeting | Tutorial | Notebook | Slides |
 |---|---|---|---|
 {% for tutorial in site.data.tutorials -%}
-| {{ tutorial.date }} | {{ tutorial.title }} | [{{ tutorial.notebook }}]({{ site.labs_org }}/bf550-{{ tutorial.id }}-tutorial/blob/main/{{ tutorial.notebook }}) | [view]({{ site.baseurl }}/tutorials/{{ tutorial.file }}.html) · [PDF]({{ site.baseurl }}/tutorials/{{ tutorial.file }}.pdf) · [PowerPoint]({{ site.baseurl }}/tutorials/{{ tutorial.file }}.pptx) |
+| {{ tutorial.date }} | {{ tutorial.title }} | [{{ tutorial.notebook }}]({{ site.labs_org }}/bf550-{{ tutorial.id }}-tutorial/blob/main/{{ tutorial.notebook }}) | {% if tutorial.file %}[view]({{ site.baseurl }}/tutorials/{{ tutorial.file }}.html) · [PDF]({{ site.baseurl }}/tutorials/{{ tutorial.file }}.pdf) · [PowerPoint]({{ site.baseurl }}/tutorials/{{ tutorial.file }}.pptx){% else %}none{% endif %} |
 {% endfor %}
 
 A tutorial is also listed on the page of the unit whose session it takes, under **In class**.

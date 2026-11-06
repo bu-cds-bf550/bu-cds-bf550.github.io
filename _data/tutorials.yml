@@ -10,10 +10,16 @@
 #   unit      the unit in whose session it is taught, matching _units/<unit>.md
 #   date      that meeting, spelled as course/docs/schedule.md spells it
 #   title     the tutorial's subject
-#   file      tutorials/<file>.qmd -> /tutorials/<file>.html, .pdf and .pptx
+#   file      tutorials/<file>.qmd -> /tutorials/<file>.html, .pdf and .pptx; omit it for a
+#             tutorial with no deck, and the slide links are left out
 - id: scikit-learn
   notebook: scikit-learn-tutorial.ipynb
   unit: unit-07
   date: "Wed Oct 28"
   title: "A model is an object: scikit-learn's `.fit`, `.predict` and `.score`"
   file: scikit-learn
+- id: statsmodels
+  notebook: statsmodels-tutorial.ipynb
+  unit: unit-09
+  date: "Fri Nov 6 · Mon Nov 9 · Wed Nov 11"
+  title: "Linear regression with statsmodels: formulas, fits and their output"

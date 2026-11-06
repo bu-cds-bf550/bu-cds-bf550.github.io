@@ -20,7 +20,7 @@ they are the cheapest way to find out whether the reading landed.
 ## In class
 
 {% include slide-links.html unit="unit-09" %}
-{% include lab-links.html unit="unit-09" %}
+{% include tutorial-links.html unit="unit-09" %}
 
 The topic opens in the first meeting. The rest of the unit is working sessions on the problem set,
 with instructors and TAs in the room.
