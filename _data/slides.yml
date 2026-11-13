@@ -107,6 +107,16 @@
   date: "Wed Oct 28"
   title: "Leakage and permutation tests"
   file: unit-07-3
+- unit: unit-10
+  session: 1
+  date: "Fri Nov 13"
+  title: "Logistic regression"
+  file: unit-10-1
+- unit: unit-10
+  session: 2
+  date: "Mon Nov 16"
+  title: "Poisson and negative binomial regression"
+  file: unit-10-2
 - unit: unit-02
   session: 2
   date: "Mon Sep 14"
