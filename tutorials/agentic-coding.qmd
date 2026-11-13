@@ -1,0 +1,500 @@
+---
+# The agentic coding tutorial deck (Wed Nov 18, unit 10's third session): what an agent is and
+# how it relates to a language model and a chatbot, how an agent makes changes through tools,
+# the agentic loop of gathering context, acting and verifying, and skills, ending on the
+# /bf550-tutor skill students build. Four sections, each followed by a part of the tutorial
+# notebook (tutorials/agentic-coding/agentic-coding-tutorial.ipynb in the instructor
+# repository). Students run Claude Code on the SCC; AI use is level 5. Builds on the
+# instructor's two earlier hands-on workshops (making a markdown deck about an animal; making
+# plots and reproducing one from its description), which had no slides. Drafted by the
+# assistant on 13 Nov 2026 at the instructor's request, for the instructor to revise; the
+# diagrams are drawn by the chunks below in the illustration palette
+# (textbook/illustrations/_style.yaml) and carry no data. Sources: Simon Willison's definition
+# of an agent as tools in a loop; Anthropic's Claude Code docs (how Claude Code works; best
+# practices; skills).
+title: "Agentic Coding with Claude Code"
+subtitle: "BF550 · agentic coding tutorial — Wed Nov 18"
+---
+
+```{python}
+#| echo: false
+import matplotlib.pyplot as plt
+from matplotlib.patches import FancyBboxPatch, FancyArrowPatch, Rectangle
+
+# the illustration palette (textbook/illustrations/_style.yaml)
+BLUE, ORANGE, GREEN = "#2a78d6", "#eb6834", "#1baf7a"
+INK, MUTED, HAIR, FAINT = "#0b0b0b", "#52514e", "#c3c2b7", "#e1e0d9"
+plt.rcParams.update({"font.family": "DejaVu Sans", "font.size": 15})
+
+
+def tint(c, a=0.18):
+    """The color at a share a over white, as the illustrations fill a box."""
+    r, g, b = (int(c[i:i + 2], 16) for i in (1, 3, 5))
+    return "#%02x%02x%02x" % tuple(round(255 - a * (255 - v)) for v in (r, g, b))
+
+
+def canvas(w, h):
+    """A blank figure whose coordinates are inches, so boxes are placed by eye."""
+    fig, ax = plt.subplots(figsize=(w, h))
+    ax.set_xlim(0, w)
+    ax.set_ylim(0, h)
+    ax.axis("off")
+    fig.subplots_adjust(0, 0, 1, 1)
+    return fig, ax
+
+
+def box(ax, x, y, w, h, text="", color=BLUE, filled=True, dashed=False, fs=15,
+        weight="normal", tc=None, ha="center", family=None, lw=2):
+    ax.add_patch(FancyBboxPatch((x, y), w, h, boxstyle="round,pad=0,rounding_size=0.12",
+                                fc=tint(color) if filled else "white", ec=color, lw=lw,
+                                ls="--" if dashed else "-"))
+    if text:
+        tx = x + w / 2 if ha == "center" else x + 0.15
+        ax.text(tx, y + h / 2, text, ha=ha, va="center", fontsize=fs, weight=weight,
+                color=tc or INK, family=family, linespacing=1.3)
+
+
+def arrow(ax, x1, y1, x2, y2, text="", color=MUTED, rad=0.0, fs=12, dx=0, dy=0.15, lw=2):
+    ax.add_patch(FancyArrowPatch((x1, y1), (x2, y2), arrowstyle="-|>", mutation_scale=20,
+                                 color=color, lw=lw, connectionstyle=f"arc3,rad={rad}"))
+    if text:
+        ax.text((x1 + x2) / 2 + dx, (y1 + y2) / 2 + dy, text, ha="center", va="bottom",
+                fontsize=fs, color=color, style="italic")
+
+
+def person(ax, x, y, label="you", color=MUTED):
+    """A plain stick figure: the human in the picture."""
+    ax.add_patch(plt.Circle((x, y + 0.62), 0.16, fc="white", ec=color, lw=2))
+    ax.plot([x, x], [y + 0.46, y + 0.12], color=color, lw=2)
+    ax.plot([x - 0.22, x + 0.22], [y + 0.36, y + 0.36], color=color, lw=2)
+    ax.plot([x, x - 0.16], [y + 0.12, y - 0.12], color=color, lw=2)
+    ax.plot([x, x + 0.16], [y + 0.12, y - 0.12], color=color, lw=2)
+    ax.text(x, y - 0.32, label, ha="center", va="top", fontsize=13, color=color)
+
+
+def three_rooms(n):
+    """Model, chatbot, agent: the first n panels drawn, the rest left blank."""
+    fig, ax = canvas(12, 4.6)
+    titles = ["a language model", "a chatbot", "an agent"]
+    for i in range(3):
+        x0 = 0.2 + 4.0 * i
+        ax.text(x0 + 1.8, 4.35, titles[i], ha="center", fontsize=17,
+                weight="bold", color=INK if i < n else "white")
+    # 1: text in, text out
+    if n >= 1:
+        box(ax, 1.0, 1.9, 2.0, 1.0, "model", BLUE, weight="bold")
+        ax.text(0.45, 2.4, "text\nin", ha="center", va="center", fontsize=13, color=MUTED)
+        ax.text(3.55, 2.4, "text\nout", ha="center", va="center", fontsize=13, color=MUTED)
+        arrow(ax, 0.75, 2.4, 1.0, 2.4)
+        arrow(ax, 3.0, 2.4, 3.25, 2.4)
+        ax.text(2.0, 1.2, "no files, no terminal", ha="center", fontsize=13, color=MUTED)
+    # 2: the chat window; you carry code in and out
+    if n >= 2:
+        box(ax, 4.7, 2.9, 2.6, 0.9, "chat window", BLUE)
+        box(ax, 5.25, 3.05, 1.5, 0.0, "", BLUE, lw=0)
+        person(ax, 6.0, 1.75)
+        box(ax, 4.4, 0.2, 3.2, 0.7, "your files + terminal", MUTED, filled=False, fs=13)
+        arrow(ax, 5.55, 2.85, 5.75, 2.5, "", BLUE)
+        arrow(ax, 6.25, 2.5, 6.45, 2.85, "", BLUE)
+        arrow(ax, 5.35, 1.6, 5.2, 0.95, "", ORANGE)
+        arrow(ax, 6.8, 0.95, 6.65, 1.6, "", ORANGE)
+        ax.text(7.75, 1.4, "you are\nthe hands", ha="center", fontsize=13, color=ORANGE, style="italic")
+    # 3: the agent: model + harness + tools, acting on the files; you supervise
+    if n >= 3:
+        box(ax, 8.6, 2.9, 1.5, 0.9, "model", BLUE, weight="bold")
+        box(ax, 10.4, 2.9, 1.5, 0.9, "harness", GREEN, weight="bold")
+        arrow(ax, 10.1, 3.55, 10.4, 3.55, "", MUTED)
+        arrow(ax, 10.4, 3.15, 10.1, 3.15, "", MUTED)
+        ax.text(10.25, 3.95, "tool calls ⇄ results", ha="center", fontsize=12, color=MUTED, style="italic")
+        box(ax, 8.6, 0.25, 3.3, 0.7, "your files + terminal", MUTED, filled=False, fs=13)
+        arrow(ax, 11.15, 2.85, 11.15, 0.98, "", GREEN)
+        arrow(ax, 10.85, 0.98, 10.85, 2.85, "", GREEN)
+        person(ax, 9.2, 1.45, "you supervise")
+        ax.text(11.55, 1.9, "the agent\nis the hands", ha="left", fontsize=13, color=GREEN, style="italic")
+    plt.show()
+```
+
+## Where this fits
+
+- In the two workshops, Claude Code wrote a slide deck about an animal, made plots, and remade a plot from its description alone
+- Today: what happens underneath, and two habits that make the work trustworthy
+
+. . .
+
+1. What an agent is
+2. How an agent makes changes
+3. The agentic loop
+4. Skills, and a tutor you build for yourself
+
+## Before we start
+
+```bash
+gh student accept bu-bioinfo-classrooms bf550-fall-2026 bf550-agentic-coding-tutorial
+```
+
+- On the SCC: clone it, open the folder in VS Code, run the notebook's setup cell
+- Start Claude Code in a terminal **in that folder**: `claude`
+- AI use today is **level 5**. Keep the terminal and the notebook side by side
+
+# What an agent is
+
+## A language model continues text
+
+```{python}
+#| echo: false
+#| fig-width: 12
+#| fig-height: 4.6
+three_rooms(1)
+```
+
+- Claude's models (Opus, Sonnet, Haiku) predict what text comes next, and nothing else
+
+## A chatbot is a model in a conversation
+
+```{python}
+#| echo: false
+#| fig-width: 12
+#| fig-height: 4.6
+three_rooms(2)
+```
+
+- Ask for code and you get **text**: you run it, and you paste the error back
+
+## An agent is a model that runs tools in a loop
+
+```{python}
+#| echo: false
+#| fig-width: 12
+#| fig-height: 4.6
+three_rooms(3)
+```
+
+- **Claude Code** is the harness: the same models, with tools that act on the folder it started in
+
+## Now the notebook: part 1
+
+- **Same request, two rooms**: ask claude.ai and Claude Code to make the same chart from `cohort.csv`
+- Predict first: which one ends with `bands.png` in your folder?
+- About 10 minutes
+
+# How an agent makes changes
+
+## A tool call is text the model writes
+
+```{python}
+#| echo: false
+#| fig-width: 12
+#| fig-height: 4.8
+fig, ax = canvas(12, 4.8)
+rows = [("model", "I'll check the file's columns first.", BLUE),
+        ("tool call", 'Read("cohort.csv")', ORANGE),
+        ("tool result", "age,e4,case   86,1,1   94,0,1   ...", GREEN),
+        ("model", "Three columns. I'll count the rows with e4 = 2.", BLUE),
+        ("tool call", 'Bash("python count_e4.py")', ORANGE),
+        ("tool result", "41", GREEN)]
+for i, (kind, text, c) in enumerate(rows):
+    y = 4.05 - 0.72 * i
+    ax.text(1.75, y + 0.27, kind, ha="right", va="center", fontsize=14, color=c, weight="bold")
+    box(ax, 2.0, y, 7.3, 0.55, text, c, fs=14, ha="left",
+        family="monospace" if kind != "model" else None)
+ax.annotate("", (9.6, 0.95), (9.6, 3.45), arrowprops=dict(arrowstyle="-", color=HAIR, lw=1))
+ax.text(9.8, 3.05, "the model writes\nthe call as text", fontsize=13, color=ORANGE, va="center", style="italic")
+ax.text(9.8, 2.3, "the harness runs it\nand adds the result", fontsize=13, color=GREEN, va="center", style="italic")
+ax.text(9.8, 1.55, "the model reads it\nand decides again", fontsize=13, color=BLUE, va="center", style="italic")
+plt.show()
+```
+
+## Claude Code's tools: look, change, run
+
+```{python}
+#| echo: false
+#| fig-width: 12
+#| fig-height: 4.4
+fig, ax = canvas(12, 4.4)
+box(ax, 4.9, 1.75, 2.2, 0.85, "harness", GREEN, weight="bold")
+groups = [(0.3, "look", BLUE, ["Read: a file", "Glob, Grep: find files, text", "WebFetch: a web page"]),
+          (4.2, "change", ORANGE, ["Edit: part of a file", "Write: a whole file", "NotebookEdit: a cell"]),
+          (8.1, "run", GREEN, ["Bash: any terminal command", "python, git, ls, ..."])]
+for x, name, c, items in groups:
+    y0 = 2.95 if name != "change" else 0.1
+    box(ax, x, y0, 3.6, 1.35, "", c, filled=False)
+    ax.text(x + 0.15, y0 + 1.1, name, fontsize=15, weight="bold", color=c, va="center")
+    for j, it in enumerate(items):
+        ax.text(x + 0.2, y0 + 0.75 - 0.3 * j, it, fontsize=13, color=INK, va="center")
+arrow(ax, 4.95, 2.6, 3.2, 2.95, "", BLUE)
+arrow(ax, 6.0, 1.8, 6.0, 1.47, "", ORANGE)
+arrow(ax, 7.05, 2.6, 8.6, 2.95, "", GREEN)
+ax.text(9.9, 2.2, "Bash can do anything\nyou can type in a terminal", fontsize=13, color=MUTED, ha="center", style="italic")
+plt.show()
+```
+
+## You decide what the agent may do
+
+```{python}
+#| echo: false
+#| fig-width: 11
+#| fig-height: 3.6
+fig, ax = canvas(11, 3.6)
+acts = ["read files", "edit files", "run commands"]
+modes = [("default", ["yes", "asks you", "asks you"]),
+         ("accept edits", ["yes", "yes", "asks you"]),
+         ("plan mode", ["yes", "no", "no"])]
+col = {"yes": GREEN, "asks you": ORANGE, "no": MUTED}
+for j, a in enumerate(acts):
+    ax.text(3.6 + 2.5 * j, 3.15, a, ha="center", fontsize=15, weight="bold", color=INK)
+for i, (m, vals) in enumerate(modes):
+    y = 2.2 - 0.85 * i
+    ax.text(2.2, y + 0.3, m, ha="right", va="center", fontsize=15, weight="bold", color=BLUE)
+    for j, v in enumerate(vals):
+        box(ax, 2.6 + 2.5 * j, y, 2.0, 0.6, v, col[v], filled=(v != "no"), fs=14)
+ax.text(10.6, 1.1, "Shift+Tab\nswitches\nmodes", ha="center", va="center", fontsize=13, color=MUTED, style="italic")
+plt.show()
+```
+
+- It works in **your** account, on **your** files. What it does, you did
+
+## Now the notebook: part 2
+
+- **Be the harness**: in pairs, one of you is the model and writes tool calls on paper; the other carries them out in the terminal, exactly
+- Then give Claude Code the same task, press **Ctrl+O**, and label its transcript: model text, tool call, tool result
+- About 15 minutes
+
+# The agentic loop
+
+## The loop: gather context, act, verify
+
+```{python}
+#| echo: false
+#| fig-width: 11
+#| fig-height: 4.8
+fig, ax = canvas(11, 4.8)
+box(ax, 4.0, 3.55, 3.0, 0.95, "gather context\nread · search · look", BLUE, fs=14)
+box(ax, 7.4, 0.9, 3.0, 0.95, "act\nedit · write · run", ORANGE, fs=14)
+box(ax, 0.6, 0.9, 3.0, 0.95, "verify\nrun it · check · read", GREEN, fs=14)
+arrow(ax, 7.0, 4.0, 8.9, 1.9, "", MUTED, rad=-0.25)
+arrow(ax, 7.4, 1.35, 3.6, 1.35, "", MUTED)
+arrow(ax, 2.1, 1.9, 4.0, 4.0, "", MUTED, rad=-0.25)
+box(ax, 4.3, 0.05, 2.4, 0.6, "done", MUTED, filled=False, fs=14)
+arrow(ax, 2.1, 0.9, 4.3, 0.35, "", MUTED, rad=0.2)
+person(ax, 5.5, 2.2, "you can interrupt")
+plt.show()
+```
+
+- Round again until the task is done, or it needs you
+
+## A workflow for bigger tasks: explore, plan, code, commit
+
+```{python}
+#| echo: false
+#| fig-width: 12
+#| fig-height: 3.6
+fig, ax = canvas(12, 3.6)
+steps = [("explore", "read the files,\nno code yet", BLUE),
+         ("plan", "read its plan,\ncorrect it", BLUE),
+         ("code", "write it, with\na check to run", ORANGE),
+         ("commit", "save with git,\nso you can go back", GREEN)]
+for i, (s, sub, c) in enumerate(steps):
+    x = 0.3 + 2.95 * i
+    box(ax, x, 1.2, 2.5, 1.0, s, c, weight="bold", fs=17)
+    ax.text(x + 1.25, 0.85, sub, ha="center", va="top", fontsize=13, color=MUTED)
+    if i < 3:
+        arrow(ax, x + 2.5, 1.7, x + 2.95, 1.7)
+ax.plot([0.3, 5.75], [2.55, 2.55], color=BLUE, lw=2)
+ax.plot([0.3, 0.3], [2.45, 2.55], color=BLUE, lw=2)
+ax.plot([5.75, 5.75], [2.45, 2.55], color=BLUE, lw=2)
+ax.text(3.0, 2.7, "plan mode: reads and plans, changes nothing", ha="center", fontsize=14, color=BLUE, style="italic")
+plt.show()
+```
+
+## The context window is the agent's working memory
+
+```{python}
+#| echo: false
+#| fig-width: 12
+#| fig-height: 4.4
+fig, ax = canvas(12, 4.4)
+items = [("your request", BLUE), ("Read cohort.csv", GREEN), ("its reply", BLUE),
+         ("Bash output", GREEN), ("Read plot.py", GREEN), ("an error", ORANGE),
+         ("its fix", BLUE), ("another error", ORANGE)]
+ax.add_patch(Rectangle((0.6, 0.3), 3.2, 3.6, fc="white", ec=MUTED, lw=2))
+for i, (t, c) in enumerate(items):
+    box(ax, 0.75, 0.42 + 0.43 * i, 2.9, 0.36, t, c, fs=12)
+ax.text(2.2, 4.1, "one long session", ha="center", fontsize=15, weight="bold")
+ax.text(4.1, 3.6, "full: earlier details\nget lost, work drifts", fontsize=13, color=ORANGE, va="center", style="italic")
+arrow(ax, 6.0, 2.1, 7.4, 2.1, "/clear", MUTED, fs=14)
+ax.add_patch(Rectangle((8.0, 0.3), 3.2, 3.6, fc="white", ec=MUTED, lw=2))
+box(ax, 8.15, 0.42, 2.9, 0.36, "the next task", BLUE, fs=12)
+box(ax, 8.15, 0.85, 2.9, 0.36, "Read the right file", GREEN, fs=12)
+ax.text(9.6, 4.1, "a fresh task", ha="center", fontsize=15, weight="bold")
+plt.show()
+```
+
+- Everything the agent reads or runs takes up room. Keep one task per conversation
+
+## Give the agent a way to check its work
+
+```{python}
+#| echo: false
+#| fig-width: 11
+#| fig-height: 3.8
+fig, ax = canvas(11, 3.8)
+box(ax, 0.4, 1.7, 2.4, 1.0, "act\nwrite the code", ORANGE, fs=14)
+box(ax, 4.2, 1.7, 2.4, 1.0, "run the check", GREEN, fs=14, weight="bold")
+box(ax, 8.2, 2.75, 2.4, 0.85, "✓  done", GREEN, fs=15)
+box(ax, 8.2, 0.85, 2.4, 0.85, "✗  read the failure", ORANGE, fs=14)
+arrow(ax, 2.8, 2.2, 4.2, 2.2)
+arrow(ax, 6.6, 2.4, 8.2, 3.15, "passes", GREEN, fs=13)
+arrow(ax, 6.6, 2.0, 8.2, 1.3, "fails", ORANGE, fs=13, dy=-0.45)
+arrow(ax, 8.2, 1.05, 1.6, 1.7, "", ORANGE, rad=-0.2)
+ax.text(5.0, 0.35, "try again", ha="center", fontsize=13, color=ORANGE, style="italic")
+plt.show()
+```
+
+- Your notebooks' check cells are this. **The check decides what "done" means**: watch what it tests
+
+## Now the notebook: part 3
+
+- Ask Claude Code to write `count_motif(seq, motif)` so the check cell passes, without editing the check
+- Then count TATA boxes in six promoters, and count one by hand
+- About 25 minutes
+
+## What happened in part 3
+
+```{python}
+#| echo: false
+#| fig-width: 11
+#| fig-height: 3.6
+fig, ax = canvas(11, 3.6)
+seq = "TATATATA"
+x0, w = 2.6, 0.7
+for i, ch in enumerate(seq):
+    ax.text(x0 + w * i + w / 2, 1.75, ch, ha="center", va="center", fontsize=26, family="monospace", weight="bold")
+for k, s in enumerate([0, 2, 4]):        # every start: three matches that overlap
+    y = 2.3 + 0.32 * k
+    ax.plot([x0 + w * s + 0.08, x0 + w * (s + 4) - 0.08], [y, y], color=GREEN, lw=4, solid_capstyle="round")
+for k, s in enumerate([0, 4]):           # str.count jumps past each match: two
+    ax.plot([x0 + w * s + 0.08, x0 + w * (s + 4) - 0.08], [1.2, 1.2], color=ORANGE, lw=4, solid_capstyle="round")
+ax.text(x0 - 0.3, 2.62, "every start\nposition: 3", ha="right", va="center", fontsize=14, color=GREEN)
+ax.text(x0 - 0.3, 1.2, "seq.count: 2", ha="right", va="center", fontsize=14, color=ORANGE)
+ax.text(x0 + w * 8 + 0.3, 1.2, "skips past each match,\nso overlaps go missing", va="center", fontsize=13, color=ORANGE, style="italic")
+plt.show()
+```
+
+- The agent did what it was asked: the request was vague, and the check tested one easy case
+- The fix was a better specification, a check with the case you meant. Then the loop did the rest
+
+# Skills
+
+## A skill teaches Claude Code one kind of task
+
+```{python}
+#| echo: false
+#| fig-width: 12
+#| fig-height: 4.2
+fig, ax = canvas(12, 4.2)
+ax.text(0.4, 3.75, "~/.claude/skills/", fontsize=15, family="monospace", color=MUTED)
+ax.text(0.8, 3.25, "bf550-tutor/", fontsize=15, family="monospace", color=INK, weight="bold")
+ax.text(1.2, 2.75, "SKILL.md", fontsize=15, family="monospace", color=INK)
+arrow(ax, 2.9, 2.85, 4.35, 2.85, "", MUTED)
+box(ax, 4.4, 2.35, 7.2, 1.55, "---\nname: bf550-tutor\ndescription: Quiz me or explain a BF550 topic...\n---",
+    ORANGE, fs=13, ha="left", family="monospace")
+box(ax, 4.4, 0.25, 7.2, 1.9, "# BF550 tutor\nFirst, gather context...\nQuiz mode: one question at a time...",
+    BLUE, filled=False, fs=13, ha="left", family="monospace")
+ax.text(11.45, 3.65, "header", ha="right", fontsize=13, color=ORANGE, style="italic", va="center")
+ax.text(11.45, 1.9, "plain instructions", ha="right", fontsize=13, color=BLUE, style="italic", va="center")
+ax.text(0.4, 1.3, "the folder's name\nis a command:\n/bf550-tutor", fontsize=14, color=MUTED, va="center")
+plt.show()
+```
+
+## The description decides when a skill loads
+
+```{python}
+#| echo: false
+#| fig-width: 12
+#| fig-height: 4.4
+fig, ax = canvas(12, 4.4)
+box(ax, 0.3, 1.8, 3.1, 0.9, '"Can you quiz me on\nodds ratios?"', MUTED, filled=False, fs=13)
+cards = [("plot-house-style", "how I label my figures", False),
+         ("bf550-tutor", "quiz me or explain a BF550 topic", True),
+         ("git-helper", "tidy commits before a push", False)]
+for i, (n, d, hit) in enumerate(cards):
+    y = 3.2 - 1.15 * i
+    box(ax, 4.6, y, 3.6, 0.9, f"{n}\n{d}", GREEN if hit else HAIR, filled=hit, fs=12)
+arrow(ax, 3.4, 2.25, 4.6, 2.5, "matches", GREEN, fs=13)
+arrow(ax, 8.2, 2.5, 8.9, 2.5, "", GREEN)
+box(ax, 8.9, 0.6, 2.9, 3.4, "the full\ninstructions\nload now", GREEN, fs=14)
+ax.text(6.4, 4.25, "read at start: descriptions only", ha="center", fontsize=13, color=MUTED, style="italic")
+plt.show()
+```
+
+- Write the description in the words you would use: "quiz me", "practice", "explain". Restart Claude Code after a change
+
+## Where skills live
+
+```{python}
+#| echo: false
+#| fig-width: 12
+#| fig-height: 3.8
+fig, ax = canvas(12, 3.8)
+box(ax, 0.3, 2.4, 4.4, 0.9, "~/.claude/skills/", BLUE, fs=15, family="monospace")
+for i, r in enumerate(["PS10 repo", "lab repo", "any folder"]):
+    box(ax, 0.3 + 1.5 * i, 0.4, 1.35, 0.8, r, BLUE, filled=False, fs=13)
+    arrow(ax, 2.5, 2.4, 0.95 + 1.5 * i, 1.2, "", BLUE)
+ax.text(2.5, 3.5, "yours, everywhere", ha="center", fontsize=15, weight="bold", color=BLUE)
+box(ax, 6.6, 0.4, 5.0, 2.6, "", ORANGE, filled=False)
+ax.text(6.8, 2.6, "a repository", fontsize=14, color=ORANGE, weight="bold")
+box(ax, 7.1, 1.1, 4.0, 0.9, ".claude/skills/", ORANGE, fs=15, family="monospace")
+ax.text(9.1, 3.5, "shared with the repo, only there", ha="center", fontsize=15, weight="bold", color=ORANGE)
+plt.show()
+```
+
+- A skill is a text file. Read one before you install it, as you read code before you run it
+
+## The tutor you will build: `/bf550-tutor`
+
+```{python}
+#| echo: false
+#| fig-width: 12
+#| fig-height: 4.4
+fig, ax = canvas(12, 4.4)
+box(ax, 0.3, 1.8, 2.4, 1.0, "what do you\nwant to practise?", BLUE, fs=13)
+box(ax, 3.4, 1.8, 2.4, 1.0, "reads the\nnotebook cell\nand course page", GREEN, fs=13)
+box(ax, 6.5, 1.8, 2.4, 1.0, "one question\nat a time", ORANGE, fs=13)
+box(ax, 9.6, 1.8, 2.2, 1.0, "what to review,\nwith links", BLUE, fs=13)
+arrow(ax, 2.7, 2.3, 3.4, 2.3)
+arrow(ax, 5.8, 2.3, 6.5, 2.3)
+arrow(ax, 8.9, 2.3, 9.6, 2.3)
+ax.annotate("", (7.2, 2.85), (8.2, 2.85), arrowprops=dict(arrowstyle="-|>", color=ORANGE, lw=2, connectionstyle="arc3,rad=1.2"))
+ax.text(7.7, 3.55, "answer, feedback, harder or easier", ha="center", fontsize=12, color=ORANGE, style="italic")
+srcs = [("course site", True), ("textbook", True), ("your bf550-* repos", True), ("anything private", False)]
+for i, (s, ok) in enumerate(srcs):
+    x = 0.3 + 3.0 * i
+    box(ax, x, 0.2, 2.7, 0.6, s, GREEN if ok else MUTED, filled=ok, fs=13, tc=INK if ok else MUTED)
+    if not ok:
+        ax.plot([x + 0.1, x + 2.6], [0.5, 0.5], color=ORANGE, lw=2.5)
+ax.plot([0.3, 8.7], [0.95, 0.95], color=GREEN, lw=2)
+arrow(ax, 4.6, 0.95, 4.6, 1.8, "where it may look", GREEN, fs=12, dx=1.1, dy=0.2)
+ax.text(10.7, 3.4, "on a level 1 question:\nteaches the ideas,\nnever writes the answer", ha="center", fontsize=12, color=MUTED, style="italic")
+plt.show()
+```
+
+## Now the notebook: part 4
+
+- Have Claude Code build `/bf550-tutor` from the specification in the notebook
+- Check that it triggers, then make it yours with a `## My preferences` section
+- Swap with a partner: can they start your tutor without reading it?
+- About 25 minutes
+
+# Habits to keep
+
+## Four habits
+
+1. **Say what you mean.** A vague request gets a reasonable answer to a different question
+2. **Give it a check.** The agent's loop is only as good as what it verifies against
+3. **Read before you accept.** The transcript and the changed files are where its mistakes show
+4. **You own the result.** Every question states its AI level, and what you submit is yours
+
+## Next time
+
+- Unit 11, Fri Nov 20: dimensionality reduction with principal component analysis
+- PS10 is due Mon Nov 30. Your tutor works there too, within each question's AI level
