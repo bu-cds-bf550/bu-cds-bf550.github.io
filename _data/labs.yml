@@ -61,3 +61,8 @@
   unit: unit-07
   date: "Fri Oct 23 · Mon Oct 26 · Wed Oct 28"
   title: "Splits, folds, and shuffled labels"
+- id: unit-10
+  path: "unit-10.ipynb"
+  unit: unit-10
+  date: "Fri Nov 13 · Mon Nov 16 · Wed Nov 18"
+  title: "Logistic and negative binomial regression with statsmodels"
