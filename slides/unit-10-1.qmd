@@ -1,0 +1,963 @@
+---
+title: "Logistic regression"
+subtitle: "BF550 · Unit 10 · Session 1 — Fri Nov 13"
+author: "Adam Labadorf"
+format:
+  revealjs:
+    theme: [default, theme/u10.scss]
+    width: 1280
+    height: 720
+    slide-number: true
+    center: false
+    auto-stretch: false
+    embed-resources: true
+execute:
+  echo: false
+  warning: false
+jupyter: python3
+---
+
+```{python}
+#| label: setup
+import sys, html, re
+sys.path.insert(0, ".")
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+import statsmodels.formula.api as smf
+from _u10data import *
+
+setup_plots()
+BG = "#fcfcfa"
+VIOLET = "#6250d6"
+
+# ---- formatting -----------------------------------------------------------
+_SUP = str.maketrans("-0123456789", "⁻⁰¹²³⁴⁵⁶⁷⁸⁹")
+def fm(v, nd=2, sign=False):
+    """A number with a real minus sign (−), optionally with a + for positives."""
+    return (f"{v:+.{nd}f}" if sign else f"{v:.{nd}f}").replace("-", "−")
+
+from IPython.display import Markdown
+
+def tn(v, nd=2):
+    """A number for LaTeX (a plain hyphen, which MathJax draws as a minus sign)."""
+    return f"{v:.{nd}f}"
+
+def M(tex):
+    """Inline LaTeX holding computed numbers, passed through without markdown escaping."""
+    return Markdown(tex)
+
+def eq(tex):
+    """A display equation holding computed numbers; call it in an output: asis chunk."""
+    print("$$" + tex + "$$")
+
+def sci(x):
+    """5e-05 as 5 \\times 10^{-5}, for LaTeX."""
+    m, e = f"{x:.1e}".split("e")
+    return rf"{m.rstrip('0').rstrip('.')} \times 10^{{{int(e)}}}"
+
+def fp(p):
+    """A p-value for a slide: 0.14, 0.053, or 5.4×10⁻⁵."""
+    if p >= 0.001:
+        return f"{p:.2g}"
+    m, e = f"{p:.1e}".split("e")
+    return f"{m}×10{str(int(e)).translate(_SUP)}"
+
+def ftab(rows, header):
+    """A small HTML table in unit 9's se-tab style."""
+    h = ['<table class="se-tab"><tr>' + "".join(f"<th>{c}</th>" for c in header) + "</tr>"]
+    for r in rows:
+        h.append("<tr>" + "".join(f"<td>{c}</td>" for c in r) + "</tr>")
+    print("```{=html}\n" + "".join(h) + "</table>\n```")
+
+# ---- highlighted statsmodels output (unit 9's style, z in place of t) -----
+LOGIT_COLS = ["coef", "std err", "z", "P>|z|", "[0.025", "0.975]"]
+
+def _wrap_tokens(line, names, cols):
+    toks = re.split(r"(\s+)", line)
+    k = 0
+    for i, tok in enumerate(toks):
+        if tok == "" or tok.isspace():
+            continue
+        nm = names[k] if k < len(names) else None
+        if nm in cols:
+            toks[i] = f'<span class="{cols[nm]}">{tok}</span>'
+        k += 1
+    return "".join(toks)
+
+def _coef_block(m):
+    """The coefficient table with exact p-values, which summary() prints as 0.000."""
+    ci = m.conf_int()
+    names = list(m.params.index)
+    nw = max(max(len(n) for n in names) + 1, 15)
+    hdr = (f"{'':<{nw}}{'coef':>10}{'std err':>11}{'z':>10}{'P>|z|':>11}"
+           f"{'[0.025':>11}{'0.975]':>11}")
+    out = ["=" * len(hdr), hdr, "-" * len(hdr)]
+    for n in names:
+        out.append(f"{n:<{nw}}{m.params[n]:>10.4f}{m.bse[n]:>11.3f}{m.tvalues[n]:>10.3f}"
+                   f"{m.pvalues[n]:>11.2e}{ci.loc[n, 0]:>11.3f}{ci.loc[n, 1]:>11.3f}")
+    return out + ["=" * len(hdr)]
+
+def show_logit(m, rows, cols=None, table_only=True, cls="u9-out"):
+    """The coefficient table of a Logit summary, with chosen rows and columns highlighted."""
+    cols = {"coef": "hl-b"} if cols is None else cols
+    lines = str(m.summary()).split("\n")
+    h = next(i for i, l in enumerate(lines) if re.match(r"^\s+coef\s+std err", l))
+    lines = ([] if table_only else lines[:h - 1]) + _coef_block(m)
+    out = []
+    for line in lines:
+        e = html.escape(line)
+        if re.match(r"^\s+coef\s+std err", line):
+            e = _wrap_tokens(e.replace("std err", "std\x00err"), LOGIT_COLS, cols).replace("\x00", " ")
+        elif re.match(r"^(" + "|".join(map(re.escape, rows)) + r")\s", line):
+            e = _wrap_tokens(e, [None] + LOGIT_COLS, cols)
+        out.append(e)
+    print(f'```{{=html}}\n<pre class="{cls}">' + "\n".join(out) + "</pre>\n```")
+
+def show_top(m, marks, cls="u9-out u9-out-lg"):
+    """The right-hand column of a Logit summary's top block (the left holds the date), marked."""
+    lines = str(m.summary()).split("\n")
+    h = next(i for i, l in enumerate(lines) if re.match(r"^\s+coef\s+std err", l))
+    out = []
+    for line in lines[2:h - 2]:
+        k, v = re.split(r"\s{2,}", line.strip())[-2:]
+        e = html.escape(f"{k:<20}{v:>12}")
+        if k.rstrip(":") in marks:
+            e = f'<span class="{marks[k.rstrip(":")]}">{e}</span>'
+        out.append(e)
+    print(f'```{{=html}}\n<pre class="{cls}">' + "\n".join(out) + "</pre>\n```")
+
+# ---- plotting helpers -----------------------------------------------------
+def newfig(w=6.4, h=5.2, **kw):
+    fig, ax = plt.subplots(figsize=(w, h), **kw)
+    fig.patch.set_facecolor(BG)
+    return fig, ax
+
+def done():
+    plt.tight_layout()
+    plt.show()
+
+def logistic(z):
+    return 1 / (1 + np.exp(-z))
+
+
+def brace(ax, x, y0, y1, color, w=0.9, k=40):
+    """A vertical curly bracket from y0 to y1 at x, pointing right (Josh's unit 9 brace)."""
+    t = np.linspace(0, 0.5, 200)
+    h = 1 / (1 + np.exp(-k * t)) + 1 / (1 + np.exp(-k * (t - 0.5)))
+    prof = np.concatenate([h, h[-2::-1]]) - 0.5
+    ax.plot(x + w * prof, np.linspace(y0, y1, len(prof)), color=color, lw=2.2,
+            solid_capstyle="round", zorder=5)
+    return x + w + 0.6
+
+# ---- the cohort -----------------------------------------------------------
+ad = alzheimers_cohort()                     # one row per person: age, e4 (0/1/2), case (0/1)
+n_people = len(ad)
+n_case = int(ad.case.sum())
+n_healthy = n_people - n_case
+ad["band"] = pd.cut(ad.age, [59, 69, 79, 89, 94], labels=["60–69", "70–79", "80–89", "90–94"])
+by_band = ad.groupby("band", observed=True).agg(n=("case", "size"), cases=("case", "sum"),
+                                               share=("case", "mean"), mid=("age", "mean"))
+bands = list(by_band.index)
+share = by_band["share"].to_numpy()
+mids = by_band["mid"].to_numpy()
+odds = share / (1 - share)
+logodds = np.log(odds)
+
+ols = smf.ols("case ~ age", ad).fit()
+ols_b0, ols_b1 = ols.params["Intercept"], ols.params["age"]
+yhat = lambda a: ols_b0 + ols_b1 * a
+n_neg = int((ols.fittedvalues < 0).sum())
+neg_ages = sorted(int(a) for a in ad.age[ols.fittedvalues < 0].unique())
+odds_line = np.polyfit(mids, odds, 1)        # a straight line through the bands' odds
+
+fit1 = smf.logit("case ~ age", ad).fit(disp=0)
+b1_age = fit1.params["age"]
+p_age = fit1.pvalues["age"]
+ll1, ll0, pr2 = fit1.llf, fit1.llnull, fit1.prsquared
+p_flat = ad.case.mean()                      # the base model's one p for everyone
+
+fit2 = smf.logit("case ~ age + e4", ad).fit(disp=0)
+b_age2, b_e4 = fit2.params["age"], fit2.params["e4"]
+by_e4 = ad.groupby("e4").case.agg(["size", "sum", "mean"])
+p_new = lambda a, c: logistic(fit2.params["Intercept"] + b_age2 * a + b_e4 * c)
+
+# ---- the six people -------------------------------------------------------
+six = six_people()
+B0 = -10.0                                   # held fixed for the hand steps
+C1, C2 = 0.12, 0.10                          # the two candidate slopes
+p_c1, each_c1, L_c1 = likelihood(B0, C1, six.age, six.case)
+p_c2, each_c2, L_c2 = likelihood(B0, C2, six.age, six.case)
+grid = np.linspace(0.06, 0.19, 651)
+L_grid = np.array([likelihood(B0, b, six.age, six.case)[2] for b in grid])
+b1_peak = grid[np.argmax(L_grid)]
+fit_six = smf.logit("case ~ age", six).fit(disp=0)
+worst = int(np.argmin(each_c1))
+
+# ---- the 0/1 picture: one mark per (age, outcome), area ∝ people ---------
+PEOPLE = "#a9a7a0"
+AREA = 3.0                                   # marker area (pt²) per person
+WIN = 3                                      # sliding window: ages within ±3 years
+win_ages = np.arange(60, 95)
+win_share = np.array([ad.case[(ad.age >= a - WIN) & (ad.age <= a + WIN)].mean() for a in win_ages])
+
+def marks(ax, share_labels=True, xlim=(58, 96), line_labels=True):
+    for y, lab, dy, va in ((1, "every case is a 1", 0.04, "bottom"), (0, "every healthy person is a 0", -0.04, "top")):
+        ax.axhline(y, color=MUTED, ls="--", lw=1.5, zorder=2)
+        if line_labels:
+            ax.text(xlim[1] - 0.5, y + dy, lab, ha="right", va=va, color=MUTED, fontsize=12.5)
+    ax.scatter(win_ages, win_share, s=46, color=ORANGE, edgecolor="white", lw=0.6, zorder=4,
+               label="share of cases among people of about that age")
+    ax.set_xlim(*xlim)
+    ax.set_yticks([0, 0.5, 1])
+    ax.set_xlabel("age")
+    ax.set_ylabel("case (1) or healthy (0)")
+    ax.set_ylim(-0.25, 1.25)
+```
+
+## Where we left off
+
+- Unit 9 fit one right-hand side, $b_0 + b_1 x_1 + b_2 x_2$, by least squares
+  - Each $b$ is read holding the other predictors fixed
+  - Leaving out a variable can hide a real effect or create a fake one
+  - Testing many genes needs adjusted p-values: Bonferroni and the false discovery rate
+
+. . .
+
+- Today keeps the same right-hand side
+- What changes is the outcome: not a measurement, but **yes or no**
+
+# A new problem
+
+## A study of 2,000 older adults
+
+- A study assesses `{python} f"{n_people:,}"` adults aged 60 to 94, once each, for Alzheimer's disease
+  - A **case** is a person with Alzheimer's
+  - A person without it is **healthy**
+- The study finds `{python} f"{n_case:,}"` cases and `{python} f"{n_healthy:,}"` healthy people
+
+. . .
+
+- Each person's age is recorded
+- The question: how does the chance of having Alzheimer's change with age?
+
+## Does the risk rise with age?
+
+:::: {.columns}
+::: {.column width="56%"}
+```{python}
+#| fig-width: 6.8
+#| fig-height: 5.0
+edges = np.arange(60, 100, 5)                # 5-year bins: 60-64, ..., 90-94
+n_all, _ = np.histogram(ad.age, bins=edges)
+n_cs, _ = np.histogram(ad.age[ad.case == 1], bins=edges)
+lefts, w = edges[:-1], 5
+fig, ax = newfig(6.8, 5.0)
+ax.bar(lefts, n_cs, width=w, align="edge", color=ORANGE, edgecolor="white", label="cases", zorder=3)
+ax.bar(lefts, n_all - n_cs, width=w, align="edge", bottom=n_cs, color="#c9d9ee", edgecolor="white",
+       label="healthy", zorder=3)
+ax.set_xlabel("age")
+ax.set_ylabel("people")
+ax.set_xticks(edges)
+ax.set_ylim(0, n_all.max() * 1.3)
+ax.grid(axis="x", visible=False)
+ax2 = ax.twinx()
+ax2.plot(lefts + w / 2, n_cs / n_all, "o-", color=INK, lw=2.5, ms=8, zorder=5, label="share that are cases")
+ax2.set_ylim(0, 0.39)
+ax2.set_ylabel("share that are cases", color=INK)
+ax2.spines["right"].set_visible(True)
+ax2.grid(False)
+h1, l1 = ax.get_legend_handles_labels(); h2, l2 = ax2.get_legend_handles_labels()
+ax.legend(h1 + h2, l1 + l2, loc="upper left", ncol=3, fontsize=12.5, handlelength=1.4, columnspacing=1.0)
+done()
+```
+:::
+::: {.column width="44%"}
+```{python}
+#| output: asis
+ftab([(b, f"{int(r.n):,}", f"{int(r.cases):,}", f"{r.share:.3f}") for b, r in by_band.iterrows()],
+     ["age", "people", "cases", "share that are cases"])
+```
+
+. . .
+
+- The share of cases rises in every age band
+- How fast does the risk rise with each year of age?
+:::
+::::
+
+# Why a straight line fails
+
+## First try: unit 9's line, with the disease coded 0 or 1
+
+- Unit 9 fit a line to a measurement, $b_0 + b_1 x$, and least squares chose the $b$'s
+- Having the disease is not a measurement; it is yes or no
+- The simplest thing is to set $y$ to either 1 or 0:
+  - a case → $y = 1$
+  - a healthy person → $y = 0$
+
+. . .
+
+- Then fit unit 9's line, with $x$ = age:
+
+$$y = b_0 + b_1 x$$
+
+- If $b_1$ is above 0, the risk rises with age
+- The question: does a line make sense for an outcome that is only ever 0 or 1?
+
+## The outcome is 0 or 1
+
+:::: {.columns}
+::: {.column width="55%"}
+```{python}
+#| fig-width: 6.4
+#| fig-height: 5.0
+fig, ax = newfig(6.4, 5.0)
+marks(ax)
+ax.legend(loc="upper center", bbox_to_anchor=(0.5, 0.82))
+done()
+```
+:::
+::: {.column width="45%"}
+- Each case is a 1 and each healthy person is a 0 (dashed lines)
+
+. . .
+
+- The mean of the 0s and 1s among people of about the same age is their **share** of cases (orange), computed from the data
+- A line through the 0s and 1s estimates how the chance of having Alzheimer's changes with each year of age. Its slope, $b_1$, is that relationship
+:::
+::::
+
+## Discuss with a neighbour: a line through 0s and 1s
+
+:::: {.columns}
+::: {.column width="52%"}
+```{python}
+def discuss_plot(residuals):
+    fig, ax = newfig(6.2, 4.8)
+    marks(ax, share_labels=False)
+    xs = np.linspace(58, 96, 50)
+    ax.plot(xs, yhat(xs), color=BLUE, lw=3, zorder=4)
+    if residuals:
+        for a in (65, 80, 92):
+            yh = yhat(a)
+            ax.vlines([a], 0, 1, color=MUTED, lw=2, zorder=2)
+            tx = brace(ax, a + 0.6, yh + 0.02, 0.97, ORANGE)
+            box = dict(facecolor=BG, edgecolor="none", alpha=0.9, pad=1.2)
+            ax.text(tx, (yh + 1) / 2, fm(1 - yh, 2, sign=True), color=ORANGE, fontsize=12,
+                    fontweight="bold", va="center", zorder=8, bbox=box)
+            tx = brace(ax, a + 0.6, 0.03, yh - 0.02, VIOLET)
+            ax.text(tx, yh / 2, fm(-yh, 2), color=VIOLET, fontsize=12, fontweight="bold",
+                    va="center", zorder=8, bbox=box)
+    ax.set_xlim(58, 99)
+    done()
+```
+
+::: {.r-stack}
+```{python}
+#| fig-width: 6.2
+#| fig-height: 4.8
+discuss_plot(residuals=False)
+```
+
+::: {.fragment fragment-index=1}
+```{python}
+#| fig-width: 6.2
+#| fig-height: 4.8
+discuss_plot(residuals=True)
+```
+:::
+:::
+:::
+::: {.column width="48%"}
+Unit 9's least-squares line:
+
+```{python}
+#| output: asis
+eq(rf"\hat{{y}} = {tn(ols_b0, 3)} + {tn(ols_b1, 4)}\,x")
+```
+
+1. A new person aged 78 joins the study. What does the line predict for them? What kind of number is it?
+
+::: {.fragment fragment-index=1}
+2. At each age, a residual takes only two values: [$1 - \hat{y}$]{.orange} for a case, [$-\hat{y}$]{.violet} for a healthy person. Does that look like unit 9's random noise?
+:::
+:::
+::::
+
+## Discuss with a neighbour (cont.)
+
+1. `{python} M(rf"$\hat{{y}} = {tn(ols_b0, 3)} + {tn(ols_b1, 4)} \times 78 = {tn(yhat(78), 2)}$")`. It is the **probability** that a person aged 78 has Alzheimer's
+2. No. Every residual is one of two values, so they cannot spread like noise around the line, and unit 9's SE and p-value do not hold
+
+. . .
+
+- So the line predicts a probability for any new person, at any age
+- What does it predict at the youngest ages?
+
+## A line can predict impossible probabilities
+
+:::: {.columns}
+::: {.column width="56%"}
+```{python}
+#| fig-width: 6.6
+#| fig-height: 4.8
+fig, ax = newfig(6.6, 4.8)
+ax.axhspan(-0.25, 0, color="#f6d5cf", zorder=0)
+ax.axhspan(1, 1.25, color="#f6d5cf", zorder=0)
+ax.text(99, -0.19, "not a probability", color="#b8481c", fontsize=13, va="center", ha="right")
+ax.text(99, 1.13, "not a probability", color="#b8481c", fontsize=13, va="center", ha="right")
+marks(ax, share_labels=False, xlim=(50, 100), line_labels=False)
+xs = np.linspace(50, 100, 50)
+ax.plot(xs, yhat(xs), color=BLUE, lw=3, zorder=4)
+for a, off in ((55, (-6, -34)), (60, (-6, 26))):
+    ax.scatter([a], [yhat(a)], s=90, color=BLUE, edgecolor="white", zorder=5)
+    ax.annotate(rf"age {a}: $\hat{{y}} = {yhat(a):.2f}$", (a, yhat(a)), xytext=off,
+                textcoords="offset points", fontsize=13, color=BLUE, ha="left",
+                bbox=dict(facecolor=BG, edgecolor="none", alpha=0.8, pad=1.5), zorder=6)
+ax.get_legend() and ax.get_legend().remove()
+done()
+```
+:::
+::: {.column width="44%"}
+- For a new person aged 60, the line predicts `{python} M(rf"$\hat{{y}} = {tn(yhat(60), 3)}$")`
+- At 55 it predicts `{python} M(rf"$\hat{{y}} = {tn(yhat(55), 3)}$")`
+
+. . .
+
+- A probability below 0 is impossible, as is one above 1
+- In our own study, `{python} n_neg` people (aged `{python} neg_ages[0]` to `{python} neg_ages[-1]`) get a negative "probability"
+- A line keeps going; a probability has to stop at 0 and 1
+:::
+::::
+
+# From probability to log-odds
+
+## Odds remove the ceiling
+
+- $p$ is stuck between 0 and 1, and a straight line crosses the limits
+- The **odds** of being a case are the chance for over the chance against: $p / (1 - p)$
+  - $p = 0.5$ → odds 1, "even odds"
+  - $p = 0.8$ → odds $0.8 / 0.2 = 4$, "4 to 1"
+- Unit 5 used odds: the posterior odds, rRNA to non-rRNA
+
+. . .
+
+```{python}
+#| output: asis
+ftab([(b, f"{s:.3f}", f"{1 - s:.3f}", f"{o:.3f}") for b, s, o in zip(bands, share, odds)],
+     ["age", r"\(p\)", r"\(1 - p\)", r"odds \(= \frac{p}{1 - p}\)"])
+```
+
+- The odds have no ceiling: as $p \to 1$, the odds $\to \infty$ ($p = 0.99$ gives odds of 99)
+
+## Odds still have a floor
+
+- Odds are never below 0: a chance for over a chance against cannot be negative
+- But a line in the odds can be. A straight line through the four bands' odds, at the bands' mean ages, extended to age 60:
+
+```{python}
+#| output: asis
+eq(rf"\text{{odds}} = {tn(odds_line[1], 3)} + {tn(odds_line[0], 4)} \times 60 = {tn(np.polyval(odds_line, 60), 3)}")
+```
+
+. . .
+
+- Taking the log removes the floor. **log** here is the natural log, and $e^x$ undoes it
+  - $e \approx 2.718$; $\log(e^x) = x$, and $e^{\log y} = y$
+  - As the odds fall toward 0, their log falls toward $-\infty$
+
+## Log-odds have no floor or ceiling
+
+:::: {.columns}
+::: {.column width="56%"}
+```{python}
+#| fig-width: 6.6
+#| fig-height: 4.6
+fig, ax = newfig(6.6, 4.6)
+pp = np.linspace(0.0025, 0.9975, 600)
+ax.plot(pp, np.log(pp / (1 - pp)), color=BLUE, lw=3, zorder=3)
+for x0 in (0, 1):
+    ax.axvline(x0, color=MUTED, ls="--", lw=1.5)
+for s_, lo in zip(share, logodds):
+    ax.plot([s_, s_], [-6.5, lo], color=ORANGE, ls=":", lw=1.5, zorder=2)
+    ax.plot([-0.05, s_], [lo, lo], color=ORANGE, ls=":", lw=1.5, zorder=2)
+    ax.scatter([s_], [lo], s=80, color=ORANGE, zorder=4)
+ax.annotate(r"$\to -\infty$ as $p \to 0$", (0.01, -4.6), xytext=(0.1, -5.6), fontsize=13, color=MUTED,
+            arrowprops=dict(arrowstyle="-", color=MUTED, lw=1))
+ax.annotate(r"$\to \infty$ as $p \to 1$", (0.99, 4.6), xytext=(0.5, 5.0), fontsize=13, color=MUTED,
+            arrowprops=dict(arrowstyle="-", color=MUTED, lw=1))
+ax.set_xlim(-0.05, 1.05); ax.set_ylim(-6.5, 6.5)
+ax.set_xticks([0, 0.25, 0.5, 0.75, 1])
+ax.set_xlabel(r"$p$, the probability of being a case")
+ax.set_ylabel(r"log-odds, $\log\left(\frac{p}{1 - p}\right)$")
+done()
+```
+:::
+::: {.column width="44%"}
+```{python}
+#| output: asis
+ftab([(b, f"{s:.3f}", f"{o:.3f}", fm(lo)) for b, s, o, lo in zip(bands, share, odds, logodds)],
+     ["age", r"\(p\)", "odds", "log-odds"])
+```
+
+```{python}
+#| output: asis
+ftab([(r"\(p\)", "0 to 1", "both"), (r"odds, \(\frac{p}{1 - p}\)", r"0 to \(\infty\)", "below 0"),
+      (r"<b>log-odds</b>, \(\log\frac{p}{1 - p}\)", r"\(-\infty\) to \(\infty\)", "none")],
+     ["scale", "range", "a line can cross"])
+```
+
+- A straight line in the log-odds never leaves their range
+:::
+::::
+
+## The log turns multiplying into adding
+
+- From one age band to the next, the odds multiplied, but a linear model adds $b_1$ for each year
+- The log connects the two: $\log(a \times b) = \log a + \log b$
+
+. . .
+
+```{python}
+#| output: asis
+ftab([(f"{bands[i]} → {bands[i + 1]}", f"×{odds[i + 1] / odds[i]:.2f}",
+       fm(logodds[i + 1] - logodds[i], 2, sign=True),
+       rf"\(\log({odds[i + 1] / odds[i]:.2f}) = {np.log(odds[i + 1] / odds[i]):.2f}\)")
+      for i in range(len(bands) - 1)],
+     ["age", "the odds", "the log-odds", "check"])
+```
+
+- Multiplying the odds by a factor adds the log of that factor to the log-odds
+- So a model that adds $b_1$ to the log-odds for each year multiplies the odds by the same factor for each year
+
+## New notation: the logistic model
+
+$$\log\left(\frac{p}{1 - p}\right) = b_0 + b_1 x$$
+
+- $p$: the probability that a person is a case
+- $\log\left(\frac{p}{1 - p}\right)$: their log-odds, the last column of the table
+- $b_0 + b_1 x$: unit 9's right-hand side, unchanged, with $x$ = age
+
+. . .
+
+- Fitting this model is **logistic regression**
+- $b_1$ is the change in log-odds for each year of age
+
+## The logistic curve
+
+:::: {.columns}
+::: {.column width="55%"}
+```{python}
+#| fig-width: 6.4
+#| fig-height: 4.8
+z = np.linspace(-6, 6, 300)
+fig, ax = newfig(6.4, 4.8)
+ax.plot(z, logistic(z), color=BLUE, lw=3)
+ax.axhline(0, color=MUTED, lw=1, ls=":")
+ax.axhline(1, color=MUTED, lw=1, ls=":")
+ax.set_xlabel(r"$b_0 + b_1 x$ (the log-odds)")
+ax.set_ylabel(r"$p$, the probability of being a case")
+ax.set_yticks([0, 0.5, 1])
+done()
+```
+:::
+::: {.column width="45%"}
+- Undo the log to get the probability back:
+
+$$p = \frac{1}{1 + e^{-(b_0 + b_1 x)}}$$
+
+. . .
+
+- Any value of $b_0 + b_1 x$ gives a $p$ between 0 and 1
+- This S-shape is the **logistic curve**
+:::
+::::
+
+# Choosing $b_0$ and $b_1$
+
+## How do we score a curve?
+
+- Unit 9 scored a line by its sum of squared residuals, and least squares chose the smallest
+- A 0/1 outcome has only two kinds of residual, so the squares do not measure fit well
+
+. . .
+
+- What else could make one curve better than another?
+
+. . .
+
+- A good curve gives a high probability to what actually happened
+
+## Six people, one candidate curve
+
+:::: {.columns}
+::: {.column width="50%"}
+```{python}
+#| fig-width: 6.0
+#| fig-height: 4.6
+def six_plot(ax, b1, color):
+    xs = np.linspace(60, 95, 200)
+    ax.plot(xs, logistic(B0 + b1 * xs), color=color, lw=3)
+    ax.scatter(six.age, six.case, s=140, color=INK, zorder=4)
+    for _, r in six.iterrows():
+        ax.annotate(r.person, (r.age, r.case), xytext=(0, 12 if r.case else -22),
+                    textcoords="offset points", ha="center", fontsize=14)
+    ax.set_yticks([0, 0.5, 1])
+    ax.set_xlabel("age"); ax.set_ylabel("case (1) or healthy (0)")
+    ax.set_ylim(-0.2, 1.2)
+fig, ax = newfig(6.0, 4.6)
+six_plot(ax, C1, BLUE)
+done()
+```
+:::
+::: {.column width="50%"}
+- Six people, small enough to work by hand
+- Candidate curve 1: `{python} M(rf"$b_0 = {tn(B0, 0)}$, $b_1 = {C1:.2f}$")`
+  - We hold $b_0$ at `{python} M(rf"${tn(B0, 0)}$")`, so only $b_1$ is a dial
+
+. . .
+
+```{python}
+#| output: asis
+ftab([(r.person, r.age, r.case, f"{p:.2f}") for (_, r), p in zip(six.iterrows(), p_c1)],
+     ["person", "age", "case", r"curve's \(p\)"])
+```
+:::
+::::
+
+## The probability of what actually happened
+
+- A case: the curve's probability, $p$
+- A healthy person: the probability of not being a case, $1 - p$
+
+```{python}
+#| output: asis
+ftab([(r.person, r.case, f"{p:.2f}",
+       (rf"case: \(p = {p:.2f}\)" if r.case else rf"healthy: \(1 - p = 1 - {p:.2f}\)"),
+       f"<b>{e:.2f}</b>")
+      for (_, r), p, e in zip(six.iterrows(), p_c1, each_c1)],
+     ["person", "case", r"curve's \(p\)", "arithmetic", "probability of what happened"])
+```
+
+. . .
+
+- Person `{python} six.person[worst]` is a case at age `{python} int(six.age[worst])` that the curve gave only `{python} f"{each_c1[worst]:.2f}"`: the curve's worst miss
+
+## Multiply the six probabilities
+
+- The six people are independent, so the probability of all six outcomes together is the product:
+
+```{python}
+#| output: asis
+eq(r" \times ".join(f"{e:.2f}" for e in each_c1) + f" = {L_c1:.3f}")
+```
+
+. . .
+
+- This number is the **likelihood** of the curve: the probability of the data if the curve were true
+- Unit 5 used the same idea: the likelihood of a read under each microbe
+- A higher likelihood means the curve explains the data better
+
+## A second candidate curve
+
+:::: {.columns}
+::: {.column width="50%"}
+```{python}
+#| fig-width: 6.0
+#| fig-height: 4.6
+fig, ax = newfig(6.0, 4.6)
+six_plot(ax, C2, ORANGE)
+xs = np.linspace(60, 95, 200)
+ax.plot(xs, logistic(B0 + C1 * xs), color=BLUE, lw=2, alpha=0.35)
+done()
+```
+:::
+::: {.column width="50%"}
+- Candidate curve 1 (faded blue): `{python} M(rf"$b_0 = {tn(B0, 0)}$, $b_1 = {C1:.2f}$")`, likelihood `{python} f"{L_c1:.3f}"`
+- Candidate curve 2: `{python} M(rf"$b_0 = {tn(B0, 0)}$, $b_1 = {C2:.2f}$")`, rising more slowly with age
+
+```{python}
+#| output: asis
+eq(r" \times ".join(f"{e:.2f}" for e in each_c2) + f" = {L_c2:.4f}")
+```
+
+. . .
+
+- Curve 1's likelihood is `{python} f"{L_c1 / L_c2:.0f}"` times curve 2's
+- So `{python} M(rf"$b_1 = {C1:.2f}$")` explains these six people better than `{python} M(rf"$b_1 = {C2:.2f}$")`
+:::
+::::
+
+## Maximum likelihood
+
+:::: {.columns}
+::: {.column width="55%"}
+```{python}
+#| fig-width: 6.4
+#| fig-height: 4.6
+fig, ax = newfig(6.4, 4.6)
+ax.plot(grid, L_grid, color=INK, lw=2.5)
+for b, L, c in ((C2, L_c2, ORANGE), (C1, L_c1, BLUE)):
+    ax.scatter([b], [L], s=110, color=c, zorder=4)
+ax.axvline(b1_peak, color=AQUA, ls="--", lw=2)
+ax.set_xlabel(rf"$b_1$ ($b_0$ held at ${B0:.0f}$)")
+ax.set_ylabel("likelihood")
+done()
+```
+:::
+::: {.column width="45%"}
+- Score every $b_1$ on a grid, as unit 1's grid search did
+- The two candidates are two points on the curve
+
+. . .
+
+- The best $b_1$ is the peak: `{python} M(rf"$b_1 \approx {b1_peak:.3f}$")`
+- Choosing the values with the highest likelihood is **maximum likelihood**
+- It plays the role least squares played in unit 9
+:::
+::::
+
+## The same steps in Python {.smaller}
+
+```{python}
+#| echo: true
+#| eval: false
+six = pd.DataFrame({"age":  [64, 70, 75, 80, 85, 90],
+                    "case": [ 0,  1,  0,  0,  1,  1]})
+fit = smf.logit("case ~ age", data=six).fit()
+fit.params
+```
+
+```{python}
+print(fit_six.params.round(3).to_string())
+```
+
+- The same formula style as unit 9's `smf.ols`; only the function's name changes
+- Python searches $b_0$ and $b_1$ together, so its `{python} M(rf"$b_1 = {tn(fit_six.params['age'], 3)}$")` is close to, not equal to, our grid's peak with $b_0$ held at `{python} M(rf"${tn(B0, 0)}$")`
+- Python reports the log of the likelihood (`Log-Likelihood`), because a product of 2,000 probabilities is too small to print
+
+# Reading the fit
+
+## Age in all 2,000 people {.smaller}
+
+```{python}
+#| echo: true
+#| eval: false
+fit = smf.logit("case ~ age", data=ad).fit()
+fit.summary()
+```
+
+```{python}
+#| output: asis
+show_logit(fit1, ["age"], cols={"coef": "hl-b"})
+```
+
+- `{python} M(rf"$b_1 = {tn(b1_age, 4)}$")`: each year of age raises the log-odds of having Alzheimer's by `{python} f"{b1_age:.4f}"`
+
+## $e^{b_1}$ is an odds ratio
+
+- Log-odds are hard to read, so undo the log:
+
+```{python}
+#| output: asis
+eq(rf"e^{{{tn(b1_age, 4)}}} = {np.exp(b1_age):.3f}")
+```
+
+- Each year of age multiplies the odds of having Alzheimer's by `{python} f"{np.exp(b1_age):.3f}"`, because adding $b_1$ to the log-odds multiplies the odds by $e^{b_1}$
+- The **odds ratio** is the factor by which the odds change for one unit of $x$
+
+. . .
+
+- Five years multiply the odds five times over:
+
+```{python}
+#| output: asis
+eq(rf"e^{{5 \times {tn(b1_age, 4)}}} = {np.exp(b1_age):.3f}^5 = {np.exp(5 * b1_age):.2f}")
+```
+
+- An odds ratio of 1 means no effect; above 1, more risk; below 1, less
+
+## Reading the summary table {.smaller}
+
+```{python}
+#| output: asis
+show_logit(fit1, ["age"], cols={"coef": "hl-b", "std err": "hl-o", "z": "hl-a", "P>|z|": "hl-v"})
+```
+
+- [coef]{.blue} and [std err]{.orange} read as in unit 9: the estimate and its spread over repeated studies
+- [z]{.aqua} = coef / std err, which plays t's role. A fit by maximum likelihood compares it with the Normal curve rather than the t-curve, so it is called z
+- [P>|z|]{.violet} = `{python} fp(p_age)`: a rise this steep is far from luck
+
+## LL-Null plays the role of SSY
+
+:::: {.columns}
+::: {.column width="45%"}
+The top of the same summary, right-hand column:
+
+```{python}
+#| output: asis
+show_top(fit1, {"Log-Likelihood": "hl-b", "LL-Null": "hl-o", "Pseudo R-squ.": "hl-a"})
+```
+:::
+::: {.column width="55%"}
+- In unit 9, SSY scored the **base model**: the mean line, one value for everyone
+- [LL-Null]{.orange} scores the logistic base model: one $p$ for everyone, the share of cases, `{python} f"{p_flat:.3f}"`
+
+. . .
+
+- [Log-Likelihood]{.blue} scores the fitted curve, as RSS scored the fitted line
+- Both are logs of a likelihood, so both are negative; closer to 0 is better
+:::
+::::
+
+## LL-Null plays the role of SSY (cont.)
+
+| | the base model | the fitted model | share explained |
+|:--|:--|:--|:--|
+| linear (unit 9) | SSY: squares around the mean $\bar{y}$ | RSS: squares around each fitted value | $R^2 = 1 - \text{RSS} / \text{SSY}$ |
+| logistic (today) | LL-Null: log-likelihood of one $p$ for everyone | Log-Likelihood: of the fitted curve | pseudo $R^2 = 1 - \text{LL} / \text{LL-Null}$ |
+
+- One direction flips: a **smaller** RSS is better, but a **larger** log-likelihood is better
+
+. . .
+
+- Here: `{python} M(rf"$1 - ({tn(ll1)}) / ({tn(ll0)}) = {pr2:.3f}$")`, the [Pseudo R-squ.]{.aqua} line
+- Age alone leaves most of who has Alzheimer's unexplained, yet p = `{python} fp(p_age)`: as in unit 9, a modest share explained can still be far from luck
+
+# Adding a gene
+
+## One gene, three genotypes
+
+- The gene APOE comes in three common versions, its **alleles**: ε2, ε3 and ε4
+- Everyone carries two copies of the gene, one from each parent
+- So each person has **0, 1 or 2 copies** of ε4; we use that count as a number, `e4`
+
+```{python}
+#| output: asis
+ftab([(c, f"{int(r['size']):,}", f"{int(r['sum']):,}", f"{r['mean']:.3f}") for c, r in by_e4.iterrows()],
+     ["ε4 copies", "people", "cases", "share that are cases"])
+```
+
+. . .
+
+- `e4` only ever takes the values 0, 1 and 2; those are the only values we plug in
+- Carrying ε4 is the strongest known genetic risk factor for late-onset Alzheimer's
+
+## Adding ε4 to the model {.smaller}
+
+```{python}
+#| echo: true
+#| eval: false
+fit = smf.logit("case ~ age + e4", data=ad).fit()
+```
+
+```{python}
+#| output: asis
+show_logit(fit2, ["age", "e4"], cols={"coef": "hl-b"})
+```
+
+- Each $b$ is read holding the other fixed, as in unit 9
+- age: `{python} M(rf"$e^{{5 \times {tn(b_age2, 4)}}} = {np.exp(5 * b_age2):.2f}$")` for every 5 years, at the same number of ε4 copies
+- e4: `{python} M(rf"$e^{{{tn(b_e4, 3)}}} = {np.exp(b_e4):.2f}$")` for each copy of ε4, at the same age
+
+## One equation, three S-curves
+
+```{python}
+#| fig-width: 12.0
+#| fig-height: 4.4
+fig, (a1, a2) = plt.subplots(1, 2, figsize=(12.0, 4.4))
+fig.patch.set_facecolor(BG)
+xs = np.linspace(60, 95, 200)
+for c, col in ((0, BLUE), (1, ORANGE), (2, VIOLET)):
+    eta_c = fit2.params["Intercept"] + b_age2 * xs + b_e4 * c
+    lab = f"{c} cop{'y' if c == 1 else 'ies'} of ε4"
+    a1.plot(xs, eta_c, color=col, lw=3, label=lab)
+    a2.plot(xs, logistic(eta_c), color=col, lw=3, label=lab)
+a1.set_xlabel("age"); a1.set_ylabel("log-odds"); a1.set_title("log-odds: three parallel lines", loc="left", fontsize=14)
+a2.set_xlabel("age"); a2.set_ylabel(r"$p$"); a2.set_title("probability: three S-curves", loc="left", fontsize=14)
+a2.set_ylim(0, 1); a1.legend(loc="upper left")
+done()
+```
+
+- As in unit 9's two-predictor model, one equation gives one line per group; the lines are parallel in the log-odds
+- Undoing the log bends each line into an S-curve that stays between 0 and 1
+
+## Predicting for a new person
+
+- A new person aged 78 joins the study. The model predicts, by ε4 copies:
+
+```{python}
+#| output: asis
+ftab([(c, rf"\({tn(fit2.params['Intercept'])} + {tn(b_age2, 4)} \times 78 + {tn(b_e4, 3)} \times {c}\)",
+       f"{p_new(78, c):.3f}") for c in (0, 1, 2)],
+     ["ε4 copies", "log-odds", r"\(\hat{p}\)"])
+```
+
+. . .
+
+- Every prediction is a probability between 0 and 1, at any age
+- Two copies of ε4 raise this person's chance from `{python} f"{p_new(78, 0):.2f}"` to `{python} f"{p_new(78, 2):.2f}"`
+
+## Linear and logistic regression are generalized linear models
+
+| model | outcome | left-hand side | right-hand side |
+|:--|:--|:--|:--|
+| linear (unit 9) | a measurement, such as expression | its mean | $b_0 + b_1 x_1 + b_2 x_2 + \dots$ |
+| logistic (today) | 0 or 1, such as case or healthy | the log-odds of $p$ | $b_0 + b_1 x_1 + b_2 x_2 + \dots$ |
+
+. . .
+
+- Both rows keep the same right-hand side
+- Only the left-hand side changes, to suit the kind of outcome
+- Models built this way have a name, and their parts have names too
+
+## New terminology: generalized linear model
+
+- A **generalized linear model** (GLM) has three parts:
+
+1. A **distribution** for the outcome $Y$
+    - linear: Normal, for a measurement
+    - logistic: **Bernoulli**, one coin flip that gives 1 with probability $p$ (unit 3's binomial with one trial)
+2. A **linear predictor**, unit 9's right-hand side: $\eta = b_0 + b_1 x_1 + b_2 x_2 + \dots$
+3. A **link function** $g$ that connects $Y$'s mean, $\mu$, to the linear predictor: $g(\mu) = \eta$
+
+. . .
+
+- $\mu$ ("mu") is the mean of $Y$; for a 0/1 outcome, $\mu = p$. $\eta$ ("eta") is the linear predictor
+- Books write $\beta_0, \beta_1$ for our $b_0, b_1$
+
+## New terminology: link function
+
+- The **link function** $g$ turns the outcome's mean into the scale of the linear predictor
+- Its inverse, $g^{-1}$, turns the linear predictor back into a mean: $\mu = g^{-1}(\eta)$
+
+| model | $Y$'s distribution | $\mu$ | link: $g(\mu) = \eta$ | inverse: $\mu = g^{-1}(\eta)$ |
+|:--|:--|:--|:--|:--|
+| linear | Normal | the mean of $Y$ | **identity**: $g(\mu) = \mu$ | $\mu = \eta$ |
+| logistic | Bernoulli | $p$ | **logit**: $g(p) = \log\left(\frac{p}{1 - p}\right)$ | $p = \frac{1}{1 + e^{-\eta}}$ |
+
+. . .
+
+- The logit link is the log-odds, which is where `smf.logit` gets its name
+- The identity link changes nothing, so unit 9's linear model is the simplest GLM
+- Monday adds a row for counts, and Wednesday a row for categories
+
+## PS10 opens today
+
+- PS10: which CpG sites change with age, using unit 9's linear models
+  - `site ~ age` at every site, with Bonferroni and the false discovery rate
+  - `+ batch` as a confounder, and `sex * age` as an interaction
+- Due Mon Nov 30, after Thanksgiving. It is the term's last set
+
+## Working time — the rest of today
+
+- Start PS10: the fixture and question 1
+
+## Next time
+
+- Logistic regression keeps unit 9's right-hand side and models the log-odds of a yes/no outcome
+- Maximum likelihood chooses $b_0$ and $b_1$, and $e^{b_1}$ is an odds ratio
+- Age and ε4 copies both raise the odds of Alzheimer's, and every prediction stays between 0 and 1
+
+Next time: counts, such as RNA-seq reads, and the negative binomial model.
