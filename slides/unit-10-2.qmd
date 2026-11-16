@@ -625,14 +625,6 @@ ftab([("Poisson", f"{calls['poisson'][0]:.0%}", f"{calls['poisson'][1]:.0%}"),
 - The negative binomial adds one parameter, $\alpha$: the same fold change, with honest uncertainty
 - Every GLM keeps the right-hand side; the Poisson and the negative binomial differ only in the spread
 
-## Next time
-
-- Counts get a log link on their mean, so $e^{b_1}$ is a fold change: Poisson regression
-- Replicates vary more than a Poisson allows; the negative binomial adds one parameter, $\alpha$
-- Same estimate, honest uncertainty: the spread decides the p-value
-
-Next time: cell types in single-cell data, where the categories are more than two.
-
 ## Working time — the rest of today
 
 - PS10: continue
