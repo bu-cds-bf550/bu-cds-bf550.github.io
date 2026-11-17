@@ -354,11 +354,52 @@ plt.show()
 - Your notebooks' check cells are this. **The check decides what "done" means**: watch what it tests
 - Today your check is three tests you write into your tutor's spec
 
+## Your tutor, built the same way
+
+```{python}
+#| echo: false
+#| fig-width: 12
+#| fig-height: 4.4
+fig, ax = canvas(12, 4.4)
+steps = [("1  think", "notes on how\nyou learn,\nno Claude", BLUE),
+         ("2  interview", "Claude asks,\none at a time;\nyou answer", BLUE),
+         ("3  spec", "tutor-spec.md:\nyou read, fix,\ncommit", BLUE),
+         ("4  build", "Claude plans\nfrom the spec,\nthen SKILL.md", ORANGE),
+         ("5  test", "your three\ntests; revise", GREEN)]
+for i, (t, sub, c) in enumerate(steps):
+    x = 0.25 + 2.35 * i
+    box(ax, x, 1.15, 2.0, 1.75, "", c)
+    ax.text(x + 1.0, 2.6, t, ha="center", va="center", fontsize=15, weight="bold")
+    ax.text(x + 1.0, 1.75, sub, ha="center", va="center", fontsize=12, color=MUTED, linespacing=1.3)
+    if i < 4:
+        arrow(ax, x + 2.0, 2.0, x + 2.35, 2.0)
+for x0, x1, t, c in [(0.25, 4.6, "explore", BLUE), (4.95, 6.95, "plan", BLUE),
+                     (7.3, 9.3, "code", ORANGE), (9.65, 11.65, "verify, commit", GREEN)]:
+    ax.plot([x0, x1], [3.25, 3.25], color=c, lw=2)
+    ax.text((x0 + x1) / 2, 3.4, t, ha="center", fontsize=14, color=c, style="italic")
+arrow(ax, 10.65, 1.15, 5.95, 1.15, "", ORANGE, rad=-0.3)
+ax.text(8.3, 0.1, "a test fails? fix the skill, or change the spec", ha="center", fontsize=12,
+        color=ORANGE, style="italic")
+plt.show()
+```
+
+- Part 3 is steps 1 to 3; part 4 is steps 4 and 5. **You make the decisions; Claude asks, writes and builds**
+
+## A spec line Claude can build from
+
+| Too vague to build | Specific enough to build |
+|---|---|
+| Quiz me well. | Ask one question at a time, and wait for my answer before the next. |
+| Be encouraging. | When I'm wrong, say first what I got right, then the mistake in one sentence. |
+| Use the course material. | Before a quiz, read the unit page for the topic and use its notation. |
+
+- Specific enough means **you could watch the tutor and say whether it did it**
+- Your interview prompt asks Claude to follow up whenever an answer is too vague
+
 ## Now the notebook: part 3
 
-- You are designing **a tutor for BF550, built around how you learn best**. Its one job: help you understand the material
-- Jot notes on how you learn, then have Claude Code **interview you** in plan mode, one question at a time
-- Write the decisions to `tutor-spec.md`, with three tests. Read it, fix it, commit it
+- Steps 1 to 3: jot notes on how you learn, then let Claude Code **interview you** to fill in the spec template, one question at a time
+- Claude writes `tutor-spec.md` and lists every line you didn't actually tell it. Read it, fix it, commit it
 - About 25 minutes
 
 ## What happened in part 3
@@ -463,7 +504,7 @@ plt.show()
 #| fig-height: 4.4
 fig, ax = canvas(12, 4.4)
 box(ax, 0.3, 1.9, 2.9, 1.0, "tutor-spec.md\nyour decisions", BLUE, fs=14)
-arrow(ax, 3.2, 2.4, 4.4, 2.4, "Claude builds", MUTED)
+arrow(ax, 3.2, 2.4, 4.4, 2.4, "plan, build", MUTED)
 box(ax, 4.4, 1.9, 2.9, 1.0, "SKILL.md\n~/.claude/skills/", ORANGE, fs=14)
 arrow(ax, 7.3, 2.4, 8.5, 2.4, "restart", MUTED)
 box(ax, 8.5, 1.9, 3.2, 1.0, "/bf550-tutor\nrun your three tests", GREEN, fs=14)
@@ -479,8 +520,8 @@ plt.show()
 
 ## Now the notebook: part 4
 
-- Have Claude Code build `/bf550-tutor` from your `tutor-spec.md`, and read the skill against the spec
-- Check that it triggers, then run your three tests and revise
+- Steps 4 and 5: in plan mode, have Claude Code plan `/bf550-tutor` from your `tutor-spec.md`, and check the plan against the spec before it builds
+- Check that it triggers, then run your three tests and revise the spec or the skill
 - Swap seats: use your partner's tutor and tell them one thing their spec didn't predict
 - About 25 minutes
 
