@@ -133,7 +133,7 @@ def three_panels(n):
 gh student accept bu-bioinfo-classrooms bf550-fall-2026 bf550-agentic-coding-tutorial
 ```
 
-- On the SCC: clone it, open the folder in VS Code, run the notebook's setup cell
+- On the SCC: clone it and open the folder in VS Code. Keep claude.ai open in a browser tab
 - Start Claude Code in a terminal **in that folder**: `claude`
 - AI use today is **level 5**. Keep the terminal and the notebook side by side
 
@@ -159,7 +159,7 @@ three_panels(1)
 three_panels(2)
 ```
 
-- Ask for code and you get **text**: you run it, and you paste the error back
+- The work happens in the conversation, even when the chat runs code: you carry what it made into your own files
 
 ## An agent is a model that runs tools in a loop
 
@@ -174,8 +174,8 @@ three_panels(3)
 
 ## Now the notebook: part 1
 
-- **The same task, in a chat and in an agent**: ask claude.ai and Claude Code for the same chart of `cohort.csv`. The chat can't see the file, so you describe it there
-- Predict first: which one ends with `bands.png` in your folder?
+- **The same prompt, in a chat and in Claude Code**: simulate rolling two dice and chart the sums, as `dice.py` and `dice.png`
+- Predict first: where will each file end up? Then ask both for three dice
 - About 10 minutes
 
 # How an agent makes changes
@@ -187,12 +187,12 @@ three_panels(3)
 #| fig-width: 12
 #| fig-height: 4.8
 fig, ax = canvas(12, 4.8)
-rows = [("model", "I'll check the file's columns first.", BLUE),
-        ("tool call", 'Read("cohort.csv")', ORANGE),
-        ("tool result", "age,e4,case   86,1,1   94,0,1   ...", GREEN),
-        ("model", "Three columns. I'll count the rows with e4 = 2.", BLUE),
-        ("tool call", 'Bash("python count_e4.py")', ORANGE),
-        ("tool result", "41", GREEN)]
+rows = [("model", "I'll check how many rolls it simulates first.", BLUE),
+        ("tool call", 'Read("dice.py")', ORANGE),
+        ("tool result", "import random   N_ROLLS = 10_000   ...", GREEN),
+        ("model", "10,000 rolls. I'll change it to 100.", BLUE),
+        ("tool call", 'Edit("dice.py", "10_000", "100")', ORANGE),
+        ("tool result", "The file dice.py has been updated.", GREEN)]
 for i, (kind, text, c) in enumerate(rows):
     y = 4.05 - 0.72 * i
     ax.text(1.75, y + 0.27, kind, ha="right", va="center", fontsize=14, color=c, weight="bold")
@@ -256,7 +256,7 @@ plt.show()
 
 ## Now the notebook: part 2
 
-- **Be the harness**: in pairs, one of you is the model and writes tool calls on paper; the other carries them out in the terminal, exactly
+- **Be the harness**, on the `dice.py` from part 1: in pairs, one of you is the model and writes tool calls on paper; the other carries them out, exactly
 - Then give Claude Code the same task, press **Ctrl+O**, and label its transcript: model text, tool call, tool result
 - About 15 minutes
 
@@ -314,7 +314,7 @@ plt.show()
 #| fig-width: 12
 #| fig-height: 4.4
 fig, ax = canvas(12, 4.4)
-items = [("your request", BLUE), ("Read cohort.csv", GREEN), ("its reply", BLUE),
+items = [("your request", BLUE), ("Read dice.py", GREEN), ("its reply", BLUE),
          ("Bash output", GREEN), ("Read plot.py", GREEN), ("an error", ORANGE),
          ("its fix", BLUE), ("another error", ORANGE)]
 ax.add_patch(Rectangle((0.6, 0.3), 3.2, 3.6, fc="white", ec=MUTED, lw=2))
