@@ -23,3 +23,9 @@
   unit: unit-09
   date: "Fri Nov 6 · Mon Nov 9 · Wed Nov 11"
   title: "Linear regression with statsmodels: formulas, fits and their output"
+- id: agentic-coding
+  notebook: agentic-coding-tutorial.ipynb
+  unit: unit-10
+  date: "Wed Nov 18"
+  title: "Agentic coding with Claude Code: from a chatbot to a tutor you design"
+  file: agentic-coding

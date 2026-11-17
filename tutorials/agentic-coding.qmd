@@ -134,7 +134,7 @@ gh student accept bu-bioinfo-classrooms bf550-fall-2026 bf550-agentic-coding-tut
 ```
 
 - On the SCC: clone it and open the folder in VS Code. Keep claude.ai open in a browser tab
-- Start Claude Code in a terminal **in that folder**: `claude`
+- Two terminals **in that folder**: Claude Code (`claude`) in one, git and Python in the other
 - AI use today is **level 5**. Keep the terminal and the notebook side by side
 
 # What an agent is
@@ -176,6 +176,7 @@ three_panels(3)
 
 - **The same prompt, in a chat and in Claude Code**: simulate rolling two dice and chart the sums, as `dice.py` and `dice.png`
 - Predict first: where will each file end up? Then ask both for three dice
+- Save your work: `git status`, then ask Claude Code to commit
 - About 10 minutes
 
 # How an agent makes changes
@@ -254,10 +255,25 @@ plt.show()
 
 - It works in **your** account, on **your** files. What it does, you did
 
+## `git diff` shows what the agent changed
+
+```diff
+ import random
++random.seed(550)
+ N_ROLLS = 10_000
+ ...
+ plt.bar(sums, counts)
++plt.xlabel("sum of three dice")
++plt.ylabel("count")
+```
+
+- `-` lines were removed, `+` lines added, since your last commit. **Read the diff, not just Claude's summary of it**
+- Every part today ends the same way: you run `git diff`, Claude describes what changed, you compare, Claude commits
+
 ## Now the notebook: part 2
 
-- **Be the harness**, on the `dice.py` from part 1: in pairs, one of you is the model and writes tool calls on paper; the other carries them out, exactly
-- Then give Claude Code the same task, press **Ctrl+O**, and label its transcript: model text, tool call, tool result
+- **Read `dice.py` yourself**, no Claude: where are the rolls set, what did three dice change, same chart twice, what's on the y axis?
+- Ask Claude Code for your changes, find its tool calls with **Ctrl+O**, then check them with `git diff`
 - About 15 minutes
 
 # The agentic loop
@@ -505,7 +521,7 @@ plt.show()
 fig, ax = canvas(12, 4.4)
 box(ax, 0.3, 1.9, 2.9, 1.0, "tutor-spec.md\nyour decisions", BLUE, fs=14)
 arrow(ax, 3.2, 2.4, 4.4, 2.4, "plan, build", MUTED)
-box(ax, 4.4, 1.9, 2.9, 1.0, "SKILL.md\n~/.claude/skills/", ORANGE, fs=14)
+box(ax, 4.4, 1.9, 2.9, 1.0, "SKILL.md\nin your repo", ORANGE, fs=14)
 arrow(ax, 7.3, 2.4, 8.5, 2.4, "restart", MUTED)
 box(ax, 8.5, 1.9, 3.2, 1.0, "/bf550-tutor\nrun your three tests", GREEN, fs=14)
 arrow(ax, 10.1, 2.9, 10.1, 3.35, "", GREEN)
@@ -521,7 +537,9 @@ plt.show()
 ## Now the notebook: part 4
 
 - Steps 4 and 5: in plan mode, have Claude Code plan `/bf550-tutor` from your `tutor-spec.md`, and check the plan against the spec before it builds
+- It builds in your repository, in `.claude/skills/`, so `git diff` shows every fix. Commit it as built
 - Check that it triggers, then run your three tests and revise the spec or the skill
+- Last: ask Claude Code to install it in `~/.claude/skills/`, to use it for the rest of the course
 - Swap seats: use your partner's tutor and tell them one thing their spec didn't predict
 - About 25 minutes
 
@@ -531,7 +549,7 @@ plt.show()
 
 1. **Say what you mean.** A vague request gets a reasonable answer to a different question
 2. **Give it a check.** The agent's loop is only as good as what it verifies against
-3. **Read before you accept.** The transcript and the changed files are where its mistakes show
+3. **Read before you accept.** The transcript and `git diff` are where its mistakes show
 4. **You own the result.** Every question states its AI level, and what you submit is yours
 
 ## Next time
