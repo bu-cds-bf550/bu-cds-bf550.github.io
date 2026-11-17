@@ -73,7 +73,7 @@ def person(ax, x, y, label="you", color=MUTED):
     ax.text(x, y - 0.32, label, ha="center", va="top", fontsize=13, color=color)
 
 
-def three_rooms(n):
+def three_panels(n):
     """Model, chatbot, agent: the first n panels drawn, the rest left blank."""
     fig, ax = canvas(12, 4.6)
     titles = ["a language model", "a chatbot", "an agent"]
@@ -145,7 +145,7 @@ gh student accept bu-bioinfo-classrooms bf550-fall-2026 bf550-agentic-coding-tut
 #| echo: false
 #| fig-width: 12
 #| fig-height: 4.6
-three_rooms(1)
+three_panels(1)
 ```
 
 - Claude's models (Opus, Sonnet, Haiku) predict what text comes next, and nothing else
@@ -156,7 +156,7 @@ three_rooms(1)
 #| echo: false
 #| fig-width: 12
 #| fig-height: 4.6
-three_rooms(2)
+three_panels(2)
 ```
 
 - Ask for code and you get **text**: you run it, and you paste the error back
@@ -167,14 +167,14 @@ three_rooms(2)
 #| echo: false
 #| fig-width: 12
 #| fig-height: 4.6
-three_rooms(3)
+three_panels(3)
 ```
 
 - **Claude Code** is the harness: the same models, with tools that act on the folder it started in
 
 ## Now the notebook: part 1
 
-- **Same request, two rooms**: ask claude.ai and Claude Code to make the same chart from `cohort.csv`
+- **The same task, in a chat and in an agent**: ask claude.ai and Claude Code for the same chart of `cohort.csv`. The chat can't see the file, so you describe it there
 - Predict first: which one ends with `bands.png` in your folder?
 - About 10 minutes
 
