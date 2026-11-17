@@ -2,7 +2,7 @@
 # The agentic coding tutorial deck (Wed Nov 18, unit 10's third session): what an agent is and
 # how it relates to a language model and a chatbot, how an agent makes changes through tools,
 # the agentic loop of gathering context, acting and verifying, and skills, ending on the
-# /bf550-tutor skill students build. Four sections, each followed by a part of the tutorial
+# /bf550-tutor skill students design (part 3, a spec written with Claude) and build (part 4). Four sections, each followed by a part of the tutorial
 # notebook (tutorials/agentic-coding/agentic-coding-tutorial.ipynb in the instructor
 # repository). Students run Claude Code on the SCC; AI use is level 5. Builds on the
 # instructor's two earlier hands-on workshops (making a markdown deck about an animal; making
@@ -11,7 +11,8 @@
 # diagrams are drawn by the chunks below in the illustration palette
 # (textbook/illustrations/_style.yaml) and carry no data. Sources: Simon Willison's definition
 # of an agent as tools in a loop; Anthropic's Claude Code docs (how Claude Code works; best
-# practices; skills).
+# practices; skills). Part 3 rebuilt on 17 Nov 2026 at the instructor's request: the count_motif
+# trap went (Claude avoided it), and part 3 became the tutor spec, with no AI-level rule.
 title: "Agentic Coding with Claude Code"
 subtitle: "BF550 · agentic coding tutorial — Wed Nov 18"
 ---
@@ -351,37 +352,41 @@ plt.show()
 ```
 
 - Your notebooks' check cells are this. **The check decides what "done" means**: watch what it tests
+- Today your check is three tests you write into your tutor's spec
 
 ## Now the notebook: part 3
 
-- Ask Claude Code to write `count_motif(seq, motif)` so the check cell passes, without editing the check
-- Then count TATA boxes in six promoters, and count one by hand
+- You are designing **a tutor for BF550, built around how you learn best**. Its one job: help you understand the material
+- Jot notes on how you learn, then have Claude Code **interview you** in plan mode, one question at a time
+- Write the decisions to `tutor-spec.md`, with three tests. Read it, fix it, commit it
 - About 25 minutes
 
 ## What happened in part 3
 
 ```{python}
 #| echo: false
-#| fig-width: 11
-#| fig-height: 3.6
-fig, ax = canvas(11, 3.6)
-seq = "TATATATA"
-x0, w = 2.6, 0.7
-for i, ch in enumerate(seq):
-    ax.text(x0 + w * i + w / 2, 1.75, ch, ha="center", va="center", fontsize=26, family="monospace", weight="bold")
-for k, s in enumerate([0, 2, 4]):        # every start: three matches that overlap
-    y = 2.3 + 0.32 * k
-    ax.plot([x0 + w * s + 0.08, x0 + w * (s + 4) - 0.08], [y, y], color=GREEN, lw=4, solid_capstyle="round")
-for k, s in enumerate([0, 4]):           # str.count jumps past each match: two
-    ax.plot([x0 + w * s + 0.08, x0 + w * (s + 4) - 0.08], [1.2, 1.2], color=ORANGE, lw=4, solid_capstyle="round")
-ax.text(x0 - 0.3, 2.62, "every start\nposition: 3", ha="right", va="center", fontsize=14, color=GREEN)
-ax.text(x0 - 0.3, 1.2, "seq.count: 2", ha="right", va="center", fontsize=14, color=ORANGE)
-ax.text(x0 + w * 8 + 0.3, 1.2, "skips past each match,\nso overlaps go missing", va="center", fontsize=13, color=ORANGE, style="italic")
+#| fig-width: 12
+#| fig-height: 4.4
+fig, ax = canvas(12, 4.4)
+srcs = [("you already knew", BLUE, False), ("Claude asked, you decided", GREEN, False),
+        ("Claude guessed", ORANGE, True)]
+for i, (t, c, d) in enumerate(srcs):
+    y = 3.0 - 1.15 * i
+    box(ax, 0.3, y, 3.6, 0.8, t, c, dashed=d, fs=14)
+    arrow(ax, 3.9, y + 0.4, 5.9, 2.0, "", c)
+ax.text(4.9, 0.25, "read it: keep, change\nor delete each guess", ha="center", fontsize=12,
+        color=ORANGE, style="italic")
+box(ax, 5.9, 0.45, 3.0, 3.2, "tutor-spec.md\n\ngoal\nhow I learn\nhow it behaves\nthree tests",
+    BLUE, filled=False, fs=14, ha="left", family="monospace")
+ax.text(7.4, 4.0, "the conversation ends; the file stays", ha="center", fontsize=13,
+        color=MUTED, style="italic")
+arrow(ax, 8.9, 2.05, 9.7, 2.05, "", MUTED)
+box(ax, 9.7, 1.45, 2.1, 1.2, "part 4:\nbuild it\nfrom the spec", ORANGE, fs=13)
 plt.show()
 ```
 
-- The agent did what it was asked: the request was vague, and the check tested one easy case
-- The fix was a better specification, a check with the case you meant. Then the loop did the rest
+- Hands up: what did Claude guess that you never said? Same request, different tutors
+- **A spec is where your decisions live.** The agent builds from what is written down, not from what you meant
 
 # Skills
 
@@ -450,39 +455,33 @@ plt.show()
 
 - A skill is a text file. Read one before you install it, as you read code before you run it
 
-## The tutor you will build: `/bf550-tutor`
+## From your spec to your tutor
 
 ```{python}
 #| echo: false
 #| fig-width: 12
 #| fig-height: 4.4
 fig, ax = canvas(12, 4.4)
-box(ax, 0.3, 1.8, 2.4, 1.0, "what do you\nwant to practise?", BLUE, fs=13)
-box(ax, 3.4, 1.8, 2.4, 1.0, "reads the\nnotebook cell\nand course page", GREEN, fs=13)
-box(ax, 6.5, 1.8, 2.4, 1.0, "one question\nat a time", ORANGE, fs=13)
-box(ax, 9.6, 1.8, 2.2, 1.0, "what to review,\nwith links", BLUE, fs=13)
-arrow(ax, 2.7, 2.3, 3.4, 2.3)
-arrow(ax, 5.8, 2.3, 6.5, 2.3)
-arrow(ax, 8.9, 2.3, 9.6, 2.3)
-ax.annotate("", (7.2, 2.85), (8.2, 2.85), arrowprops=dict(arrowstyle="-|>", color=ORANGE, lw=2, connectionstyle="arc3,rad=1.2"))
-ax.text(7.7, 3.55, "answer, feedback, harder or easier", ha="center", fontsize=12, color=ORANGE, style="italic")
-srcs = [("course site", True), ("textbook", True), ("your bf550-* repos", True), ("anything private", False)]
-for i, (s, ok) in enumerate(srcs):
-    x = 0.3 + 3.0 * i
-    box(ax, x, 0.2, 2.7, 0.6, s, GREEN if ok else MUTED, filled=ok, fs=13, tc=INK if ok else MUTED)
-    if not ok:
-        ax.plot([x + 0.1, x + 2.6], [0.5, 0.5], color=ORANGE, lw=2.5)
-ax.plot([0.3, 8.7], [0.95, 0.95], color=GREEN, lw=2)
-arrow(ax, 4.6, 0.95, 4.6, 1.8, "where it may look", GREEN, fs=12, dx=1.1, dy=0.2)
-ax.text(10.7, 3.4, "on a level 1 question:\nteaches the ideas,\nnever writes the answer", ha="center", fontsize=12, color=MUTED, style="italic")
+box(ax, 0.3, 1.9, 2.9, 1.0, "tutor-spec.md\nyour decisions", BLUE, fs=14)
+arrow(ax, 3.2, 2.4, 4.4, 2.4, "Claude builds", MUTED)
+box(ax, 4.4, 1.9, 2.9, 1.0, "SKILL.md\n~/.claude/skills/", ORANGE, fs=14)
+arrow(ax, 7.3, 2.4, 8.5, 2.4, "restart", MUTED)
+box(ax, 8.5, 1.9, 3.2, 1.0, "/bf550-tutor\nrun your three tests", GREEN, fs=14)
+arrow(ax, 10.1, 2.9, 10.1, 3.35, "", GREEN)
+box(ax, 8.8, 3.35, 2.6, 0.7, "✓  matches: commit", GREEN, fs=13)
+arrow(ax, 10.1, 1.9, 1.75, 1.9, "", ORANGE, rad=-0.35)
+ax.text(5.9, 0.15, "doesn't match? fix the skill, or change the spec", ha="center",
+        fontsize=13, color=ORANGE, style="italic")
 plt.show()
 ```
 
+- The skill follows the spec; the spec follows you. When you learn something about how you learn, change the spec first
+
 ## Now the notebook: part 4
 
-- Have Claude Code build `/bf550-tutor` from the specification in the notebook
-- Check that it triggers, then make it yours with a `## My preferences` section
-- Swap with a partner: can they start your tutor without reading it?
+- Have Claude Code build `/bf550-tutor` from your `tutor-spec.md`, and read the skill against the spec
+- Check that it triggers, then run your three tests and revise
+- Swap seats: use your partner's tutor and tell them one thing their spec didn't predict
 - About 25 minutes
 
 # Habits to keep
@@ -497,4 +496,4 @@ plt.show()
 ## Next time
 
 - Unit 11, Fri Nov 20: dimensionality reduction with principal component analysis
-- PS10 is due Mon Nov 30. Your tutor works there too, within each question's AI level
+- PS10 is due Mon Nov 30. Your tutor works there too
