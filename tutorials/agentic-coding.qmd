@@ -115,28 +115,6 @@ def three_panels(n):
     plt.show()
 ```
 
-## Where this fits
-
-- In the two workshops, Claude Code wrote a slide deck about an animal, made plots, and remade a plot from its description alone
-- Today: what happens underneath, and two habits that make the work trustworthy
-
-. . .
-
-1. What an agent is
-2. How an agent makes changes
-3. The agentic loop
-4. Skills, and a tutor you build for yourself
-
-## Before we start
-
-```bash
-gh student accept bu-bioinfo-classrooms bf550-fall-2026 bf550-agentic-coding-tutorial
-```
-
-- On the SCC: clone it and open the folder in VS Code. Keep claude.ai open in a browser tab
-- Two terminals **in that folder**: Claude Code (`claude`) in one, git and Python in the other
-- AI use today is **level 5**. Keep the terminal and the notebook side by side
-
 # What an agent is
 
 ## A language model continues text
