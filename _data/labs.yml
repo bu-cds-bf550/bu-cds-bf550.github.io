@@ -66,3 +66,8 @@
   unit: unit-10
   date: "Fri Nov 13 · Mon Nov 16 · Wed Nov 18"
   title: "Logistic and negative binomial regression with statsmodels"
+- id: unit-11
+  path: "unit-11.ipynb"
+  unit: unit-11
+  date: "Fri Nov 20 · Mon Nov 23 · Mon Nov 30"
+  title: "Principal component analysis"
